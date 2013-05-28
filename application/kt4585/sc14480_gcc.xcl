@@ -1,0 +1,13 @@
+SECTIONS
+{
+  .cstart 0xF0000 : { *(.cstart) }
+  .text : AT (ADDR (.cstart) + SIZEOF (.cstart)) { *(.text) }
+  .rodata ALIGN(0x2) : AT (ADDR (.text) + SIZEOF (.text)) { _brodata = . ; *(.rodata*) ; _erodata = . ; }
+  .data 0x8000 : AT (ADDR (.rodata) + SIZEOF (.rodata)) { _bdata = . ; *(.data); _edata = . ; }
+  .dummysegment2 0xA000 : { _dummy2rams = . ; *(.dummysegment2); _dummy2rame = . ; }
+  .bmcdataram 0x10000 (NOLOAD) : AT (ADDR (.rodata) + SIZEOF (.rodata) + SIZEOF (.data)) { _bmcdrams = . ; *(.bmcdataram); _bmcdrame = . ; }
+  .dspdataram 0x10800 (NOLOAD) : { _dsprams = . ; *(.dspdataram); _dsprame = . ; }
+  .bss : { _bbss = . ; *(.bss); _ebss = . ; }
+  .dummysegment 0x14000 : { _dummyrams = . ; *(.dummysegment); _dummyrame = . ; }
+}
+

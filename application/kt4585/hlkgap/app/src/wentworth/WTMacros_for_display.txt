@@ -1,0 +1,3784 @@
+//#############################################################################
+//#
+//# 			Wentworth Technology Touch Display Control Macro File.
+//#
+//# Date:		02-20-2011
+//#
+//# Hardware:	Reach SLCD43 (WQVGA) in landscape mode.
+//# 
+//#	Author:		David Morrill
+//#				Carl Poirier
+//#				Saco, ME  04072
+//#				(207) 571-9744
+//#
+//#				Copyright © 2013 Wentworth Technology
+//#
+//#############################################################################
+// Update v1.2-AL CRP 4/19/2013 - supported by FP rev1.2-AL
+// 1) disable beeps during play/record/stop messages
+//
+//=================================================
+// Update v1.1-AL CRP 3/19/2013 - supported by FP rev1.1-AL
+// 1) added message repeater screens
+// 2) removed show_heap_info and show_heap_main macros
+// 3) added PIN screen to get to show_wentworth_debug screen
+//
+//=================================================
+// Update v1-AL CRP 1/29/2013 - supported by FP rev1.0-AL
+// 1) revised show_wentworth to support FW_REV_MAJOR and FW_REV_MINOR
+//
+//=================================================
+// Update v4-AL CRP 1/9/2013 - supported by FP rev19-AL
+// 1) changed post-fix from PA to AL for Alango
+// 2) added request_base_command macro to support dynamic
+//    screen editting without display code edits
+// 3) added pre_volume macro to save bar height max values
+//
+//=================================================
+// Update v3-PA CRP 12/20/2012 - supported by FP rev18-PA
+// 1) revised greet_button and register_box macros to contain
+//    all position data to off load from DECT memory
+// 2) revised WT_Info screen to better reflect one or two bases
+// 3) added debug screen to display # of power on cycles
+//    and enter greeter authorization code
+// 4) added show_greeter_promo to promote calling WT when
+//    no greeter is installed and greeter button is pressed
+// 5) added request_volume macro to retrieve current volume
+//    settings from base before displaying volume settings
+//
+//=================================================
+// Update v2-PA CRP 9/6/2012 - supported by FP rev15-PA
+// 1) revised register_main macro to remove
+//    unnecessary button initialization
+// 2) pruned .bmps
+// 3) added 'e4' update to volume_indicator macro
+// 4) increased size of PIN buttons
+// 5) added "ON" and "OFF" to Greeter enable button bitmap
+//
+//=================================================
+// Update v1-PA CRP 3/6/2012 - supported by FP rev1-PA
+// 1) minor tweak to display sw revision with "-PA"
+//    to indicate power amplifier version of the software
+//
+//=================================================
+// Update v29 CRP 2/13/2012 - supported by FP rev235
+// 1) minor tweak to show_wentworth macro to clear
+//    display before writing to avoid misalignment
+//
+//=================================================
+// Update v28 CRP 2/9/2012 - supported by FP rev235
+// 1) updated copyright year
+// 2) updated each screen to use touch on/off
+//
+//=================================================
+// Update v27 CRP 12/9/2011 - supported by FP rev224
+// 1) removed set_initial_clock_time macro as base no longer uses
+//
+//=================================================
+// Update v26 CRP 12/7/2011 - supported by FP rev223
+// 1) revised report_clock to return to pre_main and
+//    pre_tools so that base can run CheckForActiveGreet()
+//
+//=================================================
+// Update v25 CRP 12/5/2011 - supported by FP rev222
+// 1) enabled greeter multi-day schedule buttons
+// 2) revised set_clock, set_initial_clock_time, and clock
+//    to support "day" parameter
+// 3) added day_name and set_clock_day for setting day of week
+// 4) added "pre_" main, tools, register_main, show_help_main,
+//    and greeter_setup to prevent errant icons being
+//    drawn when changing screen displays
+// 5) disabled macro debugging mode
+// 6) removed the `eB` parameter from calls to tools
+//
+//=================================================
+// Update v24 CRP 11/17/2011
+// 1) removed some code for GREETER support screen as
+//    base will draw most of initial screen and labels
+// 2) added greet_button macro for base to draw buttons
+// 3) added enable_btn for greet enables
+//
+//=================================================
+// Update v23 CRP 11/4/2011
+// 1) added additional code for GREETER support screen
+// 2) added revision numbers for display code
+//
+//=================================================
+// Update v22 CRP 11/1/2011
+// 1) added initial draft of GREETER support screen
+// 2) revised Copywrite notices
+//
+//=================================================
+// Update v21 CRP 9/22/2011
+// 1) decreased INBOUND max volume from 10 to 9
+//
+//=================================================
+// Update v20 CRP 9/13/2011
+// 1) increased INBOUND max volume from 5 to 10
+//
+//=================================================
+// Update v19 CRP 8/5/2011
+// 1) revised each screen to display the "home" button first
+//    in case the screen display routine gets interrupted
+//
+//=================================================
+// Update v18 CRP 7/15/2011
+// 1) added all the help screens
+// 2) revised hand_button assignments to match revised #defines
+// 3) corrected NIGHT TIME VOLUME end decrement actions
+//
+//=================================================
+// Update v17 CRP 7/11/2011
+// 1) finished cleanup after adding SET CLOCK functionality
+// 2) finished cleanup after adding SET NIGHT TIME START and END functionality
+// 3) added SET PIN functionality
+// 4) removed unused new_pin_reenter, thumbs_up, info, and show_info macros
+// 5) added request_info macro to ask base to send relevent info to show
+// 6) revised show_wentworth macro to show useful info
+//
+//=================================================
+// Update v16 CRP 7/7/2011
+// 1) revised the clock macro to clear and display time
+//
+//=================================================
+// Update v15 CRP 7/6/2011
+// 1) revised the OUT comands to DECT module
+//    WENWORTHTASK ID was 0x11, now is 0x12
+//
+//=================================================
+// Update v14 CRP 7/1/2011
+// 1) placed the system mode button behind PIN protection
+//
+//=================================================
+// Update v13 CRP 6/30/2011
+// 1) revised Register Headset button to have pressed state
+//
+//=================================================
+// Update v12 CRP 6/22/2011
+// 1) decreased INBOUND max volume from 6 to 5
+//
+//=================================================
+// Update v11 CRP 6/17/2011
+// 1) added system modes
+// 2) updated main screen to show Listen Only icon
+//
+//=================================================
+// Update v10 CRP 5/25/2011
+// 1) added beep defaults to main screen
+// 2) increased GRILL max volume from 10 to 15
+// 3) added to SVN repository for revision control
+//
+//=================================================
+// Update v10 CRP 5/19/2011
+// 1) changed INBOUND max volume from 8 to 6
+//
+//=================================================
+// Update v9 CRP 5/17/2011
+// 1) changed register button press states: 0 = unpressed, 1 = pressed
+// 2) implemented Delete Headset
+//
+//=================================================
+// Update v8 CRP 5/11/2011
+// 1) revised title block
+// 2) removed unused do_headset and do_headset_a macros
+// 3) changed e0 PIN Mode: 1 = Locked, 0 = Unlocked
+// 4) implemented pin_unlock macro
+// 5) revised pin macro
+//
+//=================================================
+// Update v7 CRP 5/6/2011
+// 1) moved to bitmaps Rev4.9: only 10 registration buttons
+// 2) changed INBOUND max volume from 15 to 8
+// 3) changed e4 Volume Mode: 1 = Day, 0 = Night
+//
+//=================================================
+// Update v6 CRP 4/11/2011
+// 1) moved to bitmaps Rev4.7
+// 2) added some headset button code to registration screen
+// 3) split startup macro into startup1 and startup2 to accomodate more than 10 arguments
+//
+//=================================================
+// Update v6 CRP 4/4/2011
+// 1) moved to bitmaps Rev4.6
+//
+// 2) began adding UART commands to DECT; UART commands have this format:
+// FF FF 4D 12 n1 CC n2 aa bb ... yy zz CS
+//  > FF FF 4D 12 : are required to send "mail" to DECT application
+//  > n1 : is the number of bytes being sent (not including the 1st 5 bytes and not the last checksum byte)
+//  > CC : use as the "command" intended for the DECT application
+//  > n2 : is the number of arguments (aa thru zz) to be used by the DECT app, the first n1 gets used up before the app can see it
+//  > aa bb ... yy zz : the arguments, if any
+//  > CS : CHECKSUM byte = summation of the command byte and all the data bytes (CC+n2+aa+bb+...+yy+zz); required by DECT application
+// for example:
+// out "\xFF\xFF\x4D\x12\x03\x5A\x01\xA5\x00"
+// sends "5A" command and 1 argument: "A5" data; checksum = 0xFF & (0xA5 + 1 + 0x5A) = 0xFF & 0x100 = 0x00
+//
+// 3) added inbound volume adjustment
+//
+// 4) added outByte, getByte, and getNibble MACROs to convert decimal to hex
+//
+//=================================================
+// Update v1 DPM 2/28/2011
+// Fixed text color on volume buttons
+// added set_clock set_clock_time macros
+// 
+//=================================================
+//---------------------------------------------------------------------------------------
+// 	Global Variable usage:
+//
+//  e0 PIN,		"0" = unlocked,		"1" = locked.
+//  e1 MODE,	"1" = hand,			"2" = push to talk,		"3" = no hand,  	"4" = speed.
+//  e2 Lane 1	"0" = no lane 1,	"1" = lane 1 empty, 	"2" = lane 1 full.
+//  e3 Lane 2	"0" = no lane 2,	"1" = lane 2 empty, 	"2" = lane 2 full.
+//  e4 Volume	"0" = night mode,	"1" = day mode.
+//  e5 detect volume
+//	e6 inbound volume
+//	e7 grill volume
+//  e8 day volume
+//	e9 night volume
+//  eA m_volume lanes "0"= single, "1" = lane A of two lanes, "2" = lane B of two lanes
+//  eB Multi-lane "0"= single, "1" = dual
+//---------------------------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------------------
+// MACRO: power_on
+//
+// NOTE: this needs to be the 1st macro in the file, as *PONMAC will be
+//       set to 1 1 (run macro index number 1, disable copyright notice)
+// 
+//---------------------------------------------------------------------------------------
+#define power_on
+//f24B
+//xs 128 0 0 479 271					// whole screen touch area
+//xm 128 touch_calibrate				// if touched, execute touch cal macro
+//t "Touch screen to calibrate." 20 100	// Show the user	
+//w 1000								// Delay a second.
+//t "."									// Show time passing.
+//w 1000
+//t "."
+//w 1000
+//t "."
+//w 1000
+ 
+m reset_display 50						// Display background.
+//m s										// Startup quick start macro
+//*macdebug 1								// Control macro debugging function (0=off, 1=on).
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: reset_display
+// -- arg0 ... index of background bitmap to display
+//
+//---------------------------------------------------------------------------------------
+#define reset_display
+bv 200									// default beep loudness
+bf 2650									// default beep frequency
+bb 10									// default beep length
+xbbs 255								// Set default backlight brightness.					
+o 0 0									// Set the origin to 0,0.
+// f 13B								// Set default font size.
+// ta CT								// Set default justification.
+// S FFF 000							// Set default white forground and black background colors.
+zs `0`									// Clear screen and draw background.
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: startup1
+// stores first set of global config states into eeprom
+//---------------------------------------------------------------------------------------
+//
+//  `0` PIN,    "0" = unlocked,		"1" = locked.
+//  `1` MODE,	"1" = hand,			"2" = push to talk,		"3" = no hand,  	"4" = speed.
+//  `2`	Lane 1, "0" = no lane 1,	"1" = lane 1 empty, "2" = lane 1 full.
+//  `3` Lane 2, "0" = no lane 2,	"1" = lane 2 empty, "2" = lane 2 full.
+//  `4`	Volume, "0" = night mode,	"1" = day mode.
+//  `5` detect volume
+//	`6` inbound volume
+//	`7` grill volume
+//  `8` day volume
+//	`9` night volume
+//  
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+#define startup1
+set e0 `0`								// Save the locked/unlocked state in variable 0.
+set e1 `1`								// Save mode
+set e2 `2`								// Save Lane 1
+set e3 `3`								// Save Lane 2
+set e4 `4`								// Save Volume mode
+set e5 `5`								// Save current detect volume
+set e6 `6`								// Save current inbound volume
+set e7 `7`								// Save current grill volume
+set e8 `8` 								// Save current day volume
+set e9 `9`								// Save current night volume
+#end
+
+
+//---------------------------------------------------------------------------------------
+// MACRO: startup2
+// stores more global config states into eeprom
+// Then runs main macro
+//---------------------------------------------------------------------------------------
+//
+//  `A` m_volume lanes "0"= single, "1" = lane A of two lanes, "2" = lane B of two lanes
+//  `B` Multi-lane "0"= single, "1" = dual
+//  
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+#define startup2
+set eA `0`								// Save volume lanes info
+set eB `1`								// Save multi-lane
+m main		    // Start it up!!
+#end
+
+
+//---------------------------------------------------------------------------------------
+// MACRO: s
+// DPM quick setup for testing, delete and call startup with parameters
+// Delete this for final version
+//  
+//---------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------
+#define s
+set e0 0								// Save the locked/unlocked state in variable 0.
+set e1 1								// Save mode
+set e2 1								// Save Lane 1
+set e3 0								// Save Lane 2
+set e4 1								// Save Volume mode
+set e5 7								// Save detect current volume
+set e6 0								// Save inbound volume
+set e7 8								// Save grill current volume
+set e8 9 								// Save day volume
+set e9 1								// Save night volume
+set eA 0								// Save volume lanes info
+set eB 0								// Save multi-lane
+m main		    // Start it up!!
+#end
+
+
+
+//---------------------------------------------------------------------
+// MACRO: pre_main
+// Tell base to clear macros before displaying main
+//
+//---------------------------------------------------------------------
+//
+#define pre_main
+out "\xFF\xFF\x4D\x12\x03\x01\x01\x01\x03"	// request base to display the main screen
+#end
+
+#define main
+touch off								// disable screen touches until screen is ready
+m reset_display 50						// Display the background.
+s 16 2									// yellow foreground on Blue background for clock
+f 32B									// font for clock digits
+ta CC									// Set text justification mode.
+bd 2 122 122 1 "" 0 0 22 22				// Setup the the Wentworth logo button.
+xm 2 request_info						// request info for show_wentworth macro.
+m register_button:lbl_`e0`				// Set up the "Register" button based on e0 (PIN state).
+m greeter_setup_button:lbl_`e0`			// Set up the "Greeter Setup" button based on e0 (PIN state).
+m pin_button:lbl_`e0`					// Setup the "Lock" button based on e0 (PIN state).
+m tools_button:lbl_`e0`					// Set up the "Tools" button based on e0 (PIN state).
+m hand_button:lbl_`e0`					// Setup the "Hand" button based on e0 and e1 (PIN state and System Mode).
+m lane_1:lbl_`e2`						// Display the lane #1 indicator.
+m lane_2:lbl_`e3`						// Display the lane #2 indicator.
+m volume_indicator:lbl_`e4`				// Display the volume indicator.
+bd 9 430 222 1 "" 0 0 12 12				// Setup the "Help" button.
+xm 9 pre_show_help_main
+out "\xFF\xFF\x4D\x12\x02\x10\x00\x10"	// tell base we're displaying the main screen
+touch on								// enable screen touches
+#end
+
+
+//---------------------------------------------------------------------
+// MACRO: pre_greeter_setup
+// Tell base to clear macros before displaying greeter_setup
+//
+//---------------------------------------------------------------------
+//
+#define pre_greeter_setup
+out "\xFF\xFF\x4D\x12\x03\x01\x01\x05\x07"	// request base to display the greeter_setup screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: greeter_setup
+// For Greeter Setup screen display.
+//
+//  
+//---------------------------------------------------------------------------------------
+#define greeter_setup
+touch off									// disable screen touches until screen is ready
+m reset_display 50							// Display the background
+s 0 2 										// set colors: black foreground, blue background
+f 18BC										// set font
+bd 40 430 222 1 "" 0 0 17 17				// Setup the "Home" button
+xm 40 pre_main								// Go back to main screen
+
+bdc 0 6 56 20 "" "" 1 2						// set greet latching button
+xmq 0 edit_push:s0_1 edit_release:s0_0		// report when pressed or released
+bdc 1 41 56 20 "" "" 13 14 					// Display greet #1 name button
+xmq 1 edit_push:s1_1 edit_release:s1_0		// report when pressed or released
+bdc 2 41 81 20 "" "" 16 18 					// Display greet #1 start time button
+xmq 2 edit_push:s2_1 edit_release:s2_0		// report when pressed or released
+bdc 3 111 81 20 "" "" 16 18 				// Display greet #1 stop time button
+xmq 3 edit_push:s3_1 edit_release:s3_0		// report when pressed or released
+bdc 4 181 56 20 "" "" 4 3 					// Display greet #1 select button
+xmq 4 enable_btn:s4_1 enable_btn:s4_0		// report when pressed or released
+
+bdc 5 6 110 20 "" "" 1 2					// set greet latching button
+xmq 5 edit_push:s5_1 edit_release:s5_0		// report when pressed or released
+bdc 6 41 110 20 "" "" 13 14 				// Display greet #2 name button
+xmq 6 edit_push:s6_1 edit_release:s6_0		// report when pressed or released
+bdc 7 41 135 20 "" "" 16 18	 				// Display greet #2 start time button
+xmq 7 edit_push:s7_1 edit_release:s7_0		// report when pressed or released
+bdc 8 111 135 20 "" "" 16 18 				// Display greet #2 stop time button
+xmq 8 edit_push:s8_1 edit_release:s8_0		// report when pressed or released
+bdc 9 181 110 20 "" "" 4 3 					// Display greet #2 select button
+xmq 9 enable_btn:s9_1 enable_btn:s9_0		// report when pressed or released
+
+bdc 10 6 164 20 "" "" 1 2					// set greet latching button
+xmq 10 edit_push:s10_1 edit_release:s10_0	// report when pressed or released
+bdc 11 41 164 20 "" "" 13 14 				// Display greet #3 name button
+xmq 11 edit_push:s11_1 edit_release:s11_0	// report when pressed or released
+bdc 12 41 189 20 "" "" 16 18 				// Display greet #3 start time button
+xmq 12 edit_push:s12_1 edit_release:s12_0	// report when pressed or released
+bdc 13 111 189 20 "" "" 16 18 				// Display greet #3 stop time button
+xmq 13 edit_push:s13_1 edit_release:s13_0	// report when pressed or released
+bdc 14 181 164 20 "" "" 4 3 				// Display greet #3 select button
+xmq 14 enable_btn:s14_1 enable_btn:s14_0	// report when pressed or released
+
+bdc 15 6 218 20 "" "" 1 2					// set greet latching button
+xmq 15 edit_push:s15_1 edit_release:s15_0	// report when pressed or released
+bdc 16 41 218 20 "" "" 13 14 				// Display greet #4 name button
+xmq 16 edit_push:s16_1 edit_release:s16_0	// report when pressed or released
+bdc 17 41 243 20 "" "" 16 18 				// Display greet #4 start time button
+xmq 17 edit_push:s17_1 edit_release:s17_0	// report when pressed or released
+bdc 18 111 243 20 "" "" 16 18 				// Display greet #4 stop time button
+xmq 18 edit_push:s18_1 edit_release:s18_0	// report when pressed or released
+bdc 19 181 218 20 "" "" 4 3 				// Display greet #4 select button
+xmq 19 enable_btn:s19_1 enable_btn:s19_0	// report when pressed or released
+
+bdc 20 250 56 20 "" "" 1 2					// set greet latching button
+xmq 20 edit_push:s20_1 edit_release:s20_0	// report when pressed or released
+bdc 21 285 56 20 "" "" 13 14				// Display greet #5 name button
+xmq 21 edit_push:s21_1 edit_release:s21_0	// report when pressed or released
+bdc 22 285 81 20 "" "" 16 18 				// Display greet #5 start time button
+xmq 22 edit_push:s22_1 edit_release:s22_0	// report when pressed or released
+bdc 23 355 81 20 "" "" 16 18 				// Display greet #5 stop time button
+xmq 23 edit_push:s23_1 edit_release:s23_0	// report when pressed or released
+bdc 24 425 56 20 "" "" 4 3 					// Display greet #5 select button
+xmq 24 enable_btn:s24_1 enable_btn:s24_0	// report when pressed or released
+
+bdc 25 250 110 20 "" "" 1 2					// set greet latching button
+xmq 25 edit_push:s25_1 edit_release:s25_0	// report when pressed or released
+bdc 26 285 110 20 "" "" 13 14 				// Display greet #6 name button
+xmq 26 edit_push:s26_1 edit_release:s26_0	// report when pressed or released
+bdc 27 285 135 20 "" "" 16 18				// Display greet #6 start time button
+xmq 27 edit_push:s27_1 edit_release:s27_0	// report when pressed or released
+bdc 28 355 135 20 "" "" 16 18 				// Display greet #6 stop time button
+xmq 28 edit_push:s28_1 edit_release:s28_0	// report when pressed or released
+bdc 29 425 110 20 "" "" 4 3 				// Display greet #6 select button
+xmq 29 enable_btn:s29_1 enable_btn:s29_0	// report when pressed or released
+
+bdc 30 250 164 20 "" "" 1 2					// set greet latching button
+xmq 30 edit_push:s30_1 edit_release:s30_0	// report when pressed or released
+bdc 31 285 164 20 "" "" 13 14				// Display greet #7 name button
+xmq 31 edit_push:s31_1 edit_release:s31_0	// report when pressed or released
+bdc 32 285 189 20 "" "" 16 18				// Display greet #7 start time button
+xmq 32 edit_push:s32_1 edit_release:s32_0	// report when pressed or released
+bdc 33 355 189 20 "" "" 16 18 				// Display greet #7 stop time button
+xmq 33 edit_push:s33_1 edit_release:s33_0	// report when pressed or released
+bdc 34 425 164 20 "" "" 4 3 				// Display greet #7 select button
+xmq 34 enable_btn:s34_1 enable_btn:s34_0	// report when pressed or released
+
+bdc 36 240 222 21 "" "" 10 11 				// Display M-T select button
+xmq 36 day_push:s36_1 day_release:s36_0		// report when pressed or released
+bdc 37 285 222 20 "" "" 8 9 				// Display F select button
+xmq 37 day_push:s37_1 day_release:s37_0		// report when pressed or released
+bdc 38 315 222 20 "" "" 6 7 				// Display S select button
+xmq 38 day_push:s38_1 day_release:s38_0		// report when pressed or released
+bdc 39 345 222 20 "" "" 6 7 				// Display S select button
+xmq 39 day_push:s39_1 day_release:s39_0		// report when pressed or released
+
+set i1 0									// use i1 to hold which schedule is displayed, start with M-T
+
+bd 41 380 222 1 "" 0 0 12 12				// Setup the "Help" button
+
+:screen0
+set i2 0									// use i2 to hold which setup screen is displayed
+bdc 46 287 10 20 "Msg 1" "Msg 1" 16 18		// Display the "Message 1 Setup" button
+xmq 46 edit_push:s46_1 edit_release:s46_0	// report when pressed
+bdc 47 367 10 20 "Msg 2" "Msg 2" 16 18		// Display the "Message 2 Setup" button
+xmq 47 edit_push:s47_1 edit_release:s47_0	// report when pressed
+bdc 35 0 0 20 "" "" 5 25 					// Display the "Greeter" banner button
+xmq 35 edit_push:s35_1 edit_release:s35_0	// report when pressed or released
+xm 41 show_help_greet						// Go to greet help screen
+out "\xFF\xFF\x4D\x12\x02\x50\x00\x50"		// tell base to fill the greeter setup screen
+
+:screen1
+set i2 1									// use i2 to hold which setup screen is displayed
+bdc 48 287 10 20 "Greeter" "Greeter" 16 18	// Display the "Greeter Setup" button
+xmq 48 edit_push:s48_1 edit_release:s48_0	// report when pressed
+bdc 47 367 10 20 "Msg 2" "Msg 2" 16 18		// Display the "Message 2 Setup" button
+xmq 47 edit_push:s47_1 edit_release:s47_0	// report when pressed
+s 2 16										// blue on yellow
+f 32B
+bd 35 0 0 1 "Message 1" 15 5 104 104		// Display the "Message 1" banner button
+xm 41 show_help_message1					// Go to message 1 help screen
+out "\xFF\xFF\x4D\x12\x02\x51\x00\x51"		// tell base to fill the message 1 setup screen
+
+:screen2
+set i2 2									// use i2 to hold which setup screen is displayed
+bdc 48 287 10 20 "Greeter" "Greeter" 16 18	// Display the "Greeter Setup" button
+xmq 48 edit_push:s48_1 edit_release:s48_0	// report when pressed
+bdc 46 367 10 20 "Msg 1" "Msg 1" 16 18		// Display the "Message 1 Setup" button
+xmq 46 edit_push:s46_1 edit_release:s46_0	// report when pressed
+s 2 16										// blue on yellow
+f 32B
+bd 35 0 0 1 "Message 2" 15 5 104 104		// Display the "Message 2" banner button
+xm 41 show_help_message2					// Go to message 2 help screen
+out "\xFF\xFF\x4D\x12\x02\x52\x00\x52"		// tell base to fill the message 2 setup screen
+
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: greet_button
+// For greet setup display.
+//  fills in a particular greet button with the appropriate text label
+//  base calls macro greet_button:lbl_n_x `0`
+//  lbl_0 = button pressed/down
+//  lbl_1 = button released/up
+//     x  : button number	(0-34)
+//    `0` : text to display on button
+//
+//---------------------------------------------------------------------------------------
+#define greet_button
+s 0 2
+f 18BC
+:lbl_0_0
+bdc 0 6 56 20 "`0`" "`0`" 1 2   						//set greet button released
+xmq 0 edit_push:s0_1 edit_release:s0_0
+:lbl_1_0
+bdc 0 6 56 21 "`0`" "`0`" 1 2 							//set greet button pressed
+xmq 0 edit_push:s0_1 edit_release:s0_0
+:lbl_0_1
+bdc 1 41 56 20 "`0`" "`0`" 13 14						//set greet button released
+xmq 1 edit_push:s1_1 edit_release:s1_0
+:lbl_1_1
+bdc 1 41 56 21 "`0`" "`0`" 13 14 						//set greet button pressed
+xmq 1 edit_push:s1_1 edit_release:s1_0
+:lbl_0_2
+bdc 2 41 81 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 2 edit_push:s2_1 edit_release:s2_0
+:lbl_1_2
+bdc 2 41 81 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 2 edit_push:s2_1 edit_release:s2_0
+:lbl_0_3
+bdc 3 111 81 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 3 edit_push:s3_1 edit_release:s3_0
+:lbl_1_3
+bdc 3 111 81 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 3 edit_push:s3_1 edit_release:s3_0
+:lbl_0_4
+bdc 4 181 56 20 "`0`" "`0`" 4 3							//set greet button released
+xmq 4 edit_push:s4_1 edit_release:s4_0
+:lbl_1_4
+bdc 4 181 56 21 "`0`" "`0`" 4 3 						//set greet button pressed
+xmq 4 edit_push:s4_1 edit_release:s4_0
+:lbl_0_5
+bdc 5 6 110 20 "`0`" "`0`" 1 2							//set greet button released
+xmq 5 edit_push:s5_1 edit_release:s5_0
+:lbl_1_5
+bdc 5 6 110 21 "`0`" "`0`" 1 2 							//set greet button pressed
+xmq 5 edit_push:s5_1 edit_release:s5_0
+:lbl_0_6
+bdc 6 41 110 20 "`0`" "`0`" 13 14						//set greet button released
+xmq 6 edit_push:s6_1 edit_release:s6_0
+:lbl_1_6
+bdc 6 41 110 21 "`0`" "`0`" 13 14 						//set greet button pressed
+xmq 6 edit_push:s6_1 edit_release:s6_0
+:lbl_0_7
+bdc 7 41 135 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 7 edit_push:s7_1 edit_release:s7_0
+:lbl_1_7
+bdc 7 41 135 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 7 edit_push:s7_1 edit_release:s7_0
+:lbl_0_8
+bdc 8 111 135 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 8 edit_push:s8_1 edit_release:s8_0
+:lbl_1_8
+bdc 8 111 135 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 8 edit_push:s8_1 edit_release:s8_0
+:lbl_0_9
+bdc 9 181 110 20 "`0`" "`0`" 4 3						//set greet button released
+xmq 9 edit_push:s9_1 edit_release:s9_0
+:lbl_1_9
+bdc 9 181 110 21 "`0`" "`0`" 4 3 						//set greet button pressed
+xmq 9 edit_push:s9_1 edit_release:s9_0
+:lbl_0_10
+bdc 10 6 164 20 "`0`" "`0`" 1 2							//set greet button released
+xmq 10 edit_push:s10_1 edit_release:s10_0
+:lbl_1_10
+bdc 10 6 164 21 "`0`" "`0`" 1 2 						//set greet button pressed
+xmq 10 edit_push:s10_1 edit_release:s10_0
+:lbl_0_11
+bdc 11 41 164 20 "`0`" "`0`" 13 14						//set greet button released
+xmq 11 edit_push:s11_1 edit_release:s11_0
+:lbl_1_11
+bdc 11 41 164 21 "`0`" "`0`" 13 14 						//set greet button pressed
+xmq 11 edit_push:s11_1 edit_release:s11_0
+:lbl_0_12
+bdc 12 41 189 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 12 edit_push:s12_1 edit_release:s12_0
+:lbl_1_12
+bdc 12 41 189 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 12 edit_push:s12_1 edit_release:s12_0
+:lbl_0_13
+bdc 13 111 189 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 13 edit_push:s13_1 edit_release:s13_0
+:lbl_1_13
+bdc 13 111 189 21 "`0`" "`0`" 16 18 					//set greet button pressed
+xmq 13 edit_push:s13_1 edit_release:s13_0
+:lbl_0_14
+bdc 14 181 164 20 "`0`" "`0`" 4 3						//set greet button released
+xmq 14 edit_push:s14_1 edit_release:s14_0
+:lbl_1_14
+bdc 14 181 164 21 "`0`" "`0`" 4 3 						//set greet button pressed
+xmq 14 edit_push:s14_1 edit_release:s14_0
+:lbl_0_15
+bdc 15 6 218 20 "`0`" "`0`" 1 2							//set greet button released
+xmq 15 edit_push:s15_1 edit_release:s15_0
+:lbl_1_15
+bdc 15 6 218 21 "`0`" "`0`" 1 2 						//set greet button pressed
+xmq 15 edit_push:s15_1 edit_release:s15_0
+:lbl_0_16
+bdc 16 41 218 20 "`0`" "`0`" 13 14						//set greet button released
+xmq 16 edit_push:s16_1 edit_release:s16_0
+:lbl_1_16
+bdc 16 41 218 21 "`0`" "`0`" 13 14 						//set greet button pressed
+xmq 16 edit_push:s16_1 edit_release:s16_0
+:lbl_0_17
+bdc 17 41 243 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 17 edit_push:s17_1 edit_release:s17_0
+:lbl_1_17
+bdc 17 41 243 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 17 edit_push:s17_1 edit_release:s17_0
+:lbl_0_18
+bdc 18 111 243 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 18 edit_push:s18_1 edit_release:s18_0
+:lbl_1_18
+bdc 18 111 243 21 "`0`" "`0`" 16 18 					//set greet button pressed
+xmq 18 edit_push:s18_1 edit_release:s18_0
+:lbl_0_19
+bdc 19 181 218 20 "`0`" "`0`" 4 3						//set greet button released
+xmq 19 edit_push:s19_1 edit_release:s19_0
+:lbl_1_19
+bdc 19 181 218 21 "`0`" "`0`" 4 3 						//set greet button pressed
+xmq 19 edit_push:s19_1 edit_release:s19_0
+:lbl_0_20
+bdc 20 250 56 20 "`0`" "`0`" 1 2						//set greet button released
+xmq 20 edit_push:s20_1 edit_release:s20_0
+:lbl_1_20
+bdc 20 250 56 21 "`0`" "`0`" 1 2 						//set greet button pressed
+xmq 20 edit_push:s20_1 edit_release:s20_0
+:lbl_0_21
+bdc 21 285 56 20 "`0`" "`0`" 13 14						//set greet button released
+xmq 21 edit_push:s21_1 edit_release:s21_0
+:lbl_1_21
+bdc 21 285 56 21 "`0`" "`0`" 13 14 						//set greet button pressed
+xmq 21 edit_push:s21_1 edit_release:s21_0
+:lbl_0_22
+bdc 22 285 81 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 22 edit_push:s22_1 edit_release:s22_0
+:lbl_1_22
+bdc 22 285 81 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 22 edit_push:s22_1 edit_release:s22_0
+:lbl_0_23
+bdc 23 355 81 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 23 edit_push:s23_1 edit_release:s23_0
+:lbl_1_23
+bdc 23 355 81 21 "`0`" "`0`" 16 18 						//set greet button pressed
+xmq 23 edit_push:s23_1 edit_release:s23_0
+:lbl_0_24
+bdc 24 425 56 20 "`0`" "`0`" 4 3						//set greet button released
+xmq 24 edit_push:s24_1 edit_release:s24_0
+:lbl_1_24
+bdc 24 425 56 21 "`0`" "`0`" 4 3 						//set greet button pressed
+xmq 24 edit_push:s24_1 edit_release:s24_0
+:lbl_0_25
+bdc 25 250 110 20 "`0`" "`0`" 1 2						//set greet button released
+xmq 25 edit_push:s25_1 edit_release:s25_0
+:lbl_1_25
+bdc 25 250 110 21 "`0`" "`0`" 1 2 						//set greet button pressed
+xmq 25 edit_push:s25_1 edit_release:s25_0
+:lbl_0_26
+bdc 26 285 110 20 "`0`" "`0`" 13 14						//set greet button released
+xmq 26 edit_push:s26_1 edit_release:s26_0
+:lbl_1_26
+bdc 26 285 110 21 "`0`" "`0`" 13 14 					//set greet button pressed
+xmq 26 edit_push:s26_1 edit_release:s26_0
+:lbl_0_27
+bdc 27 285 135 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 27 edit_push:s27_1 edit_release:s27_0
+:lbl_1_27
+bdc 27 285 135 21 "`0`" "`0`" 16 18 					//set greet button pressed
+xmq 27 edit_push:s27_1 edit_release:s27_0
+:lbl_0_28
+bdc 28 355 135 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 28 edit_push:s28_1 edit_release:s28_0
+:lbl_1_28
+bdc 28 355 135 21 "`0`" "`0`" 16 18 					//set greet button pressed
+xmq 28 edit_push:s28_1 edit_release:s28_0
+:lbl_0_29
+bdc 29 425 110 20 "`0`" "`0`" 4 3						//set greet button released
+xmq 29 edit_push:s29_1 edit_release:s29_0
+:lbl_1_29
+bdc 29 425 110 21 "`0`" "`0`" 4 3 						//set greet button pressed
+xmq 29 edit_push:s29_1 edit_release:s29_0
+:lbl_0_30
+bdc 30 250 164 20 "`0`" "`0`" 1 2						//set greet button released
+xmq 30 edit_push:s30_1 edit_release:s30_0
+:lbl_1_30
+bdc 30 250 164 21 "`0`" "`0`" 1 2 						//set greet button pressed
+xmq 30 edit_push:s30_1 edit_release:s30_0
+:lbl_0_31
+bdc 31 285 164 20 "`0`" "`0`" 13 14						//set greet button released
+xmq 31 edit_push:s31_1 edit_release:s31_0
+:lbl_1_31
+bdc 31 285 164 21 "`0`" "`0`" 13 14 					//set greet button pressed
+xmq 31 edit_push:s31_1 edit_release:s31_0
+:lbl_0_32
+bdc 32 285 189 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 32 edit_push:s32_1 edit_release:s32_0
+:lbl_1_32
+bdc 32 285 189 21 "`0`" "`0`" 16 18 					//set greet button pressed
+xmq 32 edit_push:s32_1 edit_release:s32_0
+:lbl_0_33
+bdc 33 355 189 20 "`0`" "`0`" 16 18						//set greet button released
+xmq 33 edit_push:s33_1 edit_release:s33_0
+:lbl_1_33
+bdc 33 355 189 21 "`0`" "`0`" 16 18 					//set greet button pressed
+xmq 33 edit_push:s33_1 edit_release:s33_0
+:lbl_0_34
+bdc 34 425 164 20 "`0`" "`0`" 4 3						//set greet button released
+xmq 34 edit_push:s34_1 edit_release:s34_0
+:lbl_1_34
+bdc 34 425 164 21 "`0`" "`0`" 4 3 						//set greet button pressed
+xmq 34 edit_push:s34_1 edit_release:s34_0
+#end
+
+//---------------------------------------------------------------------
+// MACRO: edit_push
+// builds key string for output:
+//	arg `0` - Greet number (1 - 7)
+//  arg `1` - button:
+//            0 = message (play/record)
+//            1 = name (left/right)
+//            2 = start time (up/down)
+//            3 = stop time (up/down)
+//            4 = enable (on/off)
+//  arg `2` - button state:
+//            1 = pressed/on
+//
+//---------------------------------------------------------------------
+//
+#define edit_push
+// disable the start/stop buttons first
+xd 2
+xd 3
+xd 7
+xd 8
+xd 12
+xd 13
+xd 17
+xd 18
+xd 22
+xd 23
+xd 27
+xd 28
+xd 32
+xd 33
+// now the rest
+xd 0
+xd 1
+xd 4
+xd 5
+xd 6
+xd 9
+xd 10
+xd 11
+xd 14
+xd 15
+xd 16
+xd 19
+xd 20
+xd 21
+xd 24
+xd 25
+xd 26
+xd 29
+xd 30
+xd 31
+xd 34
+xd 35
+xd 36
+xd 37
+xd 38
+xd 39
+xd 40
+xd 41
+:s0_1
+m msg_cmds_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x00\x01\x1D"		// greet #1, greet, pushed
+xe 0
+:s1_1
+m msg_names_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x01\x01\x1E"		// greet #1, name, pushed
+xe 1
+:s2_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x02\x01\x1F"		// greet #1, start, pushed
+xe 2
+:s3_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x03\x01\x20"		// greet #1, stop, pushed
+xe 3
+:s5_1
+m msg_cmds_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x00\x01\x1E"		// greet #2, greet, pushed
+xe 5
+:s6_1
+m msg_names_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x01\x01\x1F"		// greet #2, name, pushed
+xe 6
+:s7_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x02\x01\x20"		// greet #2, start, pushed
+xe 7
+:s8_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x03\x01\x21"		// greet #2, stop, pushed
+xe 8
+:s10_1
+m msg_cmds_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x00\x01\x1F"		// greet #3, greet, pushed
+xe 10
+:s11_1
+m msg_names_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x01\x01\x20"		// greet #3, name, pushed
+xe 11
+:s12_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x02\x01\x21"		// greet #3, start, pushed
+xe 12
+:s13_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x03\x01\x22"		// greet #3, stop, pushed
+xe 13
+:s15_1
+m msg_cmds_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x00\x01\x20"		// greet #4, greet, pushed
+xe 15
+:s16_1
+m msg_names_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x01\x01\x21"		// greet #4, name, pushed
+xe 16
+:s17_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x02\x01\x22"		// greet #4, start, pushed
+xe 17
+:s18_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x03\x01\x23"		// greet #4, stop, pushed
+xe 18
+:s20_1
+m msg_cmds_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x00\x01\x21"		// greet #5, greet, pushed
+xe 20
+:s21_1
+m msg_names_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x01\x01\x22"		// greet #5, name, pushed
+xe 21
+:s22_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x02\x01\x23"		// greet #5, start, pushed
+xe 22
+:s23_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x03\x01\x24"		// greet #5, stop, pushed
+xe 23
+:s25_1
+m msg_cmds_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x00\x01\x22"		// greet #6, greet, pushed
+xe 25
+:s26_1
+m msg_names_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x01\x01\x23"		// greet #6, name, pushed
+xe 26
+:s27_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x02\x01\x24"		// greet #6, start, pushed
+xe 27
+:s28_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x03\x01\x25"		// greet #6, stop, pushed
+xe 28
+:s30_1
+m msg_cmds_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x00\x01\x23"		// greet #7, greet, pushed
+xe 30
+:s31_1
+m msg_names_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x01\x01\x24"		// greet #7, name, pushed
+xe 31
+:s32_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x02\x01\x25"		// greet #7, start, pushed
+xe 32
+:s33_1
+m msg_times_on
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x03\x01\x26"		// greet #7, stop, pushed
+xe 33
+:s35_1
+xd 46
+xd 47
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x09\x00\x01\x25"		// enable greeter pushed (set to OFF)
+xe 35
+xe 40
+:s46_1
+m greeter_setup:screen1
+:s47_1
+m greeter_setup:screen2
+:s48_1
+m greeter_setup:screen0
+#end
+
+//---------------------------------------------------------------------
+// MACRO: edit_release
+// sends key string out to base first, then clears the controls and re-enables the edit buttons
+// builds key string for output:
+//	arg `0` - Greet number (1 - 7)
+//  arg `1` - button:
+//            0 - 3 = MT, F, Sa, Su
+//  arg `2` - setup screen:
+//            0 - 2 = Greet, Message1, Message2
+//
+//---------------------------------------------------------------------
+//
+#define edit_release
+:s0_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x00\x00\x1C"		// greet #1, greet, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s1_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x01\x00\x1D"		// greet #1, name, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s2_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x02\x00\x1E"		// greet #1, start, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s3_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x03\x00\x1F"		// greet #1, stop, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s5_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x00\x00\x1D"		// greet #2, greet, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s6_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x01\x00\x1E"		// greet #2, name, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s7_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x02\x00\x1F"		// greet #2, start, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s8_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x03\x00\x20"		// greet #2, stop, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s10_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x00\x00\x1E"		// greet #3, greet, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s11_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x01\x00\x1F"		// greet #3, name, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s12_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x02\x00\x20"		// greet #3, start, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s13_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x03\x00\x21"		// greet #3, stop, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s15_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x00\x00\x1F"		// greet #4, greet, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s16_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x01\x00\x20"		// greet #4, name, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s17_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x02\x00\x21"		// greet #4, start, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s18_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x03\x00\x22"		// greet #4, stop, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s20_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x00\x00\x20"		// greet #5, greet, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s21_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x01\x00\x21"		// greet #5, name, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s22_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x02\x00\x22"		// greet #5, start, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s23_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x03\x00\x23"		// greet #5, stop, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s25_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x00\x00\x21"		// greet #6, greet, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s26_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x01\x00\x22"		// greet #6, name, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s27_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x02\x00\x23"		// greet #6, start, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s28_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x03\x00\x24"		// greet #6, stop, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s30_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x00\x00\x22"		// greet #7, greet, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s31_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x01\x00\x23"		// greet #7, name, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s32_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x02\x00\x24"		// greet #7, start, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s33_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x03\x00\x25"		// greet #7, stop, released
+m remove_greet_controls:screen`i2`						// clear the control space
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s35_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x09\x00\x00\x24"		// enable greeter released (set to ON)
+m enable_edits:schedule_`i1`_`i2`						// allow edits to function based on schedule and setup displayed
+:s46_0
+:s47_0
+:s48_0
+#end
+
+//---------------------------------------------------------------------
+// MACRO: enable_btn
+// sends string to base when greet enable is pressed/released
+//
+//---------------------------------------------------------------------
+//
+#define enable_btn
+:s4_1
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x04\x01\x21"		// greet #1, enable, pushed
+:s4_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x01\x04\x00\x20"		// greet #1, enable, released
+:s9_1
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x04\x01\x22"		// greet #2, enable, pushed
+:s9_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x02\x04\x00\x21"		// greet #2, enable, released
+:s14_1
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x04\x01\x23"		// greet #3, enable, pushed
+:s14_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x03\x04\x00\x22"		// greet #3, enable, released
+:s19_1
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x04\x01\x24"		// greet #4, enable, pushed
+:s19_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x04\x04\x00\x23"		// greet #4, enable, released
+:s24_1
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x04\x01\x25"		// greet #5, enable, pushed
+:s24_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x05\x04\x00\x24"		// greet #5, enable, released
+:s29_1
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x04\x01\x26"		// greet #6, enable, pushed
+:s29_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x06\x04\x00\x25"		// greet #6, enable, released
+:s34_1
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x04\x01\x27"		// greet #7, enable, pushed
+:s34_0
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x07\x04\x00\x26"		// greet #7, enable, released
+#end
+
+//---------------------------------------------------------------------
+// MACRO: enable_edits
+// enables edit buttons depending on which schedule button is selected
+//	_0_n enables all buttons
+//  _1_n - _3_n only enables the start, stop, and on/off buttons
+//
+//---------------------------------------------------------------------
+//
+#define enable_edits
+// enable all the start/stop or start/repeat buttons
+xe 2
+xe 3
+xe 4
+xe 7
+xe 8
+xe 9
+xe 12
+xe 13
+xe 14
+xe 17
+xe 18
+xe 19
+xe 22
+xe 23
+xe 24
+xe 27
+xe 28
+xe 29
+xe 34
+// enable the other buttons
+xe 35
+xe 40
+xe 41
+:schedule_0_0
+// enable all the recording and naming buttons
+xe 32		// moved enable start for G7 MT here
+xe 33		// moved enable stop for G7 MT here
+xe 0
+xe 1
+xe 5
+xe 6
+xe 10
+xe 11
+xe 15
+xe 16
+xe 20
+xe 21
+xe 25
+xe 26
+xe 30
+xe 31
+xe 37
+xe 38
+xe 39
+xe 46
+xe 47
+:schedule_1_0
+xe 32		// moved enable start for G7 F here
+xe 33		// moved enable stop for G7 F here
+xe 36
+xe 38
+xe 39
+xe 46
+xe 47
+:schedule_2_0
+xe 32		// moved enable start for G7 Sa here
+xe 33		// moved enable stop for G7 Sa here
+xe 36
+xe 37
+xe 39
+xe 46
+xe 47
+:schedule_3_0
+xe 32		// moved enable start for G7 Su here
+xe 33		// moved enable stop for G7 Su here
+xe 36
+xe 37
+xe 38
+xe 46
+xe 47
+:schedule_0_1
+// enable all the recording and naming buttons
+xe 32		// moved enable start for M7 MT here
+xe 33		// moved enable repeat for M7 MT here
+xe 0
+xe 1
+xe 5
+xe 6
+xe 10
+xe 11
+xe 15
+xe 16
+xe 20
+xe 21
+xe 25
+xe 26
+xe 30
+xe 31
+xe 37
+xe 38
+xe 39
+xe 47
+xe 48
+:schedule_1_1
+xe 32		// moved enable start for M7 F here
+xe 33		// moved enable repeat for M7 F here
+xe 36
+xe 38
+xe 39
+xe 47
+xe 48
+:schedule_2_1
+xe 32		// moved enable start for M7 Sa here
+xe 33		// moved enable repeat for M7 Sa here
+xe 36
+xe 37
+xe 39
+xe 47
+xe 48
+:schedule_3_1
+xe 32		// moved enable start for M7 Su here
+xe 33		// moved enable repeat for M7 Su here
+xe 36
+xe 37
+xe 38
+xe 47
+xe 48
+:schedule_0_2
+// enable all the recording and naming buttons
+xd 32		// moved disable start for A1 MT here
+xd 33		// moved disable repeat for A1 MT here
+xd 32
+xd 33
+xe 0
+xe 1
+xe 5
+xe 6
+xe 10
+xe 11
+xe 15
+xe 16
+xe 20
+xe 21
+xe 25
+xe 26
+xe 30
+xe 31
+xe 37
+xe 38
+xe 39
+xe 46
+xe 48
+:schedule_1_2
+xd 32		// moved disable start for A1 F here
+xd 33		// moved disable repeat for A1 F here
+xe 36
+xe 38
+xe 39
+xe 46
+xe 48
+:schedule_2_2
+xd 32		// moved disable start for A1 Sa here
+xd 33		// moved disable repeat for A1 Sa here
+xe 36
+xe 37
+xe 39
+xe 46
+xe 48
+:schedule_3_2
+xd 32		// moved disable start for A1 Su here
+xd 33		// moved disable repeat for A1 Su here
+xe 36
+xe 37
+xe 38
+xe 46
+xe 48
+#end
+
+//---------------------------------------------------------------------
+// MACRO: day_push
+// manages which buttons are enabled and which schedule is displayed
+//	i1 = which schedule is being displayed
+//        0 = Monday - Thursday
+//        1 = Friday
+//        2 = Saturday
+//        3 = Sunday
+//
+//---------------------------------------------------------------------
+//
+#define day_push
+xd 36
+xd 37
+xd 38
+xd 39
+// disable all the recording and naming controls
+xd 0
+xd 1
+xd 5
+xd 6
+xd 10
+xd 11
+xd 15
+xd 16
+xd 20
+xd 21
+xd 25
+xd 26
+xd 30
+xd 31
+:s36_1													// selecting M-T
+set i1 0												// set i1 to Monday - Thursday
+ssb 37 0
+ssb 38 0
+ssb 39 0
+m enable_edits:schedule_0_`i2`
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x08\x00\x01\x24"		// M-T schedule button pressed
+:s37_1													// selecting F
+set i1 1												// set i1 to Friday
+ssb 36 0
+ssb 38 0
+ssb 39 0
+xe 36
+xe 38
+xe 39
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x08\x01\x01\x25"		// F schedule button pressed
+:s38_1													// selecting S
+set i1 2												// set i1 to Saturday
+ssb 36 0
+ssb 37 0
+ssb 39 0
+xe 36
+xe 37
+xe 39
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x08\x02\x01\x26"		// S schedule button pressed
+:s39_1													// selecting S
+set i1 3												// set i1 to Sunday
+ssb 36 0
+ssb 37 0
+ssb 38 0
+xe 36
+xe 37
+xe 38
+out "\xFF\xFF\x4D\x12\x05\x18\x03\x08\x03\x01\x27"		// S schedule button pressed
+#end
+
+//---------------------------------------------------------------------
+// MACRO: day_release
+// manages which buttons are enabled and which schedule is displayed.
+// this macro does nothing.
+//
+//---------------------------------------------------------------------
+//
+#define day_release
+:s36_0
+:s37_0
+:s38_0
+:s39_0
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: msg_cmds_on
+// Set up the Play, Record, and Stop buttons for greets.
+//
+//
+//---------------------------------------------------------------------------------------
+#define msg_cmds_on
+r 242 0 479 50 1 00F						// draw blue square for control area
+bdc 43 266 0 20 "P" "P" 97 98 				// display Play key
+xmq	43 play_record:s43_1 play_record:s43_0	// report pressed or released
+bdc 44 327 0 20 "R" "R" 43 49 				// display Record key
+xmq	44 play_record:s44_1 play_record:s44_0	// report pressed or released
+bdc 45 388 0 1 "S" 61 61 					// display Stop key
+xmq	45 play_record:x45						// report pressed or released
+xd 45										// disable Stop until Play or Record is pressed
+bc 46										// clear the message 1 setup button
+bc 47										// clear the message 2 setup button
+bc 48										// clear the greeter setup button
+bvs 0										// temporarily turn off beeps
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: play_record
+// Send the appropriate Play, Record, or Stop command to the base.
+//  `0` - 1 = Play
+//        2 = Record
+//		  3 = Stop Playing/Recording
+//
+//---------------------------------------------------------------------------------------
+#define play_record
+:s43_0
+:s43_1
+xd 43
+xd 44
+xe 45
+out "\xFF\xFF\x4D\x12\x03\x19\x01\x01\x1B"	// tell base that Play was pressed
+:s44_0
+:s44_1
+xd 43
+xd 44
+xe 45
+out "\xFF\xFF\x4D\x12\x03\x19\x01\x02\x1C"	// tell base that Record was pressed
+:x45
+ssb 43 0
+ssb 44 0
+xe 43
+xe 44
+xd 45
+out "\xFF\xFF\x4D\x12\x03\x19\x01\x03\x1D"	// tell base that Stop was pressed
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: msg_names_on
+// Set up the name selection buttons for greets.
+//
+//
+//---------------------------------------------------------------------------------------
+#define msg_names_on
+r 242 0 479 50 1 00F					// draw blue square for control area
+bvs	200									// turn beeps back on
+bdc 43 284 0 1 "" 19 19 				// Display "Left" key
+xa	43 p message_name 0					// tell base to display previous label name
+bdc 44 376 0 1 "" 20 20		 			// Display "Right" key
+xa	44 p message_name 1					// tell base to display next label name
+bc 46									// clear the message 1 setup button
+bc 47									// clear the message 2 setup button
+bc 48									// clear the greeter setup button
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: message_name
+// Send the appropriate left or right command to the base.
+//  `0` - 0 = left
+//        1 = right
+//
+//---------------------------------------------------------------------------------------
+#define message_name
+m outByte `0`							// convert digit to hex
+set s1 `s0`								// save it (s1)
+set i6 `(27+`0`)`						// add 0x1A + 0x01 + arg0 create checksum
+m outByte `i6`							// convert checksum (i6) to hex
+set s2 `s0`								// save it (s2)
+out "\xFF\xFF\x4D\x12\x03\x1A\x01\x`s1`\x`s2`"	// tell base what which control button was pressed
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: msg_times_on
+// Set up the time selection buttons for greets.
+//
+//
+//---------------------------------------------------------------------------------------
+#define msg_times_on
+r 242 0 479 50 1 00F					// draw blue square for control area
+bvs	200									// turn beeps back on
+bdc 43 284 0 1 "" 23 23 				// Display "Up" key
+xa	43 p greet_time 1					// tell base to increment time button
+bdc 44 376 0 1 "" 24 24		 			// Display "Down" key
+xa	44 p greet_time 0					// tell base to decrement time button
+bc 46									// clear the message 1 setup button
+bc 47									// clear the message 2 setup button
+bc 48									// clear the greeter setup button
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: greet_time
+// Send the appropriate up or down command to the base.
+//  `0` - 0 = decrement
+//        1 = increment
+//
+//---------------------------------------------------------------------------------------
+#define greet_time
+m outByte `0`							// convert digit to hex
+set s1 `s0`								// save it (s1)
+set i6 `(28+`0`)`						// add 0x1B + 0x01 + arg0 create checksum
+m outByte `i6`							// convert checksum (i6) to hex
+set s2 `s0`								// save it (s2)
+out "\xFF\xFF\x4D\x12\x03\x1B\x01\x`s1`\x`s2`"	// tell base what which control button was pressed
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: remove_greet_controls
+// Removes the various greet controls.
+//
+//
+//---------------------------------------------------------------------------------------
+#define remove_greet_controls
+r 242 0 479 50 1 00F						// draw blue square to erase previous controls
+bvs	200										// turn beeps back on
+bc 43										// clear previous control
+bc 44										// clear previous control
+bc 45										// clear previous control
+s 0 2 										// set colors: black foreground, blue background
+f 18BC										// set font
+:screen0
+bdc 46 287 10 20 "Msg 1" "Msg 1" 16 18		// Display the "Message 1 Setup" banner button
+xmq 46 edit_push:s46_1 edit_release:s46_0	// report when pressed
+bdc 47 367 10 20 "Msg 2" "Msg 2" 16 18		// Display the "Message 2 Setup" banner button
+xmq 47 edit_push:s47_1 edit_release:s47_0	// report when pressed
+:screen1
+bdc 48 287 10 20 "Greeter" "Greeter" 16 18	// Display the "Greeter Setup" banner button
+xmq 48 edit_push:s48_1 edit_release:s48_0	// report when pressed
+bdc 47 367 10 20 "Msg 2" "Msg 2" 16 18		// Display the "Message 2 Setup" banner button
+xmq 47 edit_push:s47_1 edit_release:s47_0	// report when pressed
+:screen2
+bdc 46 287 10 20 "Msg 1" "Msg 1" 16 18		// Display the "Message 1 Setup" banner button
+xmq 46 edit_push:s46_1 edit_release:s46_0	// report when pressed
+bdc 48 367 10 20 "Greeter" "Greeter" 16 18	// Display the "Greeter Setup" banner button
+xmq 48 edit_push:s48_1 edit_release:s48_0	// report when pressed
+#end
+
+//---------------------------------------------------------------------
+// MACRO: pre_tools
+// Tell base to clear macros before displaying tools
+//
+//---------------------------------------------------------------------
+//
+#define pre_tools
+out "\xFF\xFF\x4D\x12\x03\x01\x01\x02\x04"	// request base to display the tools screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: tools
+// For Tool screen display.
+//
+//  `eB` - "0" = single lane, "1" = two lanes.
+//  
+//---------------------------------------------------------------------------------------
+#define tools
+touch off								// disable screen touches until screen is ready
+m reset_display 50						// Display the background.
+bd 16 430 222 1 "" 0 0 17 17			// Setup the "Home" button.
+xm 16 main								// Go back to main screen
+m volume_button:lbl_`eB`				// Set up the "Set Volume" button based on number of lanes.
+xm 10 request_volume       				// run request_volume macro, request parameters for volume
+bd 11 134 11 1 "" 0 0 66 66				// Setup the the "Set Clock" button.
+xm 11 request_clock:x11					// Go to clock screen
+bd 12 248 11 1 "" 0 0 69 69				// Setup the "Set Night Volume" button.
+xm 12 request_clock:x12					// Go to set night clock screen for night volume
+bd 13 362 11 1 "" 0 0 67 67				// Setup the the "Set PIN" button.
+xm 13 new_pin							// Go to set pin screen
+bd 14 20 170 1 "" 0 0 68 68				// Setup the "Lane Configuration" button.
+bd 15 380 222 1 "" 0 0 12 12			// Setup the "Help" button.
+xm 15 show_help_settings
+out "\xFF\xFF\x4D\x12\x02\x04\x00\x04"	// tell base we're displaying the tools screen
+touch on								// enable screen touches
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_volume
+// Request current volume settings from base before setting up the volume screen.
+//
+//---------------------------------------------------------------------------------------
+#define request_volume
+out "\xFF\xFF\x4D\x12\x02\x0A\x00\x0A"	// request current volume settings from base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: pre_volume
+// For assigining volume slider bar maximum values
+//
+//  `0` (i1) holds detect bar max value - not used
+//  `1` (i2) holds inbound bar max value
+//  `2` (i3) holds grill bar max value
+//  `3` (i4) holds day bar max value
+//  `4` (i5) holds night bar max value
+//
+//---------------------------------------------------------------------------------------
+#define pre_volume
+set i1 `0`								// Save detect volume max
+set i2 `1`								// Save inbound volume max
+set i3 `2`								// Save grill volume max
+set i4 `3`								// Save day volume max
+set i5 `4`								// Save night volume max
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: volume
+// For changing the volume setting.
+//
+//  `0` (eA) lanes, "0" = single, "1" = DTA, "2" = DTB.
+//  `1` (e5) detect volume - not used
+//  `2` (e6) inbound volume
+//  `3`	(e7) grill volume
+//  `4` (e8) day volume
+//  `5`	(e9) night volume
+//  i7 holds current value for bar graph
+//  i8 holds current item bar graph
+//
+//---------------------------------------------------------------------------------------
+#define volume
+touch off								// disable screen touches until screen is ready
+m reset_display 50						// Display the background.
+
+bd 26 430 222 1 "" 0 0 17 17			// Display "Home" button.
+xm 26 main
+
+set i8 2								// Start with "Grill Speaker" selected.
+set i7 `e7`								// Set bar graph to grill speaker volume.
+set eA `0`								// Save current volume lane configuration
+set e5 `1`								// Save current detect volume
+set e6 `2`								// Save current inbound volume
+set e7 `3`								// Save current grill volume
+set e8 `4` 								// Save current day volume
+set e9 `5`								// Save current night volume
+
+//bd 17 00 48 2 "" "" 0 0 0 0 70 71		// Show the "Detection Tone" button.
+//xmq 17 det_sel							// Specify macro and disable output.
+
+bd 18 00 93 2 "" "" 0 0 0 0 99 100		// Show the "Inbound Volume" button.
+xmq 18 inbound_sel						// Specify macro and disable output.
+
+bd 19 00 138 2 "" "" 0 0 0 0 72 73		// Show the "Grill Speaker" button.
+xmq 19 grill_sel						// Specify macro and disable output.
+
+bd 20 00 183 2 "" "" 0 0 0 0 74 75		// Show the "Day Volume" button.
+xmq 20 day_sel							// Specify macro and disable output.
+
+bd 21 00 228 2 "" "" 0 0 0 0 76 77		// Show the "Night Volume" button.
+xmq 21 night_sel						// Specify macro and disable output.
+
+f 24B									// Set the font size.
+s 2 2									// Set foreground /background color to blue
+//xi 26 242 48							// Display yellow box.
+//ta CC									// Set text justification mode.
+//t "`e5`" 265 71 TR						// Display volume number.
+xi 26 242 93							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e6`" 265 116 TR						// Display volume number.
+xi 26 242 138							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e7`" 265 161 TR						// Display volume number.
+xi 26 242 183							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e8`" 265 206 TR						// Display volume number.
+xi 26 242 228							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e9`" 265 251 TR						// Display volume number.
+
+bd 22 345 81 1 "" 0 0 23 23				// Display increment button.
+xmq 22 request_increment				// Link to request_increment macro.
+
+bd 23 345 135 1 "" 0 0 24 24			// Display decrement button.
+xmq 23 request_decrement				// Link to request_decrement macro.
+
+ld 0 294 83 339 263 0 0 1 555 `i3` DD0	// Draw the bar graph (0-15 for GRILL).
+
+xd 19									// Disable keypress reporting.
+ssb 19 1								// Display "Grill Speaker" as default selection.
+xe 19									// Re-enable keypress reporting.
+xi 28 242 138							// Display green box.
+ta CC									// Set text justification mode.
+t "`i7`" 265 161 TR						// Display volume number.
+lv 0 `i7` 								// Set bar to selected value.
+
+bd 25 380 222 1 "" 0 0 12 12			// Display "Help" button.
+xm 25 show_help_volume
+bd 27 430 172 1 "" 0 0 86 86			// Display "Tools" button.
+xm 27 tools
+
+m volume_banner:lbl_0					// Call the banner macro. 
+touch on								// enable screen touches
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: pin
+// Display PIN Screen
+//  2/28/2011 DPM added * to box when key pressed
+//  After 4 keypresses, master must stop allowing presses and go to the thumbs up/down screen
+//  or it's possible to have *'s across the whole screen
+//---------------------------------------------------------------------------------------
+//
+#define pin
+touch off								// disable screen touches until screen is ready
+m reset_display 50
+
+bd 16 430 222 1 "" 0 0 17 17			// Setup the "Home" button.
+xm 16 main								// Go back to main screen
+
+set i8 48								// center x of first number box used to show number pressed
+set i9 75								// center y of first number box used to show number pressed
+
+// Display the "Set PIN" title box.
+xi 81 0 0     							// Display the banner.
+S 000 FFF								// Set the forground color to black, background to white.
+f 32B									// Set the font size.
+
+// Setup the keypad.
+bdc 1  217 47  1 "1" 30 30   			// Display #1 key.
+xa	1  p num_key 1
+bdc 2  273 47  1 "2" 30 30   			// Display #2 key.
+xa  2  p num_key 2
+bdc 3  329 47  1 "3" 30 30   			// Display #3 key.
+xa  3  p num_key 3
+bdc 4  217 103  1 "4" 30 30   			// Display #4 key.
+xa  4  p num_key 4
+bdc 5  273 103  1 "5" 30 30   			// Display #5 key.
+xa  5  p num_key 5
+bdc 6  329 103  1 "6" 30 30   			// Display #6 key.
+xa  6  p num_key 6
+bdc 7  217 159 1 "7" 30 30   			// Display #7 key.
+xa  7  p num_key 7
+bdc 8  273 159 1 "8" 30 30   			// Display #8 key.
+xa  8  p num_key 8
+bdc 9  329 159 1 "9" 30 30   			// Display #9 key.
+xa  9  p num_key 9
+bdc 10 217 220 1 ""  80 83   			// Display the clear key.
+xm  10 back_key
+bdc 0  273 215 1 "0" 30 30   			// Display #0 key.
+xa  0  p num_key 0
+
+xi 32 48 75 							// Draw the 4 gray boxes.
+xi 32 81 75
+xi 32 114 75
+xi 32 147 75
+
+bd 15 380 222 1 "" 0 0 12 12			// Setup the "Help" button.
+xm 15 show_help_pin
+touch on								// enable screen touches
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: new_pin
+// Display Change PIN Screen
+//  display keypad and allow user to enter new PIN
+//  user also has to re-enter new PIN to successfully change PIN
+//---------------------------------------------------------------------------------------
+//
+#define new_pin
+touch off								// disable screen touches until screen is ready
+m reset_display 50
+
+bd 16 430 222 1 "" 0 0 17 17			// Setup the "Home" button.
+xm 16 main								// Go back to main screen
+
+set i8 48								// center x of first number box used to index * to show number pressed
+set i9 119								// center y of first number box used to index * to show number pressed
+
+// Display the "Change PIN" title box.
+xi 84 0 0     							// Display the banner.
+S 000 FFF								// Set the forground color to black, background to white.
+f 32B									// Set the font size.
+
+// Setup the keypad.
+bdc 1  217 47  1 "1" 30 30   			// Display #1 key.
+xa	1  p num_key 1
+bdc 2  273 47  1 "2" 30 30   			// Display #2 key.
+xa  2  p num_key 2
+bdc 3  329 47  1 "3" 30 30   			// Display #3 key.
+xa  3  p num_key 3
+bdc 4  217 103  1 "4" 30 30   			// Display #4 key.
+xa  4  p num_key 4
+bdc 5  273 103  1 "5" 30 30   			// Display #5 key.
+xa  5  p num_key 5
+bdc 6  329 103  1 "6" 30 30   			// Display #6 key.
+xa  6  p num_key 6
+bdc 7  217 159 1 "7" 30 30   			// Display #7 key.
+xa  7  p num_key 7
+bdc 8  273 159 1 "8" 30 30   			// Display #8 key.
+xa  8  p num_key 8
+bdc 9  329 159 1 "9" 30 30   			// Display #9 key.
+xa  9  p num_key 9
+bdc 10 217 220 1 ""  80 83   			// Display the clear key.
+xm  10 set_pin_back_key
+bdc 0  273 215 1 "0" 30 30   			// Display #0 key.
+xa  0  p num_key 0
+
+xi 34 48 74								// draw enter new pin header
+xi 32 48 119 							// Draw the 4 gray boxes.
+xi 32 81 119
+xi 32 114 119
+xi 32 147 119
+
+xi 85 48 167							// draw enter new pin header
+xi 32 48 212 							// Draw the 4 gray boxes.
+xi 32 81 212
+xi 32 114 212
+xi 32 147 212
+
+bd 15 380 222 1 "" 0 0 12 12			// Setup the "Help" button.
+xm 15 show_help_newpin
+bd 27 430 172 1 "" 0 0 86 86			// Display "Tools" button.
+xm 27 tools
+
+out "\xFF\xFF\x4D\x12\x02\x16\x00\x16"	// tell base we're displaying the set pin screen
+touch on								// enable screen touches
+#end
+
+//---------------------------------------------------------------------
+// MACRO: set_pin_back_key
+//	run the new_pin macro to reset the screen
+//
+//---------------------------------------------------------------------
+//
+#define set_pin_back_key
+set i8 48								// reset x coordinate for first grey box
+set i9 119								// reset y coordinate for first grey box
+r 402 86 461 145 1 00F					// draw blue square to erase thumbs down
+
+xi 32  48 119 							// redraw the 8 gray boxes
+xi 32  81 119
+xi 32 114 119
+xi 32 147 119
+xi 32  48 212
+xi 32  81 212
+xi 32 114 212
+xi 32 147 212
+
+out "\xFF\xFF\x4D\x12\x02\x07\x00\x07"	// reset PIN digit index
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_clock
+// request current time from base
+// base will respond with "m set_clock h1 h2 m1 m2 day"
+// or "m set_initial_night_start_time h1 h2 m1 m2 h1 h2 m1 m2"
+// or "m set_initial_night_end_time h1 h2 m1 m2 h1 h2 m1 m2"
+//---------------------------------------------------------------------------------------
+//
+#define request_clock
+:x11										// set clock request
+out "\xFF\xFF\x4D\x12\x03\x1C\x01\x00\x1D"	// request current time from base
+:x12										// set night volume start time request
+out "\xFF\xFF\x4D\x12\x03\x1C\x01\x01\x1E"	// request current night volume start time from base
+:x13										// set night volume end time request
+out "\xFF\xFF\x4D\x12\x03\x1C\x01\x02\x1F"	// request current night volume end time from base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_system_clock
+// request current time from base
+// base will respond with "m set_clock h1 h2 m1 m2 day"
+//---------------------------------------------------------------------------------------
+//
+#define request_system_clock
+out "\xFF\xFF\x4D\x12\x03\x1C\x01\x00\x1D"	// request current time from base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_nightvolume_start_clock
+// request current night time volume start time from base
+// base will respond with "m set_initial_night_start_time h1 h2 m1 m2 h1 h2 m1 m2"
+//---------------------------------------------------------------------------------------
+//
+#define request_nightvolume_start_clock
+out "\xFF\xFF\x4D\x12\x03\x1C\x01\x01\x1E"	// request current night volume start time from base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_nightvolume_end_clock
+// request current night time volume end time from base
+// base will respond with "m set_initial_night_end_time h1 h2 m1 m2 h1 h2 m1 m2"
+//---------------------------------------------------------------------------------------
+//
+#define request_nightvolume_end_clock
+out "\xFF\xFF\x4D\x12\x03\x1C\x01\x02\x1F"	// request current night volume end time from base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_clock
+// Display SET_CLOCK screen
+//  DPM added 2/25/2011
+//---------------------------------------------------------------------------------------
+//
+#define set_clock
+touch off								// disable screen touches until screen is ready
+m reset_display 50
+
+bd 16 430 222 1 "" 0 0 17 17			// Setup the "Home" button.
+xm 16 report_clock:x16					// report new time before going back to main screen
+
+// Display the "Set clock" title box.
+xi 79 0 0     							// Display the banner.
+S 000 FFF								// Set the forground color to black, background to white.
+f 24B									// Set the font size.
+
+// Setup the keypad.
+f 32B
+bd 0  16 104 1 "" 0 0 23 23   			// Display h1 hour up key.
+xm 0 request_time_increment:x0			// Format and send the request
+bd 1  76 104 1 "" 0 0 23 23   			// Display h2 hour up key.
+xm 1 request_time_increment:x1			// Format and send the request
+bd 2  155 104 1 "" 0 0 23 23   			// Display m1 minute up key.
+xm 2 request_time_increment:x2			// Format and send the request
+bd 3  215 104 1 "" 0 0 23 23   			// Display m2 minute up key.
+xm 3 request_time_increment:x3			// Format and send the request
+
+bd 4  16 214 1 "" 0 0 24 24   			// Display h1 hour down key.
+xm 4 request_time_decrement:x4			// Format and send the request
+bd 5  76 214 1 "" 0 0 24 24   			// Display h2 hour down key.
+xm 5 request_time_decrement:x5			// Format and send the request
+bd 6  155 214 1 "" 0 0 24 24   			// Display m1 minute down key.
+xm 6 request_time_decrement:x6			// Format and send the request
+bd 7  215 214 1 "" 0 0 24 24   			// Display m2 minute down key.
+xm 7 request_time_decrement:x7			// Format and send the request
+
+bd 8  16 50 1 "" 0 0 19 19				// Display scroll left button
+xm 8 day_name:x8						// Scroll left was pressed
+bd 9 215 50 1 "" 0 0 20 20				// Display scroll right button
+xm 9 day_name:x9						// Scroll right was pressed
+
+m set_clock_time `0` `1` `2` `3`		// update time in display
+m set_clock_day `4`						// update day in display
+
+xi 29 138 166							// display dot
+xi 29 138 186							// display dot
+
+bd 15 380 222 1 "" 0 0 12 12			// Setup the "Help" button.
+xm 15 show_help_clock
+bd 27 430 172 1 "" 0 0 86 86			// Display "Tools" button.
+xm 27 report_clock:x27					// report new time before going back to tools screen
+
+touch on								// enable screen touches
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: report_clock
+// report the new time to the base
+// :main - return to the main screen
+// :tools - return to the tools screen
+//---------------------------------------------------------------------------------------
+//
+#define report_clock
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(11+4)`							// add command (11=0x0B) plus 4 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x06\x0B\x04\x`s1`\x`s2`\x`s3`\x`s4`\x`s5`"	// report new time to base
+:x16
+m pre_main								// go back to main screen
+:x27
+m pre_tools								// go back to tools screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_initial_night_start_time
+// record current time from base and then display SET_CLOCK screen
+//
+//---------------------------------------------------------------------------------------
+//
+#define set_initial_night_start_time
+set i1 `0`			// start h1
+set i2 `1`			// start h2
+set i3 `2`			// start m1
+set i4 `3`			// start m2
+set i5 `4`			// end h1
+set i6 `5`			// end h2
+set i7 `6`			// end m1
+set i8 `7`			// end m2
+
+touch off									// disable screen touches until screen is ready
+m reset_display 50
+
+// Display the "Set clock" title box.
+xi 87 0 0     								// Display the banner.
+S 000 FFF									// Set the forground color to black, background to white.
+f 32B										// set font
+ta CC										// center text
+
+bd 9 240 45 20 "" "" 0 0 0 0 89 90			// night time volume end button
+xmq 9 report_night_clock_start_s9_1
+t "`i5``i6`:`i7``i8`" 400 68 T				// Display h1h2:m1m2 in end button
+
+m set_night_clock_start
+#end
+
+/---------------------------------------------------------------------------------------
+// MACRO: set_night_clock_start
+// Display set_night_clock_start Screen
+//  DPM added 3/10/2011
+//---------------------------------------------------------------------------------------
+//
+#define set_night_clock_start
+
+bd 16 430 222 1 "" 0 0 17 17				// Setup the "Home" button.
+xm 16 report_night_clock_start:x16			// report new time before going back to main screen
+
+// Setup the keypad.
+f 32B
+bd 0  16 104 1 "" 0 0 23 23   				// Display h1 hour up key.
+xm 0 request_night_start_time_increment:x0 	// Format and send the request
+bd 1  76 104 1 "" 0 0 23 23   				// Display h2 hour up key.
+xm 1 request_night_start_time_increment:x1 	// Format and send the request
+bd 2  155 104 1 "" 0 0 23 23   				// Display m1 minute up key.
+xm 2 request_night_start_time_increment:x2 	// Format and send the request
+bd 3  215 104 1 "" 0 0 23 23   				// Display m2 minute up key.
+xm 3 request_night_start_time_increment:x3 	// Format and send the request
+
+bd 4  16 214 1 "" 0 0 24 24   				// Display h1 hour down key.
+xm 4 request_night_start_time_decrement:x4 	// Format and send the request
+bd 5  76 214 1 "" 0 0 24 24   				// Display h2 hour down key.
+xm 5 request_night_start_time_decrement:x5 	// Format and send the request
+bd 6  155 214 1 "" 0 0 24 24   				// Display m1 minute down key.
+xm 6 request_night_start_time_decrement:x6 	// Format and send the request
+bd 7  215 214 1 "" 0 0 24 24   				// Display m2 minute down key.
+xm 7 request_night_start_time_decrement:x7 	// Format and send the request
+
+m set_night_time:start `i1` `i2` `i3` `i4`	// update time in display
+
+xi 29 138 166								// display dot
+xi 29 138 186								// display dot
+
+bd 15 380 222 1 "" 0 0 12 12				// Setup the "Help" button.
+xm 15 show_help_nightvolstart
+bd 27 430 172 1 "" 0 0 86 86				// Display "Tools" button.
+xm 27 report_night_clock_start:x27			// report new time before going back to tools screen
+
+touch on									// enable screen touches
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: report_night_clock_start
+// report the new night volume times to the base
+// :main - return to the main screen
+// :tools - return to the tools screen
+//---------------------------------------------------------------------------------------
+//
+#define report_night_clock_start
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(19+4)`							// add command (19=0x13) plus 4 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x06\x13\x04\x`s1`\x`s2`\x`s3`\x`s4`\x`s5`"	// report new time to base
+:s9_1
+m request_clock:x13						// refresh screen for end time
+:x16
+m main									// go back to main screen
+:x27
+m tools									// go back to tools screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: report_night_clock_start_s9_1
+// report the new night volume times to the base
+// this is a copy specifically because I couldn't get the :s9_1 label functioning above
+//---------------------------------------------------------------------------------------
+//
+#define report_night_clock_start_s9_1
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(19+4)`							// add command (19=0x13) plus 4 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x06\x13\x04\x`s1`\x`s2`\x`s3`\x`s4`\x`s5`"	// report new time to base
+m request_clock:x13						// refresh screen for end time
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_initial_night_end_time
+// record current time from base and then display SET_CLOCK screen
+//
+//---------------------------------------------------------------------------------------
+//
+#define set_initial_night_end_time
+set i1 `0`									// end h1
+set i2 `1`									// end h2
+set i3 `2`									// end m1
+set i4 `3`									// end m2
+set i5 `4`									// start h1
+set i6 `5`									// start h2
+set i7 `6`									// start m1
+set i8 `7`									// start m2
+
+touch off									// disable screen touches until screen is ready
+m reset_display 50
+
+// Display the "Set clock" title box.
+xi 87 0 0     								// Display the banner.
+S 000 FFF									// Set the forground color to black, background to white.
+f 32B										// set font
+ta CC										// center text
+
+bd 8 0 45 20 "" "" 0 0 0 0 88 91			// night time volume start button
+xmq 8 report_night_clock_end_s8_1
+t "`i5``i6`:`i7``i8`" 175 68 T				// Display h1h2:m1m2 in start button
+
+m set_night_clock_end
+#end
+
+/---------------------------------------------------------------------------------------
+// MACRO: set_night_clock_end
+// Display set_night_clock_end Screen
+//
+//---------------------------------------------------------------------------------------
+//
+#define set_night_clock_end
+
+bd 16 430 222 1 "" 0 0 17 17				// Setup the "Home" button.
+xm 16 report_night_clock_end:x16			// report new time before going back to main screen
+
+// Setup the keypad.
+f 32B
+bd 0  16 104 1 "" 0 0 23 23   				// Display h1 hour up key.
+xm 0 request_night_end_time_increment:x0 	// Format and send the request
+bd 1  76 104 1 "" 0 0 23 23   				// Display h2 hour up key.
+xm 1 request_night_end_time_increment:x1 	// Format and send the request
+bd 2  155 104 1 "" 0 0 23 23   				// Display m1 minute up key.
+xm 2 request_night_end_time_increment:x2 	// Format and send the request
+bd 3  215 104 1 "" 0 0 23 23   				// Display m2 minute up key.
+xm 3 request_night_end_time_increment:x3 	// Format and send the request
+
+bd 4  16 214 1 "" 0 0 24 24   				// Display h1 hour down key.
+xm 4 request_night_end_time_decrement:x4	// Format and send the request
+bd 5  76 214 1 "" 0 0 24 24   				// Display h2 hour down key.
+xm 5 request_night_end_time_decrement:x5	// Format and send the request
+bd 6  155 214 1 "" 0 0 24 24   				// Display m1 minute down key.
+xm 6 request_night_end_time_decrement:x6	// Format and send the request
+bd 7  215 214 1 "" 0 0 24 24   				// Display m2 minute down key.
+xm 7 request_night_end_time_decrement:x7	// Format and send the request
+
+m set_night_time:end `i1` `i2` `i3` `i4`	// update time in display
+
+xi 29 138 166								// display dot
+xi 29 138 186								// display dot
+
+bd 15 380 222 1 "" 0 0 12 12				// Setup the "Help" button.
+xm 15 show_help_nightvolend
+bd 27 430 172 1 "" 0 0 86 86				// Display "Tools" button.
+xm 27 report_night_clock_end:x27			// report new time before going back to tools screen
+
+touch on									// enable screen touches
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: report_night_clock_end
+// report the new night volume times to the base
+// :main - return to the main screen
+// :tools - return to the tools screen
+//---------------------------------------------------------------------------------------
+//
+#define report_night_clock_end
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(20+4)`							// add command (20=0x14) plus 4 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x06\x14\x04\x`s1`\x`s2`\x`s3`\x`s4`\x`s5`"	// report new time to base
+:s8_1
+m request_clock:x12						// refresh screen for start time
+:x16
+m main									// go back to main screen
+:x27
+m tools									// go back to tools screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: report_night_clock_end_s8_1
+// report the new night volume times to the base
+// this is a copy specifically because I couldn't get the :s8_1 label functioning above
+//---------------------------------------------------------------------------------------
+//
+#define report_night_clock_end_s8_1
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(20+4)`							// add command (20=0x14) plus 4 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x06\x14\x04\x`s1`\x`s2`\x`s3`\x`s4`\x`s5`"	// report new time to base
+m request_clock:x12						// refresh screen for start time
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_clock_time
+// For changing the time setting.
+//  `0` h1
+//  `1` h2
+//  `2`	m1
+//  `3` m2
+//---------------------------------------------------------------------------------------
+#define set_clock_time
+set i1 `0`						// Start with no selection made.
+set i2 `1`						// Start with no selection made.
+set i3 `2`						// Start with no selection made.
+set i4 `3`						// Start with no selection made.
+
+xi 30  18 156					// display number box
+xi 30  78 156					// display number box
+xi 30 157 156					// display number box
+xi 30 217 156					// display number box
+
+f 32B 							// set font
+ta CC							// center text
+t "`i1`"  18 156  73 211 T		// Display h1
+t "`i2`"  78 156 133 211 T		// Display h2
+t "`i3`" 157 156 212 211 T		// Display m1
+t "`i4`" 217 156 272 211 T		// Display m2
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: day_name
+// Send the appropriate left or right command to the base.
+//
+//---------------------------------------------------------------------------------------
+#define day_name
+:x8
+out "\xFF\xFF\x4D\x12\x03\x0F\x01\x00\x10"	// tell base scroll left button was pressed
+:x9
+out "\xFF\xFF\x4D\x12\x03\x0F\x01\x01\x11"	// tell base scroll right button was pressed
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_clock_day
+// For changing the day setting.
+//  `0` day
+//
+//---------------------------------------------------------------------------------------
+#define set_clock_day
+xi 13 76 62						// display day box
+f 24BC 							// set font
+ta CC							// center text
+t "`0`" 76 62 216 87 T			// Display day
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_night_time
+// For changing the time setting.
+//  `0` h1 of chosen timer
+//  `1` h2 of chosen timer
+//  `2`	m1 of chosen timer
+//  `3` m2 of chosen timer
+//---------------------------------------------------------------------------------------
+#define set_night_time
+set i1 `0`						// Start with no selection made.
+set i2 `1`						// Start with no selection made.
+set i3 `2`						// Start with no selection made.
+set i4 `3`						// Start with no selection made.
+
+xi 30  18 156					// display number box
+xi 30  78 156					// display number box
+xi 30 157 156					// display number box
+xi 30 217 156					// display number box
+
+f 32B 							// set font
+ta CC							// center text
+t "`i1`"  18 156  73 211 T		// Display h1
+t "`i2`"  78 156 133 211 T		// Display h2
+t "`i3`" 157 156 212 211 T		// Display m1
+t "`i4`" 217 156 272 211 T		// Display m2
+
+:start
+xi 91 0 45						// display pressed night time volume start
+t "`i1``i2`:`i3``i4`" 175 68 T	// Display h1h2:m1m2
+
+:end
+xi 90 240 45					// display pressed night time volume end
+t "`i1``i2`:`i3``i4`" 400 68 T	// Display h1h2:m1m2
+
+#end
+
+
+//---------------------------------------------------------------------------------------
+// MACRO: volume_banner
+// Display the "Set Volume" banner on Tools screen.
+//	"lbl_0" = single, "lbl_1" = DTA, "lbl_2" = DTB.
+//---------------------------------------------------------------------------------------
+#define volume_banner
+:lbl_0
+xi 78 0 0     							// Display the "Set Volume" banner.
+:lbl_1
+xi 94 0 0     							// Display the "Set Volume A" banner.
+:lbl_2
+xi 95 0 0     							// Display the "Set Volume B" banner.
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_increment
+// Request to increment a volume item.
+//
+//---------------------------------------------------------------------------------------
+#define request_increment
+m outByte `i8`							// convert item (i8) to hex
+set s1 `s0`								// save it (s1)
+m outByte `(`i7`+1)`					// convert requested volume (i7+1) to hex
+set s2 `s0`								// save it (s2)
+set i6 `(17+2)`							// add command (17=0x11) plus 2 for num of args
+set i6 `(`i6`+`i8`)`					// add in item (i8)
+set i6 `(`i6`+`i7`)`					// add in current volume (i7)
+set i6 `(`i6`+1)`						// add in increment
+m outByte `i6`							// convert checksum (i6) to hex
+set s3 `s0`								// save it (s3)
+out "\xFF\xFF\x4D\x12\x04\x11\x02\x`s1`\x`s2`\x`s3`"	// item & vol
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_decrement
+// Request to decrement a volume item.
+//
+//---------------------------------------------------------------------------------------
+#define request_decrement
+m outByte `i8`							// convert item (i8) to hex
+set s1 `s0`								// save it (s1)
+m outByte `(`i7`-1)`					// convert requested volume (i7-1) to hex
+set s2 `s0`								// save it (s2)
+set i6 `(17+2)`							// add command (17=0x11) plus 2 for num of args
+set i6 `(`i6`+`i8`)`					// add in item (i8)
+set i6 `(`i6`+`i7`)`					// add in current volume (i7)
+set i6 `(`i6`-1)`						// subtract out decrement
+m outByte `i6`							// convert checksum (i6) to hex
+set s3 `s0`								// save it (s3)
+out "\xFF\xFF\x4D\x12\x04\x11\x02\x`s1`\x`s2`\x`s3`"	// item & vol
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_volume
+// Set a volume item.
+//  `0` item number: "0" = detect, "1" = inbound, "2" = grill, "3" = day, "4" = night
+//  `1` volume
+//---------------------------------------------------------------------------------------
+#define set_volume
+set i8 `0`								// Assign first argument to item number (i8)
+set i7 `1`								// Assign second argument to current volume (i7)
+lv 0 `i7` 								// Set bar to selected value.
+set e`(`i8`+5)` `i7` 				    // save volume (i7) to selected value (e5 thru e9)
+f 24B									// Set the font size.
+s 2 2									// set foreground /background color to blue
+set i9 `(`i8`*45)`						// Multiply item number (i8) times button size (45)
+xi 28 242 `(48+`i9`)`					// Display green box
+ta CC									// Set text justification mode.
+t "`i7`" 265 `(71+`i9`)` TR				// Display volume number.
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: det_sel
+// Detect pressed. Clear Inbound, Grill, Day, and Night selection buttons.
+//
+//---------------------------------------------------------------------------------------
+#define det_sel
+f 24B									// Set the font size.
+set i8 0
+xd 18
+xd 19
+xd 20
+xd 21
+ssb 18 0
+ssb 19 0
+ssb 20 0
+ssb 21 0
+xe 18
+xe 19
+xe 20
+xe 21
+ld 0 294 83 339 263 0 0 1 555 `i1` DD0	// Draw the bar graph.
+bd 17 00 48  2 "" "" 0 0 0 0 71 71		// Show the pressed "Headset Tone" button.
+xmq 17 det_sel							// Specify macro and disable output.
+xi 28 242 48							// Display green box.
+ta CC									// Set text justification mode.
+t "`e5`" 265 71 TR						// Display volume number.
+bd 18 00 93  2 "" "" 0 0 0 0 99 99		// Show the "Inbound Volume" button.
+xmq 18 inbound_sel						// Specify macro and disable output.
+xi 26 242 93							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e6`" 265 116 TR						// Display volume number.
+bd 19 00 138 2 "" "" 0 0 0 0 72 72		// Show the "Grill Speaker" button.
+xmq 19 grill_sel						// Specify macro and disable output.
+xi 26 242 138							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e7`" 265 161 TR						// Display volume number.
+bd 20 00 183 2 "" "" 0 0 0 0 74 74		// Show the "Day Volume" button.
+xmq 20 day_sel							// Specify macro and disable output.
+xi 26 242 183							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e8`" 265 206 TR						// Display volume number.
+bd 21 00 228 2 "" "" 0 0 0 0 76 76		// Show the "Night Volume" button.
+xmq 21 night_sel						// Specify macro and disable output.
+xi 26 242 228							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e9`" 265 251 TR						// Display volume number.
+lv 0 `e5` 								// Set bar to selected value.
+set i7 `e5`								// store current value
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: inbound_sel
+// Inbound pressed. Clear Detect, Grill, Day, and Night selection buttons.
+//
+//---------------------------------------------------------------------------------------
+#define inbound_sel
+f 24B									// Set the font size.
+set i8 1
+xd 19
+xd 20
+xd 21
+ssb 19 0
+ssb 20 0
+ssb 21 0
+xe 19
+xe 20
+xe 21
+ld 0 294 83 339 263 0 0 1 555 `i2` DD0	// Draw the bar graph.
+bd 18 00 93  2 "" "" 0 0 0 0 100 100	// Show the pressed "Inbound Volume" button.
+xmq 18 inbound_sel						// Specify macro and disable output.
+xi 28 242 93							// Display green box.
+ta CC									// Set text justification mode.
+t "`e6`" 265 116 TR						// Display volume number.
+bd 19 00 138 2 "" "" 0 0 0 0 72 72		// Show the "Grill Speaker" button.
+xmq 19 grill_sel						// Specify macro and disable output.
+xi 26 242 138							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e7`" 265 161 TR						// Display volume number.
+bd 20 00 183 2 "" "" 0 0 0 0 74 74		// Show the "Day Volume" button.
+xmq 20 day_sel							// Specify macro and disable output.
+xi 26 242 183							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e8`" 265 206 TR						// Display volume number.
+bd 21 00 228 2 "" "" 0 0 0 0 76 76		// Show the "Night Volume" button.
+xmq 21 night_sel						// Specify macro and disable output.
+xi 26 242 228							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e9`" 265 251 TR						// Display volume number.
+lv 0 `e6` 								// Set bar to selected value.
+set i7 `e6`								// store current value
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: grill_sel
+// Grill pressed. Clear Detect, Inbound, Day, and Night selection buttons.
+//
+//---------------------------------------------------------------------------------------
+#define grill_sel
+f 24B									// Set the font size.
+set i8 2
+xd 18
+xd 20
+xd 21
+ssb 18 0
+ssb 20 0
+ssb 21 0
+xe 18
+xe 20
+xe 21
+ld 0 294 83 339 263 0 0 1 555 `i3` DD0	// Draw the bar graph.
+bd 18 00 93  2 "" "" 0 0 0 0 99 99		// Show the "Inbound Volume" button.
+xmq 18 inbound_sel						// Specify macro and disable output.
+xi 26 242 93							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e6`" 265 116 TR						// Display volume number.
+bd 19 00 138 2 "" "" 0 0 0 0 73 73		// Show the pressed "Grill Speaker" button.
+xmq 19 grill_sel						// Specify macro and disable output.
+xi 28 242 138							// Display green box.
+ta CC									// Set text justification mode.
+t "`e7`" 265 161 TR						// Display volume number.
+bd 20 00 183 2 "" "" 0 0 0 0 74 74		// Show the "Day Volume" button.
+xmq 20 day_sel							// Specify macro and disable output.
+xi 26 242 183							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e8`" 265 206 TR						// Display volume number.
+bd 21 00 228 2 "" "" 0 0 0 0 76 76		// Show the "Night Volume" button.
+xmq 21 night_sel						// Specify macro and disable output.
+xi 26 242 228							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e9`" 265 251 TR						// Display volume number.
+lv 0 `e7` 								// Set bar to selected value.
+set i7 `e7`								// store current value
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: day_sel
+// Day pressed. Clear Detect, Inbound, Grill, and Night selection buttons.
+//
+//---------------------------------------------------------------------------------------
+#define day_sel
+f 24B									// Set the font size.
+set i8 3
+xd 18
+xd 19
+xd 21
+ssb 18 0
+ssb 19 0
+ssb 21 0
+xe 18
+xe 19
+xe 21
+ld 0 294 83 339 263 0 0 1 555 `i4` DD0	// Draw the bar graph.
+bd 18 00 93  2 "" "" 0 0 0 0 99 99		// Show the "Inbound Volume" button.
+xmq 18 inbound_sel						// Specify macro and disable output.
+xi 26 242 93							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e6`" 265 116 TR						// Display volume number.
+bd 19 00 138 2 "" "" 0 0 0 0 72 72		// Show the "Grill Speaker" button.
+xmq 19 grill_sel						// Specify macro and disable output.
+xi 26 242 138							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e7`" 265 161 TR						// Display volume number.
+bd 20 00 183 2 "" "" 0 0 0 0 75 75		// Show the pressed "Day Volume" button.
+xmq 20 day_sel							// Specify macro and disable output.
+xi 28 242 183							// Display green box.
+ta CC									// Set text justification mode.
+t "`e8`" 265 206 TR						// Display volume number.
+bd 21 00 228 2 "" "" 0 0 0 0 76 76		// Show the "Night Volume" button.
+xmq 21 night_sel						// Specify macro and disable output.
+xi 26 242 228							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e9`" 265 251 TR						// Display volume number.
+lv 0 `e8` 								// Set bar to selected value.
+set i7 `e8`								// store current value
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: night_sel
+// Night pressed. Clear Detect, Inbound, Grill, and Day selection buttons.
+//
+//---------------------------------------------------------------------------------------
+#define night_sel
+f 24B									// Set the font size.
+set i8 4
+xd 18
+xd 19
+xd 20
+ssb 18 0
+ssb 19 0
+ssb 20 0
+xe 18
+xe 19
+xe 20
+ld 0 294 83 339 263 0 0 1 555 `i5` DD0	// Draw the bar graph.
+bd 18 00 93  2 "" "" 0 0 0 0 99 99		// Show the "Inbound Volume" button.
+xmq 18 inbound_sel						// Specify macro and disable output.
+xi 26 242 93							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e6`" 265 116 TR						// Display volume number.
+bd 19 00 138 2 "" "" 0 0 0 0 72 72		// Show the "Grill Speaker" button.
+xmq 19 grill_sel						// Specify macro and disable output.
+xi 26 242 138							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e7`" 265 161 TR						// Display volume number.
+bd 20 00 183 2 "" "" 0 0 0 0 74 74		// Show the "Day Volume" button.
+xmq 20 day_sel							// Specify macro and disable output.
+xi 26 242 183							// Display yellow box.
+ta CC									// Set text justification mode.
+t "`e8`" 265 206 TR						// Display volume number.
+bd 21 00 228 2 "" "" 0 0 0 0 77 77		// Show the pressed "Night Volume" button.
+xmq 21 night_sel						// Specify macro and disable output.
+xi 28 242 228							// Display green box.
+ta CC									// Set text justification mode.
+t "`e9`" 265 251 TR						// Display volume number.
+lv 0 `e9` 								// Set bar to selected value.
+set i7 `e9`								// store current value
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: volume_button
+// Display the "Set Volume" button on Tools screen.
+//	lbl_0 = single lane, lbl_1 = two lanes.
+//---------------------------------------------------------------------------------------
+#define volume_button
+:lbl_0
+bd 10 20 11 1 "" 0 0 65 65     			// Setup "Volume" button for one lane.
+:lbl_1
+xi 96 20 11								// Display the two lane button.
+xs 128 62 53 110 101					// Hotspot for "Set A" button.
+xs 129 62 107 110 155					// Hotspot for "Set B" button.
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: register_button
+// Setup the "Register" button..
+//	lbl_0 = unlocked state.  "0" = unlocked, "1" = locked.
+//  set up macro to run on button press depending on lock state
+//---------------------------------------------------------------------------------------
+#define register_button
+bd 3 14 4 1 "" 0 0 51 51     			// Setup "Register" button
+:lbl_0
+xm 3 pre_register_main					// Unlocked, goto register screen
+:lbl_1
+xa 3 p pre_pin_unlock then_registration	// Locked, goto password screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: greeter_setup_button
+// Setup the "Greeter Setup" button.
+//	lbl_0 = unlocked state.  "0" = unlocked, "1" = locked.
+//  set up macro to run on button press depending on lock state
+//---------------------------------------------------------------------------------------
+#define greeter_setup_button
+bd 8 107 4 1 "" 0 0 103 103     			// Setup "Greeter Setup" button
+:lbl_0
+xm 8 pre_greeter_setup						// Unlocked, goto greeter screen where greets are set up
+:lbl_1
+xa 8 p pre_pin_unlock then_greeter_setup	// Locked, goto password screen
+#end
+
+//---------------------------------------------------------------------
+// MACRO: pre_register_main
+// Tell base to clear macros before displaying register_main
+//
+//---------------------------------------------------------------------
+//
+#define pre_register_main
+out "\xFF\xFF\x4D\x12\x03\x01\x01\x03\x05"	// request base to display the register_main screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: register_main
+// For register screen display.
+//  Host is going to have to do most of the work here
+//  Need to send command for each button to determine if green or gray
+//  Once button is set, it remembers text even if variable changes
+//---------------------------------------------------------------------------------------
+#define register_main
+touch off												// disable screen touches until screen is ready
+m reset_display 50										// display the background
+
+bd 16 430 222 1 "" 0 0 17 17							// Setup the "Home" button.
+xm 16 pre_main											// Go back to main screen
+
+bd 28 0 0 2 "" "" 0 0 0 0 41 47 						// register button
+xmq 28 register_button_pressed register_button_released
+bd 29 160 0 1 "" 0 0 102 102 							// listen only button
+xmq 29 listen_only_button_pressed
+bd 30 320 0 1 "" 0 0 42 42								// delete button
+xmq 30 delete_button_pressed
+s 0 2 							   						// set colors: black foreground, blue background
+f 18BC													// set font
+
+bd 15 380 222 1 "" 0 0 12 12							// Setup the "Help" button.
+xm 15 show_help_registration
+
+out "\xFF\xFF\x4D\x12\x02\x03\x00\x03"					// request to be filled with registered headsets
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: register_box
+// For register button display.
+//  displays a box for each headset registration slot, with number if provided  
+//  call macro register_box:lbl_n_x `0`
+//  lbl_0 = headset off (gray)
+//  lbl_1 = headset on (green)
+//     x  : box number (40-49)
+//    `0` : serial number
+//  Host is going to have to do most of the work here
+//  Need to send command for each button to determine if green or gray
+//  Once button is set, it remembers text even if variable changes
+//---------------------------------------------------------------------------------------
+#define register_box
+:lbl_0_40
+bdc 40 0 80 20 "`0`" "`0`" 40 38   						//set headset box latching button headset off
+xmq 40 headset_button:s40_1 headset_button:s40_0
+:lbl_1_40
+bdc 40 0 80 20 "`0`" "`0`" 39 38 						//set headset box latching button headset on
+xmq 40 headset_button:s40_1 headset_button:s40_0
+:lbl_0_41
+bdc 41 160 80 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 41 headset_button:s41_1 headset_button:s41_0
+:lbl_1_41
+bdc 41 160 80 20 "`0`" "`0`" 39 38 						//set headset box latching button headset on
+xmq 41 headset_button:s41_1 headset_button:s41_0
+:lbl_0_42
+bdc 42 320 80 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 42 headset_button:s42_1 headset_button:s42_0
+:lbl_1_42
+bdc 42 320 80 20 "`0`" "`0`" 39 38 						//set headset box latching button headset on
+xmq 42 headset_button:s42_1 headset_button:s42_0
+:lbl_0_43
+bdc 43 0 120 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 43 headset_button:s43_1 headset_button:s43_0
+:lbl_1_43
+bdc 43 0 120 20 "`0`" "`0`" 39 38 						//set headset box latching button headset on
+xmq 43 headset_button:s43_1 headset_button:s43_0
+:lbl_0_44
+bdc 44 160 120 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 44 headset_button:s44_1 headset_button:s44_0
+:lbl_1_44
+bdc 44 160 120 20 "`0`" "`0`" 39 38 					//set headset box latching button headset on
+xmq 44 headset_button:s44_1 headset_button:s44_0
+:lbl_0_45
+bdc 45 320 120 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 45 headset_button:s45_1 headset_button:s45_0
+:lbl_1_45
+bdc 45 320 120 20 "`0`" "`0`" 39 38 					//set headset box latching button headset on
+xmq 45 headset_button:s45_1 headset_button:s45_0
+:lbl_0_46
+bdc 46 0 160 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 46 headset_button:s46_1 headset_button:s46_0
+:lbl_1_46
+bdc 46 0 160 20 "`0`" "`0`" 39 38 						//set headset box latching button headset on
+xmq 46 headset_button:s46_1 headset_button:s46_0
+:lbl_0_47
+bdc 47 160 160 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 47 headset_button:s47_1 headset_button:s47_0
+:lbl_1_47
+bdc 47 160 160 20 "`0`" "`0`" 39 38 					//set headset box latching button headset on
+xmq 47 headset_button:s47_1 headset_button:s47_0
+:lbl_0_48
+bdc 48 320 160 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 48 headset_button:s48_1 headset_button:s48_0
+:lbl_1_48
+bdc 48 320 160 20 "`0`" "`0`" 39 38 					//set headset box latching button headset on
+xmq 48 headset_button:s48_1 headset_button:s48_0
+:lbl_0_49
+bdc 49 160 200 20 "`0`" "`0`" 40 38   					//set headset box latching button headset off
+xmq 49 headset_button:s49_1 headset_button:s49_0
+:lbl_1_49
+bdc 49 160 200 20 "`0`" "`0`" 39 38 					//set headset box latching button headset on
+xmq 49 headset_button:s49_1 headset_button:s49_0
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: headset_button
+// handles when a headset button is pressed
+//  s4x_0 = button not pressed (gray/green)
+//  s4x_1 = button pressed (red)
+//
+//---------------------------------------------------------------------------------------
+#define headset_button
+:s40_0
+out "\xFF\xFF\x4D\x12\x03\x28\x01\x00\x29"				// headset 40 state 0
+:s40_1
+out "\xFF\xFF\x4D\x12\x03\x28\x01\x01\x2A"				// headset 40 state 1
+:s41_0
+out "\xFF\xFF\x4D\x12\x03\x29\x01\x00\x2A"				// headset 41 state 0
+:s41_1
+out "\xFF\xFF\x4D\x12\x03\x29\x01\x01\x2B"				// headset 41 state 1
+:s42_0
+out "\xFF\xFF\x4D\x12\x03\x2A\x01\x00\x2B"				// headset 42 state 0
+:s42_1
+out "\xFF\xFF\x4D\x12\x03\x2A\x01\x01\x2C"				// headset 42 state 1
+:s43_0
+out "\xFF\xFF\x4D\x12\x03\x2B\x01\x00\x2C"				// headset 43 state 0
+:s43_1
+out "\xFF\xFF\x4D\x12\x03\x2B\x01\x01\x2D"				// headset 43 state 1
+:s44_0
+out "\xFF\xFF\x4D\x12\x03\x2C\x01\x00\x2D"				// headset 44 state 0
+:s44_1
+out "\xFF\xFF\x4D\x12\x03\x2C\x01\x01\x2E"				// headset 44 state 1
+:s45_0
+out "\xFF\xFF\x4D\x12\x03\x2D\x01\x00\x2E"				// headset 45 state 0
+:s45_1
+out "\xFF\xFF\x4D\x12\x03\x2D\x01\x01\x2F"				// headset 45 state 1
+:s46_0
+out "\xFF\xFF\x4D\x12\x03\x2E\x01\x00\x2F"				// headset 46 state 0
+:s46_1
+out "\xFF\xFF\x4D\x12\x03\x2E\x01\x01\x30"				// headset 46 state 1
+:s47_0
+out "\xFF\xFF\x4D\x12\x03\x2F\x01\x00\x30"				// headset 47 state 0
+:s47_1
+out "\xFF\xFF\x4D\x12\x03\x2F\x01\x01\x31"				// headset 47 state 1
+:s48_0
+out "\xFF\xFF\x4D\x12\x03\x30\x01\x00\x31"				// headset 48 state 0
+:s48_1
+out "\xFF\xFF\x4D\x12\x03\x30\x01\x01\x32"				// headset 48 state 1
+:s49_0
+out "\xFF\xFF\x4D\x12\x03\x31\x01\x00\x32"				// headset 49 state 0
+:s49_1
+out "\xFF\xFF\x4D\x12\x03\x31\x01\x01\x33"				// headset 49 state 1
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: register_button_pressed
+// Handles registering a new headset
+//
+//---------------------------------------------------------------------------------------
+#define register_button_pressed
+out "\xFF\xFF\x4D\x12\x03\x15\x01\x01\x17"		// send begin register headset request to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: register_button_released
+// Handles end of registering a new headset
+//
+//---------------------------------------------------------------------------------------
+#define register_button_released
+out "\xFF\xFF\x4D\x12\x03\x15\x01\x00\x16"		// send end register headset request to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: listen_only_button_pressed
+// Handles making a headset listen only
+//
+//---------------------------------------------------------------------------------------
+#define listen_only_button_pressed
+out "\xFF\xFF\x4D\x12\x02\x1F\x00\x1F"			// send make headset listen only request to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: delete_button_pressed
+// Handles deleting a registered headset
+//
+//---------------------------------------------------------------------------------------
+#define delete_button_pressed
+out "\xFF\xFF\x4D\x12\x02\x1E\x00\x1E"			// send delete headset request to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: Setup the "Tools" button..
+//	lbl_0 = unlocked state.  "0" = unlocked, "1" = locked.
+//
+//---------------------------------------------------------------------------------------
+#define tools_button
+bd 5 293 4 1 "" 0 0 52 52     			// Setup "Tools" button
+:lbl_0
+xm 5 pre_tools							// Unlocked, goto tools screen
+:lbl_1
+xa 5 p pre_pin_unlock then_tools		// Locked, goto password screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: Display the lane #1 indicator.
+//	lbl_0 = lane not in use, display nothing.
+//	lbl_1 = lane in use, but vacant.
+//	lbl_2 = lane in use and car present.
+//---------------------------------------------------------------------------------------
+#define lane_1
+:lbl_0
+set e2 0
+r 140 194 189 263 1 00F					// draw blue square to erase previous lane figure
+:lbl_1
+set e2 1
+xi 93 140 194							// Display a vacant lane.
+:lbl_2
+set e2 2
+xi 21 140 194							// Display an occupied lane.
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: Display the lane #2 indicator.
+//	lbl_0 = lane not in use, display nothing.
+//	lbl_1 = lane in use, but vacant.
+//	lbl_2 = lane in use and car present.
+//---------------------------------------------------------------------------------------
+#define lane_2
+:lbl_0
+set e3 0
+r 216 194 265 263 1 00F					// draw blue square to erase previous lane figure
+:lbl_1
+set e3 1
+xi 92 216 194							// Display a vacant lane.
+:lbl_2
+set e3 2
+xi 60 216 194							// Display an occupied lane.
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: Display the volume indicator.
+//
+//
+//---------------------------------------------------------------------------------------
+#define volume_indicator
+:lbl_0
+xi 63 292 194							// Display nighttime setting.
+set e4 0								// update volume mode
+:lbl_1
+xi 62 292 194							// Display daytime settings.
+set e4 1								// update volume mode
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: Setup "Lock" button.
+//
+//
+//---------------------------------------------------------------------------------------
+#define pin_button
+:lbl_0
+bd 4 200 4 1 "" 0 0 59 59				// if e0 = 0, display unlocked button.
+xm 4 lock                              	// if pressed, lock it
+:lbl_1
+bd 4 200 4 1 "" 0 0 53 53				// if e0 = 1, display locked button.
+xa 4 p pre_pin_unlock then_main			// execute pin macro
+#end
+
+
+//---------------------------------------------------------------------------------------
+// MACRO:  "Lock" it
+//  This is used to toggle the unlocked button to locked
+//  by setting eeprom lock bit e0 to 1 then returning to main
+//---------------------------------------------------------------------------------------
+#define lock
+set e0 1                             	// lock it
+out "\xFF\xFF\x4D\x12\x02\x12\x00\x12"	// tell base PIN is locked
+m main									// return to main display
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO:  pre_pin_unlock
+//  This is an intermediate macro used to call pin_unlock
+//
+//---------------------------------------------------------------------------------------
+#define pre_pin_unlock
+m pin_unlock:`0`
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO:  pin_unlock
+//  This is used to tell the base which screen to display after the PIN screen
+//
+//---------------------------------------------------------------------------------------
+#define pin_unlock
+m pin
+:then_main
+out "\xFF\xFF\x4D\x12\x03\x05\x01\x01\x07"	// tell base to goto main after PIN
+:then_tools
+out "\xFF\xFF\x4D\x12\x03\x05\x01\x02\x08"	// tell base to goto tools after PIN
+:then_registration
+out "\xFF\xFF\x4D\x12\x03\x05\x01\x03\x09"	// tell base to goto register_main after PIN
+:then_greeter_setup
+out "\xFF\xFF\x4D\x12\x03\x05\x01\x04\x0A"	// tell base to goto greeter_setup after PIN
+:then_show_wentworth_debug
+out "\xFF\xFF\x4D\x12\x03\x05\x01\x05\x0B"	// tell base to goto show_wentworth_debug after PIN
+#end
+
+
+//---------------------------------------------------------------------------------------
+// MACRO: hand_button
+// Setup the "System Mode" button..
+//	lbl_0 = unlocked state.  "0" = unlocked, "1" = locked.
+//  set up macro to run on button press depending on lock state
+//---------------------------------------------------------------------------------------
+#define hand_button
+:lbl_0
+bc `(`e1`+23)`								// clear button macro
+m hand_button_press:lbl_`e1`				// setup current system mode button
+:lbl_1
+bc `(`e1`+23)`								// clear button macro
+m hand_button_press:lbl_`e1`				// setup current system mode button
+xa `(`e1`+23)` p pre_pin_unlock then_main	// Locked, goto password screen
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: Setup System Mode button.
+//  1 = Hands Free (57) = button 24
+//  2 = Push To Talk (101) = button 25
+//  3 = Auto Hands Free (58) = button 26
+//  4 = Speed Team (56) = button 27
+//---------------------------------------------------------------------------------------
+#define hand_button_press
+:lbl_1
+bd 24 386 4 1 "" 0 0 57 57
+xm 24 update_system_mode:x24
+out "\xFF\xFF\x4D\x12\x03\x08\x01\x02\x0B"	// tell base to go to Hands Free Mode
+:lbl_2
+bd 25 386 4 1 "" 0 0 101 101
+xm 25 update_system_mode:x25
+out "\xFF\xFF\x4D\x12\x03\x08\x01\x03\x0C"	// tell base to go to Push To Talk Mode
+:lbl_3
+bd 26 386 4 1 "" 0 0 58 58
+xm 26 update_system_mode:x26
+out "\xFF\xFF\x4D\x12\x03\x08\x01\x04\x0D"	// tell base to go to Auto Hands Free Mode
+:lbl_4
+bd 27 386 4 1 "" 0 0 56 56
+xm 27 update_system_mode:x27
+out "\xFF\xFF\x4D\x12\x03\x08\x01\x05\x0E"	// tell base to go to Speed Team Mode
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: update_system_mode variable.
+//  1 = Hands Free (57) = button 24
+//  2 = Push To Talk (101) = button 25
+//  3 = Auto Hands Free (58) = button 26
+//  4 = Speed Team (56) = button 27
+//  Update the System Mode (e1) to the next mode
+//  Call macro to display the new System Mode button
+//---------------------------------------------------------------------------------------
+#define update_system_mode
+:x24
+set e1 2
+bc 24									// clear button 24 macro
+m hand_button_press:lbl_2
+:x25
+set e1 3
+bc 25									// clear button 25 macro
+m hand_button_press:lbl_3
+:x26
+set e1 4
+bc 26									// clear button 26 macro
+m hand_button_press:lbl_4
+:x27
+set e1 1
+bc 27									// clear button 27 macro
+m hand_button_press:lbl_1
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: Display the clock.
+//	`0` = clock string "hh" of hh:mm
+//	`1` = clock string "mm" of hh:mm
+//  `2` = day string
+//---------------------------------------------------------------------------------------
+//
+#define clock
+f 32B									// Select the font
+s 16 2 							   		// Set colors: yellow foreground, blue background
+t "           "				13 220 N	// clear the area for displaying the clock string
+t "`0`:`1`" 				13 220 N	// Display the clock string in the correct location
+f 24B									// Select the font
+t "                    "	13 250 N	// clear the area for displaying the day string
+t "`2`" 					13 250 N	// Display the day string in the correct location
+#end
+
+//---------------------------------------------------------------------
+// MACRO: num_key
+// builds key string for output and places a * in the number box
+//
+//---------------------------------------------------------------------
+//
+#define num_key
+xi 33 `i8` `i9`
+set i8 `(`i8`+33)`       				// increment x coordinate for next grey box
+m outByte `0`							// convert digit to hex
+set s1 `s0`								// save it (s1)
+set i6 `(`0`+7)`						// add 6 + 1 + `0` for checksum
+m outByte `i6`							// convert checksum (i6) to hex
+set s2 `s0`								// save it (s2)
+out "\xFF\xFF\x4D\x12\x03\x06\x01\x`s1`\x`s2`"	// PIN digit
+#end
+
+//---------------------------------------------------------------------
+// MACRO: back_key
+//	run the PIN macro to reset the screen
+//
+//---------------------------------------------------------------------
+//
+#define back_key
+set i8 48								// reset x coordinate for first grey box
+r 72 146 131 205 1 00F					// draw blue square to erase thumbs down
+xi 32 48 75 							// redraw the 4 gray boxes
+xi 32 81 75
+xi 32 114 75
+xi 32 147 75
+out "\xFF\xFF\x4D\x12\x02\x07\x00\x07"	// reset PIN digit index
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_time_increment
+// Request to increment a time digit
+//
+//---------------------------------------------------------------------------------------
+#define request_time_increment
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(13+6)`							// add command (13=0x0D) plus 6 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+:x0
+set i6 `(`i6`+1)`						// add in "place" (h1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x01\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+:x1
+set i6 `(`i6`+2)`						// add in "place" (h2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x02\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+:x2
+set i6 `(`i6`+3)`						// add in "place" (m1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x03\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+:x3
+set i6 `(`i6`+4)`						// add in "place" (m2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x04\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_time_decrement
+// Request to decrement a time digit
+//
+//---------------------------------------------------------------------------------------
+#define request_time_decrement
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(14+6)`							// add command (14=0x0E) plus 6 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+:x4
+set i6 `(`i6`+1)`						// add in "place" (h1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x01\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+:x5
+set i6 `(`i6`+2)`						// add in "place" (h2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x02\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+:x6
+set i6 `(`i6`+3)`						// add in "place" (m1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x03\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+:x7
+set i6 `(`i6`+4)`						// add in "place" (m2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x04\x`s1`\x`s2`\x`s3`\x`s4`\x00\x`s5`"	// request new time to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_night_start_time_increment
+// Request to increment a time digit
+//
+//---------------------------------------------------------------------------------------
+#define request_night_start_time_increment
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(13+6)`							// add command (13=0x0D) plus 6 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+set i6 `(`i6`+1)`						// add in DayNight flag (1)
+:x0
+set i6 `(`i6`+1)`						// add in "place" (h1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x01\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+:x1
+set i6 `(`i6`+2)`						// add in "place" (h2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x02\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+:x2
+set i6 `(`i6`+3)`						// add in "place" (m1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x03\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+:x3
+set i6 `(`i6`+4)`						// add in "place" (m2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x04\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_night_start_time_decrement
+// Request to decrement a time digit
+//
+//---------------------------------------------------------------------------------------
+#define request_night_start_time_decrement
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(14+6)`							// add command (14=0x0E) plus 6 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+set i6 `(`i6`+1)`						// add in DayNight flag (1)
+:x4
+set i6 `(`i6`+1)`						// add in "place" (h1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x01\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+:x5
+set i6 `(`i6`+2)`						// add in "place" (h2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x02\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+:x6
+set i6 `(`i6`+3)`						// add in "place" (m1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x03\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+:x7
+set i6 `(`i6`+4)`						// add in "place" (m2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x04\x`s1`\x`s2`\x`s3`\x`s4`\x01\x`s5`"	// request new time to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_night_end_time_increment
+// Request to increment a time digit
+//
+//---------------------------------------------------------------------------------------
+#define request_night_end_time_increment
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(13+6)`							// add command (13=0x0D) plus 6 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+set i6 `(`i6`+2)`						// add in DayNight flag (2)
+:x0
+set i6 `(`i6`+1)`						// add in "place" (h1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x01\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+:x1
+set i6 `(`i6`+2)`						// add in "place" (h2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x02\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+:x2
+set i6 `(`i6`+3)`						// add in "place" (m1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x03\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+:x3
+set i6 `(`i6`+4)`						// add in "place" (m2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0D\x06\x04\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_night_end_time_decrement
+// Request to decrement a time digit
+//
+//---------------------------------------------------------------------------------------
+#define request_night_end_time_decrement
+m outByte `i1`							// convert h1 to hex string
+set s1 `s0`								// save it
+m outByte `i2`							// convert h2 to hex string
+set s2 `s0`								// save it
+m outByte `i3`							// convert m1 to hex string
+set s3 `s0`								// save it
+m outByte `i4`							// convert m2 to hex string
+set s4 `s0`								// save it
+set i6 `(14+6)`							// add command (14=0x0E) plus 6 for num of args
+set i6 `(`i6`+`i1`)`					// add in h1 (i1)
+set i6 `(`i6`+`i2`)`					// add in h2 (i2)
+set i6 `(`i6`+`i3`)`					// add in m1 (i3)
+set i6 `(`i6`+`i4`)`					// add in m2 (i4)
+set i6 `(`i6`+2)`						// add in DayNight flag (2)
+:x4
+set i6 `(`i6`+1)`						// add in "place" (h1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x01\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+:x5
+set i6 `(`i6`+2)`						// add in "place" (h2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x02\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+:x6
+set i6 `(`i6`+3)`						// add in "place" (m1)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x03\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+:x7
+set i6 `(`i6`+4)`						// add in "place" (m2)
+m outByte `i6`							// convert checksum (i6) to hex
+set s5 `s0`								// save it (s5)
+out "\xFF\xFF\x4D\x12\x08\x0E\x06\x04\x`s1`\x`s2`\x`s3`\x`s4`\x02\x`s5`"	// request new time to base
+#end
+
+//---------------------------------------------------------------------
+// MACRO: show_moon
+//
+//
+//---------------------------------------------------------------------
+//
+#define show_moon
+xi 55 296 4    				// Moon icon.
+xm 131 show_sun				// Link hotspot to show_sun macro.
+aout "NIGHT\x0D\x0A"
+#end
+
+//---------------------------------------------------------------------
+// MACRO: show_sun
+//
+//
+//---------------------------------------------------------------------
+//
+#define show_sun
+xi 54 296  4    			// Sun icon.
+xm 131 show_moon			// Link hotspot to show_moon macro.
+aout "DAY\x0D\x0A"
+#end
+
+//---------------------------------------------------------------------
+// MACRO: hands_free
+//
+//
+//---------------------------------------------------------------------
+//
+#define hands_free
+xi 57 392 4    				// Hands Free icon.
+xm 132 no_hands				// Link hotspot to no_hands macro.
+aout "FREE\x0D\x0A"
+#end
+
+//---------------------------------------------------------------------
+// MACRO: no_hands
+//
+//
+//---------------------------------------------------------------------
+//
+#define no_hands
+xi 58 392 4    				// Hands Free icon.
+xm 132 hands_free			// Link hotspot to hands_free macro.
+aout "SPEED\x0D\x0A"
+#end
+
+//---------------------------------------------------------------------
+// MACRO: pre_show_help_main
+// Tell base to clear macros before displaying help
+//
+//---------------------------------------------------------------------
+//
+#define pre_show_help_main
+out "\xFF\xFF\x4D\x12\x03\x01\x01\x04\x06"	// request base to display help for the main screen
+#end
+
+//---------------------------------------------------------------------
+// MACRO: all the show_help_"" macros
+//
+//
+//---------------------------------------------------------------------
+//
+#define show_help_main
+touch off					// disable screen touches until screen is ready
+zs 82
+xs 128 0 0 429 271			// whole left side screen touch area
+xm 128 main					// Return to main when touched
+xs 129 429 50 479 271		// whole bottom right screen touch area
+xm 129 main					// Return to main when touched
+m pre_request_debug_info:lbl_`e0`
+touch on					// enable screen touches
+#end
+
+#define show_help_settings
+touch off					// disable screen touches until screen is ready
+zs 46
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 tools				// Return to tools when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_pin
+touch off					// disable screen touches until screen is ready
+zs 64
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 pin					// Return to pin when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_registration
+touch off					// disable screen touches until screen is ready
+zs 48
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 register_main		// Return to registration when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_newpin
+touch off					// disable screen touches until screen is ready
+zs 45
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 new_pin				// Return to newpin when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_clock
+touch off					// disable screen touches until screen is ready
+zs 44
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 request_system_clock	// return to clock when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_volume
+touch off					// disable screen touches until screen is ready
+zs 37
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 request_volume		// return to volume when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_nightvolstart
+touch off					// disable screen touches until screen is ready
+zs 36
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 request_nightvolume_start_clock	// return to night volume start when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_nightvolend
+touch off					// disable screen touches until screen is ready
+zs 36
+xs 128 0 0 479 271			// whole screen touch area
+xm 128 request_nightvolume_end_clock	// return to night volume end when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_lanes
+touch off					// disable screen touches until screen is ready
+zs 35
+xs 128 0 0 479 271			// whole screen touch area
+//xm 128 lanes				// Return to lanes when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_greet
+touch off					// disable screen touches until screen is ready
+zs 31
+xs 128 0 0 479 271			// whole screen touch area
+xa 128 p greeter_return 0	// Return to greeter setup when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_message1
+touch off					// disable screen touches until screen is ready
+zs 105
+xs 128 0 0 479 271			// whole screen touch area
+xa 128 p greeter_return 1	// Return to greeter setup when touched
+touch on					// enable screen touches
+#end
+
+#define show_help_message2
+touch off					// disable screen touches until screen is ready
+zs 106
+xs 128 0 0 479 271			// whole screen touch area
+xa 128 p greeter_return 2	// Return to greeter setup when touched
+touch on					// enable screen touches
+#end
+
+#define greeter_return
+m greeter_setup:screen`0`
+#end
+
+//---------------------------------------------------------------------
+// MACRO: request_info
+//  ask base for relevant information
+//
+//---------------------------------------------------------------------
+//
+#define request_info
+out "\xFF\xFF\x4D\x12\x02\x02\x00\x02"	// tell base we want to display the Wentworth info
+#end
+
+//---------------------------------------------------------------------
+// MACRO: show_wentworth
+//	`0` = major firmware version number.
+//	`1` = minor firmware version number.
+//	`2` = 10 characters of master serial number.
+//	`3` = 10 characters of slave serial number.
+//---------------------------------------------------------------------
+//
+#define show_wentworth
+touch off										// disable screen touches until screen is ready
+zs 27											// display the help screen
+xs 128 0 0 479 271								// whole screen touch area
+xm 128 main										// Return to main when touched.
+s 0 1											// Black on White
+f 14x24
+t "                          "     	13  25 T	// help clear the screen before writing
+t "      Wentworth Technology"     	13  25 T
+t "     Saco, Maine, USA 04072"    	13  50 T
+t "        (877) 495-1634"      	13  75 T
+t "  www.wentworthtechnology.com"	13 100 T
+:single
+t "   Firmware Version - `0`.`1`-AL"13 150 T	// Display the firmware version number.
+t "   Base Serial # - `2`"       	13 175 T	// Display the master serial number.
+t "   Copyright \xA9 2013  v1.2-AL" 13 250 T
+touch on										// enable screen touches
+:dual
+t " Firmware Version - `0`.`1`-AL" 	13 150 T	// Display the firmware version number.
+t " 1st Base Serial # - `2`"       	13 175 T	// Display the master serial number.
+t " 2nd Base Serial # - `3`"       	13 200 T	// Display the slave number.
+t "  Copyright \xA9 2013  v1.2-AL"  13 250 T
+touch on										// enable screen touches
+#end
+
+//---------------------------------------------------------------------
+// MACRO: pre_request_debug_info
+//  ask base for relevant information
+//
+//---------------------------------------------------------------------
+//
+#define pre_request_debug_info
+xs 130 430 0 479 50								// set up top right corner hot spot
+:lbl_0
+xm 130 request_debug_info						// ask base to show debug info
+:lbl_1
+xa 130 p pre_pin_unlock then_show_wentworth_debug	// Locked, goto password screen first
+#end
+
+//---------------------------------------------------------------------
+// MACRO: request_debug_info
+//  ask base for relevant information
+//
+//---------------------------------------------------------------------
+//
+#define request_debug_info
+out "\xFF\xFF\x4D\x12\x02\x40\x00\x40"			// tell base we want to display the Wentworth debug info
+#end
+
+//---------------------------------------------------------------------
+// MACRO: show_wentworth_debug
+//	`0` = power up count
+//	`1` = power up count for second base if present
+//---------------------------------------------------------------------
+//
+#define show_wentworth_debug
+touch off										// disable screen touches until screen is ready
+zs 27											// display the help screen
+xs 128 429 221 479 271							// bottom right of screen touch area
+xm 128 main										// Return to main when touched
+s 0 1											// Black on White
+f 14x24
+t "                          "     	60  30 T	// help clear the screen before writing
+bd 1 5 224 1 "" 0 0 97 98						// Setup the "greet" button
+xm 1 request_greet_authorization				// request to save greet authorization code
+t " Greet"							60  239 T
+t " Code"							60  259 T
+:single
+bd 2 5 164 1 "" 0 0 43 49						// Setup the first "erase" button
+xm 2 request_power_count_reset					// request reset of counter
+t " # power ups: `0`"				60 189 T	// Display the number of times the base has been powered up
+touch on										// enable screen touches
+:dual
+bd 2 5 110 1 "" 0 0 43 49						// Setup the first "erase" button
+xm 2 request_power_count_reset					// request reset of counter
+bd 3 5 164 1 "" 0 0 43 49						// Setup the second "erase" button
+xm 3 request_power_count_reset2					// request reset of counter
+t " # power ups (master): `0`"		60 135 T	// Display the number of times the base has been powered up
+t " # power ups  (slave): `1`"		60 189 T	// Display the number of times the base has been powered up
+touch on										// enable screen touches
+#end
+
+//---------------------------------------------------------------------
+// MACRO: show_greeter_promo
+//
+//
+//---------------------------------------------------------------------
+//
+#define show_greeter_promo
+touch off										// disable screen touches until screen is ready
+zs 27											// display the help screen
+xs 128 0 0 479 271								// whole screen touch area
+xm 128 main										// Return to main when touched.
+s 0 1											// Black on White
+f 14x24
+t "                                "	13  25 T	// help clear the screen before writing
+t "   This system does not have	   " 	13  25 T
+t "   a Greet System installed.	   "	13  50 T
+t "   To discuss purchasing one,   "  	13  75 T
+t "       please call us:		   "	13 100 T
+t "      Wentworth Technology	   "    13 150 T
+t "     Saco, Maine, USA 04072	   "    13 175 T
+t "        (877) 495-1634		   "    13 200 T
+t "  www.wentworthtechnology.com   "	13 225 T
+touch on										// enable screen touches
+#end
+
+//---------------------------------------------------------------------
+// MACRO: request_greet_authorization
+// Request to display GREETER authorization code Screen
+// After 4 keypresses, master must stop allowing presses and save code
+//---------------------------------------------------------------------------------------
+//
+#define request_greet_authorization
+out "\xFF\xFF\x4D\x12\x02\x43\x00\x43"	// tell base we want to save the greeter authorization code
+#end
+
+//---------------------------------------------------------------------
+// MACRO: request_power_count_reset
+//  ask base to reset power on counter
+//
+//---------------------------------------------------------------------
+//
+#define request_power_count_reset
+out "\xFF\xFF\x4D\x12\x02\x41\x00\x41"			// tell base we want to reset the Wentworth debug info
+#end
+
+#define request_power_count_reset2
+out "\xFF\xFF\x4D\x12\x02\x42\x00\x42"			// tell base we want to reset the Wentworth debug info
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_base_command
+// Send the requested command to the base.
+//  `0` - command request being sent to base
+//
+//---------------------------------------------------------------------------------------
+#define request_base_command
+m outByte `0`							// convert digit to hex
+set s1 `s0`								// save it (s1)
+set i6 `(69+`0`)`						// add 0x44 + 0x01 + arg0 create checksum
+m outByte `i6`							// convert checksum (i6) to hex
+set s2 `s0`								// save it (s2)
+out "\xFF\xFF\x4D\x12\x03\x44\x01\x`s1`\x`s2`"	// tell base what which command is being requested
+#end
+
+//---------------------------------------------------------------------
+// MACRO: car_present
+//
+//
+//---------------------------------------------------------------------
+//
+#define car_present
+xi 21 216 195    		// Display "Car Present" icon.
+xm 134 hands_free		// Link hotspot to car_present macro.
+aout "SPEED\x0D\x0A"
+#end
+
+//---------------------------------------------------------------------
+// MACRO: thumbs_dn
+//
+//
+//---------------------------------------------------------------------
+//
+#define thumbs_dn
+xi 15 72 146	// thumbs down icon.
+#end
+
+//---------------------------------------------------------------------
+// MACRO: set_pin_thumbs_dn
+//
+//
+//---------------------------------------------------------------------
+//
+#define set_pin_thumbs_dn
+xi 15 402 86	// thumbs down icon.
+#end
+
+//---------------------------------------------------------------------
+// MACRO: touch_calibrate
+//
+//
+//---------------------------------------------------------------------
+//
+#define touch_calibrate
+tc
+m main
+#end
+
+//---------------------------------------------------------------------
+// MACRO: outByte arg1
+//	creates hex value of arg1 in s0 using getByte and getNibble MACROs
+//
+//---------------------------------------------------------------------
+//
+#define outByte
+set i0 `(`0`%256)`
+set s0 ""
+m getByte `i0`
+// out "\x`s0`\r"
+#end
+
+#define getByte
+set i0 `(`0`/16)`
+m getNibble:lbl_`i0`
+set i0 `(`0`%16)`
+m getNibble:lbl_`i0`
+#end
+
+#define getNibble
+:lbl_0
+mpush 0 "0"
+:lbl_1
+mpush 0 "1"
+:lbl_2
+mpush 0 "2"
+:lbl_3
+mpush 0 "3"
+:lbl_4
+mpush 0 "4"
+:lbl_5
+mpush 0 "5"
+:lbl_6
+mpush 0 "6"
+:lbl_7
+mpush 0 "7"
+:lbl_8
+mpush 0 "8"
+:lbl_9
+mpush 0 "9"
+:lbl_10
+mpush 0 "A"
+:lbl_11
+mpush 0 "B"
+:lbl_12
+mpush 0 "C"
+:lbl_13
+mpush 0 "D"
+:lbl_14
+mpush 0 "E"
+:lbl_15
+mpush 0 "F"
+#end
+
+//===== END OF FILE =======
