@@ -27,14 +27,12 @@ extern void ConvertHexSNtoAriSN(IPEIType Hex_SN, char SerialNumber[11]);
 extern void CopyToUartTxBuffer(UByte * buffer, unsigned int length);
 extern void CopyByteToUartTxBuffer(UByte buffer);
 extern void BroadcastSystemModeState(PPIDType user);
+extern void BroadcastCalOffset(PPIDType user, unsigned char direction);
 extern UByte fp_subscription_removeSubscription(PPIDType user);
 extern void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length);
 extern void CheckNightVolumeTime(void);
 extern void RunGreetClock(UByte greet_cmd, UByte greet_selection);
 extern UByte fp_subscription_getNumberOfSubscriptions();
-#ifdef SECOND_BASE_CODE
-extern void SendPCMCommand(WORD cmd);
-#endif
 
 extern UByte GENERALFPTASKTIMER;
 extern UByte GENERALBC5TASKTIMER;
@@ -60,19 +58,7 @@ void WTInfoScreen()
 {
 	int i = 0;
 
-#ifdef SECOND_BASE_CODE
-	if ((base_station).SecondBoardPresent)
-	{
-		UByte test[11] = "0123456789\0";
-		if (memcmp((base_station).SerialNumber2, test, 10) == 0)
-			ConvertHexSNtoAriSN((base_station).FP2_ARI, (base_station).SerialNumber2);
-		CopyToUartTxBuffer((UByte *)"m show_wentworth:dual ", 22);
-	}
-	else
-#endif
-	{
-		CopyToUartTxBuffer((UByte *)"m show_wentworth:single ", 24);
-	}
+	CopyToUartTxBuffer((UByte *)"m show_wentworth:single ", 24);
 	SendAsciiValue(FW_REV_MAJOR);
 	CopyByteToUartTxBuffer(' ');
 	SendAsciiValue(FW_REV_MINOR);
@@ -93,28 +79,6 @@ void WTInfoScreen()
 		case '9':		CopyByteToUartTxBuffer('9');	break;
 		}
 	}
-#ifdef SECOND_BASE_CODE
-	if ((base_station).SecondBoardPresent)
-	{
-		CopyByteToUartTxBuffer(' ');
-		for (i = 0; i < 10; i++)
-		{
-			switch ((base_station).SerialNumber2[i])
-			{
-			case '0':		CopyByteToUartTxBuffer('0');	break;
-			case '1':		CopyByteToUartTxBuffer('1');	break;
-			case '2':		CopyByteToUartTxBuffer('2');	break;
-			case '3':		CopyByteToUartTxBuffer('3');	break;
-			case '4':		CopyByteToUartTxBuffer('4');	break;
-			case '5':		CopyByteToUartTxBuffer('5');	break;
-			case '6':		CopyByteToUartTxBuffer('6');	break;
-			case '7':		CopyByteToUartTxBuffer('7');	break;
-			case '8':		CopyByteToUartTxBuffer('8');	break;
-			case '9':		CopyByteToUartTxBuffer('9');	break;
-			}
-		}
-	}
-#endif
 	CopyByteToUartTxBuffer('\r');
 
 //	general_startTimer(-1, WT_HEAP_CHECK, NULL, 0, 200);
@@ -122,22 +86,9 @@ void WTInfoScreen()
 
 void WTInfoDebugScreen()
 {
-#ifdef SECOND_BASE_CODE
-	if (FIRST_BASE && (base_station).SecondBoardPresent)
-	{
-		CopyToUartTxBuffer((UByte *)"m show_wentworth_debug:dual ", 28);
-		SendAsciiValue((base_station).PowerOnCount);
-		CopyByteToUartTxBuffer(' ');
-		SendAsciiValue((base_station).PowerOnCount2);
-		CopyByteToUartTxBuffer('\r');
-	}
-	else
-#endif
-	{
-		CopyToUartTxBuffer((UByte *)"m show_wentworth_debug:single ", 30);
-		SendAsciiValue((base_station).PowerOnCount);
-		CopyByteToUartTxBuffer('\r');
-	}
+	CopyToUartTxBuffer((UByte *)"m show_wentworth_debug:single ", 30);
+	SendAsciiValue((base_station).PowerOnCount);
+	CopyByteToUartTxBuffer('\r');
 
 	CopyToUartTxBuffer((UByte *)"s 0 10\r", 7);			// black on light gray if required
 
@@ -157,24 +108,27 @@ void WTInfoDebugScreen()
 
 	usec_pause(0xFFFF);									// to avoid over running the display input buffer
 
-	// add a bitmap and command for halting WatchDog
+	// add a bitmap and command for toggling BC5 demo mode
 	CopyToUartTxBuffer((UByte *)"f 13B\r", 6);
-	CopyToUartTxBuffer((UByte *)"bdc 5 160 224 20 \"STOP\\nWD\" \"STOPPED\" 43 49\r", 44);
+	if ((base_station).BC5Bypassed)
+		CopyToUartTxBuffer((UByte *)"bdc 5 5 55 21 \"ON\" \"OFF\" 26 28\r", 31);
+	else
+		CopyToUartTxBuffer((UByte *)"bdc 5 5 55 20 \"ON\" \"OFF\" 26 28\r", 31);
+	CopyToUartTxBuffer((UByte *)"f 14x24\r", 8);
+	CopyToUartTxBuffer((UByte *)"t \"HSet noise\" 60 68 T\r", 23);
+	CopyToUartTxBuffer((UByte *)"t \"canceling\" 60 88 T\r", 22);
 	CopyToUartTxBuffer((UByte *)"xa	5 p request_base_command 2\r", 30);
+	CopyToUartTxBuffer((UByte *)"xa	5 r request_base_command 3\r", 30);
 
 	usec_pause(0xFFFF);									// to avoid over running the display input buffer
 
-	// add a bitmap and command for toggling Alert input pin between C/P3[4] (default input) and N/P1[2] (optional 12V VD input)
+	// add a bitmap and command for opening headset calibration screen
 	CopyToUartTxBuffer((UByte *)"f 13B\r", 6);
-	if ((base_station).UsingP34ForAlarm)
-		CopyToUartTxBuffer((UByte *)"bdc 6 5 105 20 \"pin C\" \"pin N\" 26 28\r", 37);
-	else
-		CopyToUartTxBuffer((UByte *)"bdc 6 5 105 21 \"pin C\" \"pin N\" 26 28\r", 37);
+	CopyToUartTxBuffer((UByte *)"bdc 6 5 105 20 \"CAL\" \"CAL\" 26 28\r", 33);
 	CopyToUartTxBuffer((UByte *)"f 14x24\r", 8);
-	CopyToUartTxBuffer((UByte *)"t \"used for\" 60 118 T\r", 22);
-	CopyToUartTxBuffer((UByte *)"t \"Alert\" 60 138 T\r", 19);
-	CopyToUartTxBuffer((UByte *)"xa	6 p request_base_command 3\r", 30);
-	CopyToUartTxBuffer((UByte *)"xa	6 r request_base_command 4\r", 30);
+	CopyToUartTxBuffer((UByte *)"t \"calibrate\" 60 118 T\r", 23);
+	CopyToUartTxBuffer((UByte *)"t \"headsets\" 60 138 T\r", 22);
+	CopyToUartTxBuffer((UByte *)"xa	6 p request_base_command 4\r", 30);
 
 	usec_pause(0xFFFF);									// to avoid over running the display input buffer
 
@@ -183,17 +137,24 @@ void WTInfoDebugScreen()
 	{
 		CopyToUartTxBuffer((UByte *)"f 13B\r", 6);
 		if ((base_station).PlayGreetInPP)
-			CopyToUartTxBuffer((UByte *)"bdc 8 430 5 21 \"NO\" \"YES\" 26 28\r", 32);
+			CopyToUartTxBuffer((UByte *)"bdc 7 430 5 21 \"NO\" \"YES\" 26 28\r", 32);
 		else
-			CopyToUartTxBuffer((UByte *)"bdc 8 430 5 20 \"NO\" \"YES\" 26 28\r", 32);
+			CopyToUartTxBuffer((UByte *)"bdc 7 430 5 20 \"NO\" \"YES\" 26 28\r", 32);
 		CopyToUartTxBuffer((UByte *)"f 14x24\r", 8);
 		CopyToUartTxBuffer((UByte *)"t \"GREET\" 320 18 T\r", 19);
 		CopyToUartTxBuffer((UByte *)"t \"in HSet\" 320 38 T\r", 21);
-		CopyToUartTxBuffer((UByte *)"xa	8 p request_base_command 7\r", 30);
-		CopyToUartTxBuffer((UByte *)"xa	8 r request_base_command 8\r", 30);
+		CopyToUartTxBuffer((UByte *)"xa	7 p request_base_command 5\r", 30);
+		CopyToUartTxBuffer((UByte *)"xa	7 r request_base_command 6\r", 30);
 
 		usec_pause(0xFFFF);									// to avoid over running the display input buffer
 	}
+
+	// add a bitmap and command for halting WatchDog
+	CopyToUartTxBuffer((UByte *)"f 13B\r", 6);
+	CopyToUartTxBuffer((UByte *)"bdc 8 160 224 20 \"STOP\\nWD\" \"STOPPED\" 43 49\r", 44);
+	CopyToUartTxBuffer((UByte *)"xa	8 p request_base_command 7\r", 30);
+
+	usec_pause(0xFFFF);									// to avoid over running the display input buffer
 
 	// add chip revision comment
 	CopyToUartTxBuffer((UByte *)"f 14x24\r", 8);
@@ -205,20 +166,6 @@ void WTInfoDebugScreen()
         CopyToUartTxBuffer((UByte *)"t \"chip ver = ES8\" 225 250 T\r", 29);
 	else
         CopyToUartTxBuffer((UByte *)"t \"chip ver = ES?\" 225 250 T\r", 29);
-
-	usec_pause(0xFFFF);									// to avoid over running the display input buffer
-
-	// add a bitmap and command for toggling BC5 demo mode
-	CopyToUartTxBuffer((UByte *)"f 13B\r", 6);
-	if ((base_station).BC5Bypassed)
-		CopyToUartTxBuffer((UByte *)"bdc 7 5 55 21 \"ON\" \"OFF\" 26 28\r", 31);
-	else
-		CopyToUartTxBuffer((UByte *)"bdc 7 5 55 20 \"ON\" \"OFF\" 26 28\r", 31);
-	CopyToUartTxBuffer((UByte *)"f 14x24\r", 8);
-	CopyToUartTxBuffer((UByte *)"t \"HSet noise\" 60 68 T\r", 23);
-	CopyToUartTxBuffer((UByte *)"t \"canceling\" 60 88 T\r", 22);
-	CopyToUartTxBuffer((UByte *)"xa	7 p request_base_command 5\r", 30);
-	CopyToUartTxBuffer((UByte *)"xa	7 r request_base_command 6\r", 30);
 }
 
 void VolumeAdjustScreen()
@@ -318,7 +265,7 @@ void VolumeAdjustScreen()
 			}
 		}
 		(base_station).GrillSpeakerVolume = requested_vol;
-		if ((base_station).GrillShouldBeOn && ((base_station).GrillSpeakerVolume > 0))
+		if ((base_station).GrillShouldBeOn && (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER)))
 			GRILL_SPEAKER_ON;
 		else
 			GRILL_SPEAKER_OFF;
@@ -369,13 +316,28 @@ void RegistrationScreen(UByte cmd)
 	{
 	case 0x03:
 		// fill buttons with registered headsets
-#ifdef SECOND_BASE_CODE
-		if ((!(base_station).SecondBoardPresent && ((base_station).HeadsetCounter < MAX_Allowed_Users)) ||
-		     ((base_station).SecondBoardPresent && ((base_station).HeadsetCounter < MAX_Allowed_Users_Dual)))
-#else
 		if ((base_station).HeadsetCounter < MAX_Allowed_Users)
-#endif
 		{
+			if (((base_station).DualBase > 0) && ((base_station).HeadsetCounter == 0))
+			{
+				// for dual base system, re-paint LISTEN-ONLY button
+				CopyToUartTxBuffer((UByte *)"f 13B\r", 6);												// switch to smaller font
+				CopyToUartTxBuffer((UByte *)"r 160 0 320 50 1 00F\r", 21);								// draw a blue square to "erase" normal LISTEN-ONLY button
+				if ((base_station).DualBase == DUAL_BASE_MASTER)
+				{
+					CopyToUartTxBuffer((UByte *)"bdc 29 170 12 1 \"LISTEN ONLY HDSETS\" 13 13\r", 43);	// button for switching to Slave base (LISTEN ONLY headsets)
+					CopyToUartTxBuffer((UByte *)"xmq 29 delayed_switch_button_pressed\r", 37);
+				}
+				else
+				{
+					CopyToUartTxBuffer((UByte *)"f 13B\r", 6);											// switch to smaller font
+					CopyToUartTxBuffer((UByte *)"bdc 29 170 12 1 \"REGULAR HEADSETS\" 13 13\r", 41);	// button for switching to Master base (FULL function headsets)
+					CopyToUartTxBuffer((UByte *)"xmq 29 delayed_switch_button_pressed\r", 37);
+					CopyToUartTxBuffer((UByte *)"xd 16\r", 6);											// disable HOME button touch
+					CopyToUartTxBuffer((UByte *)"r 430 222 475 267 1 00F\r", 24);						// draw a blue square to "erase" HOME button
+				}
+			}
+
 			CopyToUartTxBuffer((UByte *)"s 0 2\r", 6);
 			CopyToUartTxBuffer((UByte *)"f 18BC\r", 7);
 			i = (base_station).HeadsetCounter++;
@@ -418,86 +380,59 @@ void RegistrationScreen(UByte cmd)
 			CopyToUartTxBuffer(&buffer[0], count);
 			OSStartTimer(GENERALFPTASKTIMER, 5); 			// 5 x 10ms = 50ms pause before sending next button info
 		}
-#ifdef SECOND_BASE_CODE
-		else if (FIRST_BASE && ((base_station).HeadsetCounter < MAX_Allowed_Users))
-		{
-			// work with 2nd base headsets on 1st base display
-			CopyToUartTxBuffer((UByte *)"s 0 2\r", 6);
-			CopyToUartTxBuffer((UByte *)"f 18BC\r", 7);
-			i = (base_station).HeadsetCounter++;
-			if ((base_station).QuickDataBoard2[i - MAX_Allowed_Users_Dual].EmptyMarker == 0)
-			{
-				Ipei[0] = 0x01;					// hard coding 0x01 for 1st byte
-				memcpy(&Ipei[1], (base_station).QuickDataBoard2[i - MAX_Allowed_Users_Dual].Upi, 4);
-				ConvertIpeiToSN(i, SN, Ipei);
-				if ((base_station).HeadsetIsOn[i])
-				{
-					memcpy(&buffer[0], "m register_box:lbl_1_", 21);
-					count = 21;
-				}
-				else
-				{
-					memcpy(&buffer[0], "m register_box:lbl_0_", 21);
-					count = 21;
-				}
-				count += GetAsciiValue(&buffer[0], (i + 40), count);
-				memcpy(&buffer[0] + count, " \"", 2);
-				count += 2;
-				if ((base_station).HeadsetIsOn[i])
-				{
-					memcpy(&buffer[0] + count, "on ", 3);
-					count += 3;
-				}
-				else
-				{
-					memcpy(&buffer[0] + count, "off ", 4);
-					count += 4;
-				}
-				memcpy(&buffer[0] + count, &SN[6], 10);
-				count += 10;
-				memcpy(&buffer[0] + count, "\"\r", 2);
-				count += 2;
-			}
-			else
-			{
-				memcpy(&buffer[0], "m register_box:lbl_0_", 21);
-				count = 21;
-				count += GetAsciiValue(buffer, (i + 40), count);
-				memcpy(&buffer[0] + count, " \"\"\r", 4);
-				count += 4;
-			}
-			CopyToUartTxBuffer(&buffer[0], count);
-			OSStartTimer(GENERALFPTASKTIMER, 5); 			// 5 x 10ms = 50ms pause before sending next button info
-		}
-#endif
 		else
 		{
+			if ((base_station).PPCalibration)
+			{
+				// calibrating headsets, re-paint LISTEN-ONLY and DELETE buttons
+				CopyToUartTxBuffer((UByte *)"f 13B\r", 6);												// switch to smaller font
+				CopyToUartTxBuffer((UByte *)"r 0 0 480 50 1 00F\r", 19);								// draw a blue square to "erase" normal buttons
+				CopyToUartTxBuffer((UByte *)"f 13B\r", 6);												// switch to smaller font
+				CopyToUartTxBuffer((UByte *)"xd 28\r", 6);												// disable REGISTRATION button
+				CopyToUartTxBuffer((UByte *)"xd 29\r", 6);												// disable LISTEN ONLY button
+				CopyToUartTxBuffer((UByte *)"xd 30\r", 6);												// disable DELETE button
+				CopyToUartTxBuffer((UByte *)"bdc 28 10 0 1 \"- DECREASE MIC\" 13 13\r", 37);			// button for decrementing headset MIC volume offset
+				CopyToUartTxBuffer((UByte *)"xa 28 p request_base_command 28\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 29 170 0 1 \"RESET MIC\" 13 13\r", 33);				// button for resetting headset MIC volume offset
+				CopyToUartTxBuffer((UByte *)"xa 29 p request_base_command 29\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 30 330 0 1 \"+ INCREASE MIC\" 13 13\r", 38);			// button for incrementing headset MIC volume offset
+				CopyToUartTxBuffer((UByte *)"xa 30 p request_base_command 30\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 31 10 46 1 \"- DECREASE RCV\" 13 13\r", 38);			// button for decrementing headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"xa 31 p request_base_command 31\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 32 170 46 1 \"RESET RCV\" 13 13\r", 34);				// button for resetting headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"xa 32 p request_base_command 32\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 33 330 46 1 \"+ INCREASE RCV\" 13 13\r", 39);			// button for incrementing headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"xa 33 p request_base_command 33\r", 32);
+			}
 			(base_station).FillingRegistrationDisplay = FALSE;
 			CopyToUartTxBuffer((UByte *)"touch on\r", 9);
 		}
 		break;
 	case 0x1E:
 		// delete one or more headsets
-#ifdef SECOND_BASE_CODE
-		if ((!(base_station).SecondBoardPresent && ((base_station).DeletionCounter < MAX_Allowed_Users)) ||
-		     ((base_station).SecondBoardPresent && ((base_station).DeletionCounter < MAX_Allowed_Users_Dual)))
-#else
 		if ((base_station).DeletionCounter < MAX_Allowed_Users)
-#endif
 		{
 			i = (base_station).DeletionCounter++;
-#ifdef SECOND_BASE_CODE
-			while ((!(base_station).SecondBoardPresent && (!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).DeletionCounter < MAX_Allowed_Users)) ||
-			        ((base_station).SecondBoardPresent && (!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).DeletionCounter < MAX_Allowed_Users_Dual)))
-#else
 			while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).DeletionCounter < MAX_Allowed_Users))
-#endif
 			{
 				// if the current headset is not pressed, and the next button is ok to check, increment button index
 				i = (base_station).DeletionCounter++;
 			}
 			if ((base_station).HeadsetButtonIsPressed[i])
 			{
+				if ((base_station).CalibratingPPMic)
+				{
+					CopyToUartTxBuffer((UByte *)"t \"decrease MIC volume\" 10 250\r", 31);
+					BroadcastCalOffset(i, 0);
+					break;
+				}
+				else if ((base_station).CalibratingPPRcv)
+				{
+					CopyToUartTxBuffer((UByte *)"t \"decrease RCV volume\" 10 250\r", 31);
+					BroadcastCalOffset(i, 3);
+					break;
+				}
+
 				(base_station).DisplayValueChanged = TRUE;
 				(base_station).HeadsetButtonIsPressed[i] = FALSE;
 				fp_subscription_removeSubscription(i);
@@ -507,7 +442,8 @@ void RegistrationScreen(UByte cmd)
 				CopyByteToUartTxBuffer('\"');
 				CopyByteToUartTxBuffer('\"');
 				CopyByteToUartTxBuffer('\r');
-				(base_station).ListenOnly[i] = 0xFF;
+				if ((base_station).DualBase != DUAL_BASE_SLAVE)
+					(base_station).ListenOnly[i] = 0xFF;
 				(base_station).HeadsetIsOn[i] = FALSE;
 				if ((base_station).MicIsOn[i])
 				{
@@ -519,64 +455,51 @@ void RegistrationScreen(UByte cmd)
 			}
 			OSStartTimer(PPDELETETASKTIMER, 50); 			// 50 x 10ms = 500ms pause before checking next button
 		}
-#ifdef SECOND_BASE_CODE
-		else if (FIRST_BASE && ((base_station).DeletionCounter < MAX_Allowed_Users))
-		{
-			// work with 2nd base headsets on 1st base display
-			i = (base_station).DeletionCounter++;
-			while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).DeletionCounter < MAX_Allowed_Users))
-			{
-				// if the current headset is not pressed, and the next button is ok to check, increment button index
-				i = (base_station).DeletionCounter++;
-			}
-			if ((base_station).HeadsetButtonIsPressed[i])
-			{
-				(base_station).DisplayValueChanged = TRUE;
-				(base_station).HeadsetButtonIsPressed[i] = FALSE;
-				SendPCMCommand(DELETE_PP_ind + (i - MAX_Allowed_Users_Dual));
-				(base_station).QuickDataBoard2[i - MAX_Allowed_Users_Dual].EmptyMarker = 1;
-				CopyToUartTxBuffer((UByte *)"m register_box:lbl_0_", 21);
-				SendAsciiValue(i + 40);
-				CopyByteToUartTxBuffer(' ');
-				CopyByteToUartTxBuffer('\"');
-				CopyByteToUartTxBuffer('\"');
-				CopyByteToUartTxBuffer('\r');
-				(base_station).ListenOnly[i] = 0xFF;
-				(base_station).HeadsetIsOn[i] = FALSE;
-				if ((base_station).MicIsOn[i])
-				{
-					WWMSF WWMSFVal;
-					WWMSFVal.SubStatusType = MIC_MUTE_CMD;
-					WWMSFVal.Sub.SetMicMute.MicMute = 1;              			// 0 is unmute, 1 is mute
-					HandlePacketFromPP(i, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
-				}
-			}
-			OSStartTimer(PPDELETETASKTIMER, 50); 			// 50 x 10ms = 500ms pause before checking next button
-		}
-#endif
 		break;
 	case 0x1F:
 		// make one or more headsets listen only
-#ifdef SECOND_BASE_CODE
-		if ((!(base_station).SecondBoardPresent && ((base_station).ListenOnlyCounter < MAX_Allowed_Users)) ||
-		     ((base_station).SecondBoardPresent && ((base_station).ListenOnlyCounter < MAX_Allowed_Users_Dual)))
-#else
 		if ((base_station).ListenOnlyCounter < MAX_Allowed_Users)
-#endif
 		{
+			if ((!(base_station).PPCalibration) && ((base_station).DualBase > 0) && ((base_station).ListenOnlyCounter == 0))
+			{
+				if ((base_station).DualBase == DUAL_BASE_MASTER)
+				{
+					// this is MASTER so switch UART to SLAVE ...
+					SWITCH_DISPLAY_TO_SLAVE;
+					// start polling SLAVE STATUS (P3[4]); when it goes HIGH switch display back to MASTER
+					OSStartTimer(LISTENONLYTASKTIMER, 50); 												// 50 x 10ms = 500ms pause before checking P3[4]
+				}
+				else
+				{
+					// this is SLAVE so set up P3[4] HIGH to tell MASTER to switch UART back to MASTER ...
+					SET_P34_ACTIVE;
+					// set SLAVE STATUS P3[4] to HIGH for 1 second
+					OSStartTimer(LISTENONLYTASKTIMER, 100); 											// 100 x 10ms = 1000ms pause before resetting P3[4] to LO
+				}
+				break;																					// skip the rest of the LISTON-ONLY code
+			}
+
 			i = (base_station).ListenOnlyCounter++;
-#ifdef SECOND_BASE_CODE
-			while ((!(base_station).SecondBoardPresent && (!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).ListenOnlyCounter < MAX_Allowed_Users)) ||
-			        ((base_station).SecondBoardPresent && (!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).ListenOnlyCounter < MAX_Allowed_Users_Dual)))
-#else
 			while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).ListenOnlyCounter < MAX_Allowed_Users))
-#endif
 			{
 				// if the current headset is not pressed, and the next button is ok to check, increment button index
 				i = (base_station).ListenOnlyCounter++;
 			}
 			if ((base_station).HeadsetButtonIsPressed[i])
 			{
+				if ((base_station).CalibratingPPMic)
+				{
+					CopyToUartTxBuffer((UByte *)"t \"increase MIC volume\" 10 250\r", 31);
+					BroadcastCalOffset(i, 2);
+					break;
+				}
+				else if ((base_station).CalibratingPPRcv)
+				{
+					CopyToUartTxBuffer((UByte *)"t \"increase RCV volume\" 10 250\r", 31);
+					BroadcastCalOffset(i, 5);
+					break;
+				}
+
 				(base_station).HeadsetButtonIsPressed[i] = FALSE;
 				if (QuickData[i].EmptyMarker == 0)
 				{
@@ -618,65 +541,6 @@ void RegistrationScreen(UByte cmd)
 			}
 			OSStartTimer(LISTENONLYTASKTIMER, 50); 			// 50 x 10ms = 500ms pause before checking next button
 		}
-#ifdef SECOND_BASE_CODE
-		else if (FIRST_BASE && ((base_station).ListenOnlyCounter < MAX_Allowed_Users))
-		{
-			// work with 2nd base headsets on 1st base display
-			i = (base_station).ListenOnlyCounter++;
-			while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).ListenOnlyCounter < MAX_Allowed_Users))
-			{
-				// if the current headset is not pressed, and the next button is ok to check, increment button index
-				i = (base_station).ListenOnlyCounter++;
-			}
-			if ((base_station).HeadsetButtonIsPressed[i])
-			{
-				(base_station).HeadsetButtonIsPressed[i] = FALSE;
-				if ((base_station).QuickDataBoard2[i - MAX_Allowed_Users_Dual].EmptyMarker == 0)
-				{
-					if ((base_station).ListenOnly[i] == 0xFF)
-					{
-						(base_station).ListenOnly[i] = 0x01;
-						SendPCMCommand(LISTEN_ONLY_PP_ind + ((i - MAX_Allowed_Users_Dual) << 4) + 1);
-					}
-					else
-					{
-						(base_station).ListenOnly[i] = 0xFF;
-						SendPCMCommand(LISTEN_ONLY_PP_ind + ((i - MAX_Allowed_Users_Dual) << 4) + 0);
-					}
-					(base_station).DisplayValueChanged = TRUE;
-					Ipei[0] = 0x01;													// hard coding 0x01 for 1st byte
-					memcpy(&Ipei[1], (base_station).QuickDataBoard2[i - MAX_Allowed_Users_Dual].Upi, 4);
-					ConvertIpeiToSN(i, SN, Ipei);
-					if ((base_station).HeadsetIsOn[i])
-						CopyToUartTxBuffer((UByte *)"m register_box:lbl_1_", 21);	// green
-					else
-						CopyToUartTxBuffer((UByte *)"m register_box:lbl_0_", 21);	// gray
-					SendAsciiValue(i + 40);
-					CopyByteToUartTxBuffer(' ');
-					CopyByteToUartTxBuffer('\"');
-					if ((base_station).HeadsetIsOn[i])
-						CopyToUartTxBuffer((UByte *)"on ", 3);
-					else
-						CopyToUartTxBuffer((UByte *)"off ", 4);
-					for (ii = 6; ii < 16; ii++)
-						CopyByteToUartTxBuffer(SN[ii]);
-					CopyByteToUartTxBuffer('\"');
-					CopyByteToUartTxBuffer('\r');
-				}
-				else
-				{
-					// just in case the headset was deleted but is still listed on the display
-					CopyToUartTxBuffer((UByte *)"m register_box:lbl_0_", 21);	// gray
-					SendAsciiValue(i + 40);
-					CopyByteToUartTxBuffer(' ');
-					CopyByteToUartTxBuffer('\"');
-					CopyByteToUartTxBuffer('\"');
-					CopyByteToUartTxBuffer('\r');
-				}
-			}
-			OSStartTimer(LISTENONLYTASKTIMER, 50); 			// 50 x 10ms = 500ms pause before checking next button
-		}
-#endif
 		break;
 	// 0x28 - 0x31 are button presses for each headset serial number
 	case 0x28:
@@ -731,20 +595,6 @@ void PINScreen()
 					CopyToUartTxBuffer((UByte *)"m tools\r", 8);
 					break;
 				case REGISTRATION:
-#ifdef SECOND_BASE_CODE
-					if ((base_station).SecondBoardPresent && FIRST_BASE)
-					{
-						for (i = 0; i < MAX_Allowed_Users_Dual; i++)
-						{
-							(base_station).QuickDataBoard2[i].EmptyMarker = 1;
-							(base_station).QuickDataBoard2[i].Upi[0] = 0xFF;
-							(base_station).QuickDataBoard2[i].Upi[1] = 0xFF;
-							(base_station).QuickDataBoard2[i].Upi[2] = 0xFF;
-							(base_station).QuickDataBoard2[i].Upi[3] = 0xFF;
-						}
-						SendPCMCommand(REQUEST_PP_SN_ind);			// request PP SNs
-					}
-#endif
 					CopyToUartTxBuffer((UByte *)"m register_main\r", 16);
 					break;
 				case GREETER_SETUP:
@@ -767,8 +617,33 @@ void PINScreen()
 				case NEW_CLOCK:
 				case GREETER_PIN:
 				case NEW_NIGHT_TIME:
+				case CAL_PP_PIN:
 					break;
 				}
+			}
+			else
+			{
+				CopyToUartTxBuffer((UByte *)"m back_key\r", 11);
+				CopyToUartTxBuffer((UByte *)"m thumbs_dn\r", 12);
+			}
+		}
+	}
+	// this handles PIN screen to access headset calibration screen
+	else if ((base_station).DisplayScreen == CAL_PP_PIN)
+	{
+		if ((base_station).PinDigitIndex == 0)
+		{
+			// draw blue square to erase possible thumbs down
+			CopyToUartTxBuffer((UByte *)"r 72 146 131 205 1 00F\r", 23);
+		}
+		else if ((base_station).PinDigitIndex > 2)
+		{
+			if ((memcmp(&(base_station).TempPin, &(base_station).DisplayCalPPPin, 4) == 0))
+			{
+				CopyToUartTxBuffer((UByte *)"set e0 0\r", 9);
+				(base_station).DisplayIsLocked = 0;
+				(base_station).DisplayValueChanged = TRUE;
+					CopyToUartTxBuffer((UByte *)"m register_main\r", 16);
 			}
 			else
 			{
@@ -1896,6 +1771,62 @@ void GreeterAuthorizationScreen()
 	(base_station).PinDigitIndex++;
 }
 
+void HandleDebugButton(UByte cmd)
+{
+	int i = 0;
+	(base_station).HeadsetCounter = 0;
+	(base_station).DeletionCounter = 0;
+	(base_station).ListenOnlyCounter = 0;
+	(base_station).CalibratingPPMic = FALSE;
+	(base_station).CalibratingPPRcv = FALSE;
+
+	CopyToUartTxBuffer((UByte *)"t \"                                        \" 10 250\r", 52);
+
+	switch (cmd)
+	{
+	case 28:	// - PP MIC offset
+		(base_station).CalibratingPPMic = TRUE;
+		RegistrationScreen(0x1E);
+		break;
+	case 29:	// reset PP MIC offset
+		i = (base_station).HeadsetCounter++;
+		while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).HeadsetCounter < MAX_Allowed_Users))
+		{
+			i = (base_station).HeadsetCounter++;
+		}
+		if ((base_station).HeadsetButtonIsPressed[i])
+		{
+			CopyToUartTxBuffer((UByte *)"t \"reset MIC volume\" 10 250\r", 28);
+			BroadcastCalOffset(i, 1);
+		}
+		break;
+	case 30:	// + PP MIC offset
+		(base_station).CalibratingPPMic = TRUE;
+		RegistrationScreen(0x1F);
+		break;
+	case 31:	// - PP RCV offset
+		(base_station).CalibratingPPRcv = TRUE;
+		RegistrationScreen(0x1E);
+		break;
+	case 32:	// reset PP RCV offset
+		i = (base_station).HeadsetCounter++;
+		while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).HeadsetCounter < MAX_Allowed_Users))
+		{
+			i = (base_station).HeadsetCounter++;
+		}
+		if ((base_station).HeadsetButtonIsPressed[i])
+		{
+			CopyToUartTxBuffer((UByte *)"t \"reset RCV volume\" 10 250\r", 28);
+			BroadcastCalOffset(i, 4);
+		}
+		break;
+	case 33:	// + PP RCV offset
+		(base_station).CalibratingPPRcv = TRUE;
+		RegistrationScreen(0x1F);
+		break;
+	}
+}
+
 void ServiceDisplay()
 {
 	// service the Display command that was sent
@@ -1920,9 +1851,12 @@ void ServiceDisplay()
 			(base_station).DisplayScreen == MESSAGE_SETUP2 ||
 			(base_station).DisplayScreen == NEW_CLOCK)
 		{
-			CheckForActiveGreet();								// check if selected greet has changed
-			CheckForActiveMessage();							// check if reminders or alarm selections have changed
-			PlayQueuedMessage();								// start playing any queued reminders or alarm
+			if ((base_station).GreeterActive)
+			{
+				CheckForActiveGreet();							// check if selected greet has changed
+				CheckForActiveMessage();						// check if reminders or alarm selections have changed
+				PlayQueuedMessage();							// start playing any queued reminders or alarm
+			}
 		}
 		(base_station).DisplayScreen = NONE;
 		CopyToUartTxBuffer((UByte *)"*abt\r", 5);
@@ -1935,22 +1869,6 @@ void ServiceDisplay()
 			CopyToUartTxBuffer((UByte *)"m tools\r", 8);
 			break;
 		case 0x03:
-#ifdef SECOND_BASE_CODE
-			if ((base_station).SecondBoardPresent && FIRST_BASE)
-			{
-				StopTimer(VEHICLEDETECTTASKTIMER); 						// temporarily stop checking vehicle detector
-				for (i = 0; i < MAX_Allowed_Users_Dual; i++)
-				{
-					(base_station).QuickDataBoard2[i].EmptyMarker = 1;
-					(base_station).QuickDataBoard2[i].Upi[0] = 0xFF;
-					(base_station).QuickDataBoard2[i].Upi[1] = 0xFF;
-					(base_station).QuickDataBoard2[i].Upi[2] = 0xFF;
-					(base_station).QuickDataBoard2[i].Upi[3] = 0xFF;
-				}
-				SendPCMCommand(REQUEST_PP_SN_ind);						// request PP SNs
-				OSStartTimer(VEHICLEDETECTTASKTIMER, 100); 				// 100 x 10ms = 1s resume checking vehicle detector
-			}
-#endif
 			CopyToUartTxBuffer((UByte *)"m register_main\r", 16);
 			break;
 		case 0x04:
@@ -1998,7 +1916,7 @@ void ServiceDisplay()
 		if ((base_station).DisplayScreen == GREETER_PIN)
 			GreeterAuthorizationScreen();
 		else
-		PINScreen();
+			PINScreen();
 		break;
 	case 0x07:
 		(base_station).PinDigitIndex = 0;
@@ -2084,10 +2002,6 @@ void ServiceDisplay()
 		{
 			(base_station).RegistrationButtonPressed = FALSE;
 			(base_station).RegistrationAllowed = FALSE;
-#ifdef SECOND_BASE_CODE
-			if ((base_station).SecondBoardPresent)
-				SendPCMCommand(REGISTER_PP_ind + FALSE);
-#endif
 		}
 
 		if ((base_station).GreeterInstalled)
@@ -2118,7 +2032,7 @@ void ServiceDisplay()
 					GREET_IN_PP_OFF;												// enable BC5 audio path only (no GREET) is enabled to DECT MICP/N
 				if ((base_station).MessageIsPlaying == 0)
 					MENU_SPKR_AMP_ON;												// turn post speaker back on (enable BC5 audio path in to DECT MICP/N)
-				if ((base_station).GrillSpeakerVolume > 0)
+				if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
 					GRILL_SPEAKER_ON;												// turn grill speaker back on
 				(base_station).GrillShouldBeOn = TRUE;
 				// TODO: CRP - convert usec_pause to use timer
@@ -2164,6 +2078,13 @@ void ServiceDisplay()
 		if ((base_station).DayTime != PreviousDayTime)
 			RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
 
+		if ((base_station).PPCalibration)
+			(base_station).PPCalibration = FALSE;
+		if ((base_station).CalibratingPPMic)
+			(base_station).CalibratingPPMic = FALSE;
+		if ((base_station).CalibratingPPRcv)
+			(base_station).CalibratingPPRcv = FALSE;
+
 		break;
 	case 0x11:
 		(base_station).DisplayScreen = VOLUME;
@@ -2199,54 +2120,12 @@ void ServiceDisplay()
 		if ((base_station).DisplayCommandData[0] == 1)
 		{
 			(base_station).RegistrationButtonPressed = TRUE;
-#ifdef SECOND_BASE_CODE
-			if ((base_station).SecondBoardPresent)
-			{
-				UByte base1 = fp_subscription_getNumberOfSubscriptions();
-			    UByte base2 = 0;
-			    for(i = 0; i < MAX_Allowed_Users_Dual; i++)
-			    {
-			        if((base_station).QuickDataBoard2[i].EmptyMarker == 0)
-			        {
-			        	base2++;
-			        }
-			    }
-				// if both have 5 headsets registered, do not allow more registrations
-				if ((base1 >= MAX_Allowed_Users_Dual) && (base2 >= MAX_Allowed_Users_Dual))
-				{
-					PrintStatus(0, "already full - no registrations allowed");
-					(base_station).RegistrationAllowed = FALSE;
-					CopyToUartTxBuffer((UByte *)"ssb 28 0\r", 9);	// release Registration button
-				}
-				// if first base has 5 headsets registered, only allow registrations on second base
-				else if (base1 >= MAX_Allowed_Users_Dual)
-				{
-					PrintStatus(0, "only allowing registrations on second base");
-					(base_station).RegistrationAllowed = FALSE;
-					SendPCMCommand(REGISTER_PP_ind + TRUE);
-				}
-				// if second base has 5 headsets registered, only allow registrations on first base
-				else if (base2 >= MAX_Allowed_Users_Dual)
-				{
-					PrintStatus(0, "only allowing registrations on first base");
-					(base_station).RegistrationAllowed = TRUE;
-				}
-				// ok to allow registrations on either base
-				else
-				{
-					PrintStatus(0, "allowing registrations on either base");
-					(base_station).RegistrationAllowed = TRUE;
-					SendPCMCommand(REGISTER_PP_ind + TRUE);
-				}
-			}
-#else
 			if (fp_subscription_getNumberOfSubscriptions() >= MAX_Allowed_Users)
 			{
 				PrintStatus(0, "already full - no registrations allowed");
 				(base_station).RegistrationAllowed = FALSE;
 				CopyToUartTxBuffer((UByte *)"ssb 28 0\r", 9);	// release Registration button
 			}
-#endif
 			else
 				(base_station).RegistrationAllowed = TRUE;
 		}
@@ -2254,10 +2133,6 @@ void ServiceDisplay()
 		{
 			(base_station).RegistrationButtonPressed = FALSE;
 			(base_station).RegistrationAllowed = FALSE;
-#ifdef SECOND_BASE_CODE
-			if ((base_station).SecondBoardPresent)
-				SendPCMCommand(REGISTER_PP_ind + FALSE);
-#endif
 		}
 		break;
 	case 0x16:
@@ -2363,15 +2238,7 @@ void ServiceDisplay()
 		break;
 	case 0x40:
 	    (base_station).DisplayScreen = WENTWORTH_INFO_DEBUG;
-#ifdef SECOND_BASE_CODE
-		if (FIRST_BASE && (base_station).SecondBoardPresent)
-		{
-			SendPCMCommand(REQUEST_POWER_ON_COUNT_ind);
-			general_startTimer(-1, DISPLAY_WT_DEBUG_INFO, NULL, 0, 10);	// wait for count from second base before displaying screen
-		}
-		else
-#endif
-			WTInfoDebugScreen();
+		WTInfoDebugScreen();
 		break;
 	case 0x41:
 		if ((base_station).PowerOnCount)
@@ -2382,13 +2249,6 @@ void ServiceDisplay()
 		WTInfoDebugScreen();
 		break;
 	case 0x42:
-#ifdef SECOND_BASE_CODE
-		if ((base_station).PowerOnCount2)
-		{
-			(base_station).PowerOnCount2 = 0;
-			SendPCMCommand(REQUEST_POWER_ON_COUNT2_ind);
-		}
-#endif
 		WTInfoDebugScreen();
 		break;
 	case 0x43:
@@ -2421,42 +2281,46 @@ void ServiceDisplay()
 				(base_station).DisplayValueChanged = TRUE;
 				break;
 			case 2:
-				CopyToUartTxBuffer((UByte *)"touch off\r", 10);
-				StopTimer(WATCHDOGTASKTIMER);
-				break;
-			case 3:
-				// Alert Input button press executes here
-				(base_station).UsingP34ForAlarm = FALSE;
-				(base_station).DisplayValueChanged = TRUE;
-				break;
-			case 4:
-				// Alert Input button release executes here
-				(base_station).UsingP34ForAlarm = TRUE;
-				(base_station).DisplayValueChanged = TRUE;
-				break;
-			case 5:
 				// BC5 on/off button press here
 				(base_station).BC5Bypassed = TRUE;
 				// send BC5 OFF to PPs
 				BroadcastSystemModeState(-1);
 				break;
-			case 6:
+			case 3:
 				// BC5 on/off button release here
 				(base_station).BC5Bypassed = FALSE;
 				// send BC5 ON to PPs
 				BroadcastSystemModeState(-1);
 				break;
-			case 7:
+			case 4:
+				(base_station).PPCalibration = TRUE;
+				(base_station).DisplayScreen = CAL_PP_PIN;
+				(base_station).PinDigitIndex = 0;
+				CopyToUartTxBuffer((UByte *)"m pin\r", 6);
+				break;
+			case 5:
 				// GREET in headset NO/YES button press here
 				// play greet in headset
 				(base_station).PlayGreetInPP = TRUE;
 				(base_station).DisplayValueChanged = TRUE;
 				break;
-			case 8:
+			case 6:
 				// GREET in headset NO/YES button release here
 				// do NOT play greet in headset
 				(base_station).PlayGreetInPP = FALSE;
 				(base_station).DisplayValueChanged = TRUE;
+				break;
+			case 7:
+				CopyToUartTxBuffer((UByte *)"touch off\r", 10);
+				StopTimer(WATCHDOGTASKTIMER);
+				break;
+			case 28:	// - PP MIC offset
+			case 29:	// reset PP MIC offset
+			case 30:	// + PP MIC offset
+			case 31:	// - PP RCV offset
+			case 32:	// reset PP RCV offset
+			case 33:	// + PP RCV offset
+				HandleDebugButton((base_station).DisplayCommandData[0]);
 				break;
 			default:
 				PrintStatus(0, "unknown command request");

@@ -277,8 +277,8 @@ void check_touch_pins(void)
   if (loop++ == 3)
 	  loop = 1;
 
-  // headset not in a call yet so ignore button presses
-  if ((headset.SystemMode == UNREGISTERED) || (headset.SystemMode == NOT_LOCKED)) return;
+  // headset not in a call yet, and not in test mode, so ignore button presses
+  if (((headset.SystemMode == UNREGISTERED) || (headset.SystemMode == NOT_LOCKED)) && !headset.ProductionTest) return;
 
   UByte key_pressed = 0x00;
   UByte changed_keys = 0x00;
@@ -861,6 +861,7 @@ void InitHeadsetVariables(void)
 	headset.AlertCount = 0;
 	headset.BatteryLowCounter = 0;
 	headset.GainVolume = 1;						// dB; pre-TX GAIN block
+	headset.SpkrVolOffset = 0;					// only used for calibrating receiver levels at production test
 	headset.WavAtten = 0x0E32;					// .wav attenuation dB = (InboundVol x -2) - 13.1;
 	headset.GainSpkrVolume = -1;				// dB; post decoder GAIN block: set as FP InboundVol x 2
 	headset.SpeakerVolume = 6;					// dB; used for additional PP volume, normalized by subtracting 8dB (0 = -8dB, 8 = 0dB, 14 = +6dB)
@@ -879,6 +880,7 @@ void InitHeadsetVariables(void)
 	headset.DualLane = FALSE;
 	headset.SystemMode = UNREGISTERED;
 	headset.TouchBoardStatus = 0;
+	headset.ProductionTest = FALSE;
 #ifdef ENABLE_CHANNEL_MESSAGES
 	headset.ChannelInfo = 0;
 	headset.LEDCount = 0;

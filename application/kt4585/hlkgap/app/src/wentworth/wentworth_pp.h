@@ -28,6 +28,7 @@
 #define WENTWORTH_PP_H_
 
 #define TOGGLE_LED		0xA4	// toggle LED won low battery
+#define CHECK_OFFSET	0xA5	// check EEPROM[0x03E3-0x03E6] for headset.GainVolume & headset.SpkrVolOffset offsets
 
 #define HM_Filler_D2 	0xD2	// hopefully a filler
 
@@ -75,7 +76,7 @@ typedef struct
 	BOOLEAN CarWaiting;
 	UByte AlertCount;
 	UByte BatteryLowCounter;
-	UByte GainVolume;
+	int GainVolume, SpkrVolOffset;
 	WORD WavAtten;
 	int GainSpkrVolume;
 	UByte SpeakerVolume;
@@ -91,6 +92,7 @@ typedef struct
 	char SerialNumber[17];
 	UByte SystemMode;
 	UByte TouchBoardStatus;
+	BOOLEAN ProductionTest;
 #ifdef ENABLE_CHANNEL_MESSAGES
 	UByte ChannelInfo, LEDCount;
 #endif

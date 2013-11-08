@@ -38,10 +38,6 @@ extern void DeleteBuffer(void *BufferPointer);
 extern void ConvertIpeiToSN(PPIDType user, char SerialNumber[17], IPEIType Hex_SN);
 extern void CopyToUartTxBuffer(UByte * buffer, unsigned int length);
 extern void CopyByteToUartTxBuffer(UByte buffer);
-#ifdef SECOND_BASE_CODE
-extern void SendQuickData(UByte user);
-extern void SendPCMCommand(WORD cmd);
-#endif
 
 extern BYTE AlarmStatus;
 extern UByte BSCSFTASK;
@@ -651,13 +647,6 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
 
                     // set up registration display "green" button here
                     (base_station).HeadsetIsOn[PMID2PPID(applicationInstanceData->pmid)] = TRUE;
-#ifdef SECOND_BASE_CODE
-                    if (!FIRST_BASE)
-                    {
-                    	SendQuickData(PMID2PPID(applicationInstanceData->pmid));
-                    	SendPCMCommand(PP_ON_ind + (PMID2PPID(applicationInstanceData->pmid) << 4) + 1);
-                    }
-#endif
                     if ((base_station).DisplayScreen == REGISTRATION)
                     {
                     	UByte buffer[50];

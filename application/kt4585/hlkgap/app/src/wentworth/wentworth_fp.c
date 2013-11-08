@@ -72,10 +72,6 @@ extern void AFESetGainInboundVolumeFP(int vol_set);
 extern void AFEDisablePostMicPath(void);
 extern void AFEEnablePostMicPath(void);
 extern void AFESetGainSpkrVolumeFP(int vol_set);
-#ifdef SECOND_BASE_CODE
-extern void ServicePCMCommand(WORD cmd);
-extern void SendPCMCommand(WORD cmd);
-#endif
 extern UByte fp_subscription_removeSubscription(PPIDType user);
 
 static void usec_pause(unsigned int x)
@@ -87,145 +83,81 @@ static void usec_pause(unsigned int x)
     }
 }
 
+void check_shutdown_grill_pin(void)
+{
+	if (P20_STATUS == Px_0_DATA)
+	{
+		AFEEnablePostMicPath();													// enable DECT MIC input
+		MENU_SPKR_AMP_ON;														// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
+	}
+	else
+	{
+		AFEDisablePostMicPath();												// disable DECT MIC input
+		MENU_SPKR_AMP_OFF;														// make sure post speaker is off (disables BC5 audio path in to DECT MICP/N)
+	}
+}
+
 void check_external_relay_pin(void)
 {
 	// check alarm pin if Alarm Message is enabled
 	if (((base_station).ActiveMessages & 0x2000) == 0x2000)
 	{
-		if ((base_station).UsingP34ForAlarm)
+		if (!(base_station).AlertPlayed && !(base_station).AlertWaiting && (~P1_DATA_REG & Px_2_DATA))
 		{
-			if (!(base_station).AlertPlayed && !(base_station).AlertWaiting && (~P3_DATA_REG & Px_4_DATA))
+//			PrintStatus(0, "****** ALARM MSG: external relay pin-N / P1[2] is LOW *** ");
+			if ((base_station).SystemMode == SPEED_TEAM)
 			{
-//				PrintStatus(0, "****** ALARM MSG: external relay pin-C / P3[4] is LOW *** ");
-				if ((base_station).SystemMode == SPEED_TEAM)
-				{
-					(base_station).AlertWaiting = TRUE;
-					PlayQueuedMessage();
-				}
-				else if (!(base_station).VehicleDetectIsActive)
-				{
-					MENU_SPKR_AMP_OFF;													// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
-					GRILL_SPEAKER_OFF;													// mute grill speaker during playback
-					AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);						// temporarily set inbound for playback comfort
-					AFEEnablePostMicPath();												// enable DECT MIC input
-					RunGreetClock(MESSAGE_PLAY_START, NUM_OF_MESSAGES);					// play the alarm message
-					(base_station).AlertPlayed = TRUE;
-				}
-				else
-					(base_station).AlertWaiting = TRUE;
+				(base_station).AlertWaiting = TRUE;
+				PlayQueuedMessage();
 			}
-			else if (((base_station).AlertPlayed || (base_station).AlertWaiting) && (P3_DATA_REG & Px_4_DATA))
+			else if (!(base_station).VehicleDetectIsActive)
 			{
-//				PrintStatus(0, "****** ALARM MSG: external relay pin-C / P3[4] is HIGH; reset alert flag *** ");
-				if (!(base_station).AlertWaiting)
-					(base_station).AlertPlayed = FALSE;
+				MENU_SPKR_AMP_OFF;												// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
+				GRILL_SPEAKER_OFF;												// mute grill speaker during playback
+				AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);					// temporarily set inbound for playback comfort
+				AFEEnablePostMicPath();											// enable DECT MIC input
+				RunGreetClock(MESSAGE_PLAY_START, NUM_OF_MESSAGES);				// play the alarm message
+				(base_station).AlertPlayed = TRUE;
 			}
+			else
+				(base_station).AlertWaiting = TRUE;
 		}
-		else
+		else if (((base_station).AlertPlayed || (base_station).AlertWaiting) && (P1_DATA_REG & Px_2_DATA))
 		{
-			if (!(base_station).AlertPlayed && !(base_station).AlertWaiting && (~P1_DATA_REG & Px_2_DATA))
-			{
-//				PrintStatus(0, "****** ALARM MSG: external relay pin-N / P1[2] is LOW *** ");
-				if ((base_station).SystemMode == SPEED_TEAM)
-				{
-					(base_station).AlertWaiting = TRUE;
-					PlayQueuedMessage();
-				}
-				else if (!(base_station).VehicleDetectIsActive)
-				{
-					MENU_SPKR_AMP_OFF;													// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
-					GRILL_SPEAKER_OFF;													// mute grill speaker during playback
-					AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);						// temporarily set inbound for playback comfort
-					AFEEnablePostMicPath();												// enable DECT MIC input
-					RunGreetClock(MESSAGE_PLAY_START, NUM_OF_MESSAGES);					// play the alarm message
-					(base_station).AlertPlayed = TRUE;
-				}
-				else
-					(base_station).AlertWaiting = TRUE;
-			}
-			else if (((base_station).AlertPlayed || (base_station).AlertWaiting) && (P1_DATA_REG & Px_2_DATA))
-			{
-//				PrintStatus(0, "****** ALARM MSG: external relay pin-N / P1[2] is HIGH; reset alert flag *** ");
-				if (!(base_station).AlertWaiting)
-					(base_station).AlertPlayed = FALSE;
-			}
+//			PrintStatus(0, "****** ALARM MSG: external relay pin-N / P1[2] is HIGH; reset alert flag *** ");
+			if (!(base_station).AlertWaiting)
+				(base_station).AlertPlayed = FALSE;
 		}
 	}
 }
 
-#ifdef SECOND_BASE_CODE
-void ServiceVehicleDetect(BOOLEAN VehicleIsPresent, BOOLEAN GreetPlaying);
-#else
 void ServiceVehicleDetect(BOOLEAN VehicleIsPresent);
-#endif
 void check_VD_pins(void)
 {
 	if (!(base_station).VehicleDetectIsActive && (~P1_DATA_REG & Px_1_DATA))
 	{
 //		PrintStatus(0, "****** VD_3V fired *** ");
-#ifdef SECOND_BASE_CODE
-		ServiceVehicleDetect(TRUE, FALSE);
-#else
 		ServiceVehicleDetect(TRUE);
-#endif
-	}
-	else if (!(base_station).VehicleDetectIsActive && (base_station).UsingP34ForAlarm && (~P1_DATA_REG & Px_2_DATA))
-	{
-//		PrintStatus(0, "****** VD_12V fired *** ");
-#ifdef SECOND_BASE_CODE
-		ServiceVehicleDetect(TRUE, FALSE);
-#else
-		ServiceVehicleDetect(TRUE);
-#endif
-	}
-	else if ((base_station).UsingP34ForAlarm)
-	{
-		if ((base_station).VehicleDetectIsActive && (P1_DATA_REG & Px_2_DATA) && (P1_DATA_REG & Px_1_DATA))
-		{
-//			PrintStatus(0, "****** VD released *** ");
-#ifdef SECOND_BASE_CODE
-			ServiceVehicleDetect(FALSE, FALSE);
-#else
-		ServiceVehicleDetect(FALSE);
-#endif
-		}
 	}
 	else if ((base_station).VehicleDetectIsActive && (P1_DATA_REG & Px_1_DATA))
 	{
 //		PrintStatus(0, "****** VD_3V released *** ");
-#ifdef SECOND_BASE_CODE
-		ServiceVehicleDetect(FALSE, FALSE);
-#else
 		ServiceVehicleDetect(FALSE);
-#endif
 	}
 }
 
-#ifdef SECOND_BASE_CODE
-void ServiceVehicleDetect(BOOLEAN VehicleIsPresent, BOOLEAN GreetPlaying)
-#else
 void ServiceVehicleDetect(BOOLEAN VehicleIsPresent)
-#endif
 {
 	int i;
 	if (VehicleIsPresent && ((base_station).SystemMode != SPEED_TEAM))
 	{
-#ifdef SECOND_BASE_CODE
-		if (FIRST_BASE && (base_station).SecondBoardPresent)					// let the second base process VD also
-		{
-			if ((base_station).GreeterActive && ((base_station).ActiveGreetNumber > 0))
-    			SendPCMCommand(VEHICLE_DET_ind + 0x10 + VehicleIsPresent);
-			else
-				SendPCMCommand(VEHICLE_DET_ind + VehicleIsPresent);
-		}
-#endif
 		if ((base_station).DisplayScreen == MAIN)
 			CopyToUartTxBuffer((UByte *)"m lane_1:lbl_2\r", 15);				// display car on pad icon
 		else
 			CopyToUartTxBuffer((UByte *)"set e2 2\r", 9);						// notify that car is on pad
 		(base_station).VehicleDetectIsActive = TRUE;
 		(base_station).CarIsWaiting = TRUE;
-		if ((base_station).MessageIsPlaying > 0)
+		if ((base_station).GreeterActive && ((base_station).MessageIsPlaying > 0))
 		{
 			RunGreetClock(MESSAGE_PLAY_STOP, (base_station).MessageIsPlaying);	// stops playback of any greet
 			if (((base_station).DisplayScreen == GREETER_SETUP) ||
@@ -238,7 +170,7 @@ void ServiceVehicleDetect(BOOLEAN VehicleIsPresent)
 				CopyToUartTxBuffer((UByte *)"xd 45\r", 6);						// disable stop button
 			}
 		}
-		else if ((base_station).MessageIsRecording > 0)
+		else if ((base_station).GreeterActive && ((base_station).MessageIsRecording > 0))
 		{
 			RunGreetClock(MESSAGE_RECORD_STOP, (base_station).MessageIsRecording);	// stops recording of any greet
 			if (((base_station).DisplayScreen == GREETER_SETUP) ||
@@ -251,23 +183,18 @@ void ServiceVehicleDetect(BOOLEAN VehicleIsPresent)
 				CopyToUartTxBuffer((UByte *)"xd 45\r", 6);						// disable stop button
 			}
 		}
-#ifdef SECOND_BASE_CODE
-		if (FIRST_BASE)
-#endif
-		{
-			AFESetGainInboundVolumeFP(NORMAL_INBOUND);
-			RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
-			if ((base_station).P33UsedForGreetMux)
-				GREET_IN_PP_OFF;												// enable BC5 audio path only (no GREET) in to DECT MICP/N
-			MENU_SPKR_AMP_ON;													// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
-			if ((base_station).GrillSpeakerVolume > 0)
-				GRILL_SPEAKER_ON;												// turn on grill speaker
-			(base_station).GrillShouldBeOn = TRUE;
-			// TODO: CRP - convert usec_pause to use timer
-			usec_pause(65535);
-			usec_pause(65535);
-			AFEEnablePostMicPath();												// enable DECT MIC input
-		}
+		AFESetGainInboundVolumeFP(NORMAL_INBOUND);
+		RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
+		if ((base_station).P33UsedForGreetMux)
+			GREET_IN_PP_OFF;													// enable BC5 audio path only (no GREET) in to DECT MICP/N
+		MENU_SPKR_AMP_ON;														// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
+		if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
+			GRILL_SPEAKER_ON;													// turn on grill speaker
+		(base_station).GrillShouldBeOn = TRUE;
+		// TODO: CRP - convert usec_pause to use timer
+		usec_pause(65535);
+		usec_pause(65535);
+		AFEEnablePostMicPath();													// enable DECT MIC input
 		if ((base_station).GreeterActive)
 		{
     		PrintStatus(0, "*** GREET_N is LO *** ");
@@ -282,34 +209,21 @@ void ServiceVehicleDetect(BOOLEAN VehicleIsPresent)
 			else
 				BroadcastCarWaiting(11);										// send "car waiting in lane 1 + beep" command
 		}
-#ifdef SECOND_BASE_CODE
-		else if (GreetPlaying)													// this is for second base if present
-			BroadcastCarWaiting(10);											// send "car waiting in lane 1 + no beep" command
-#endif
 		else
 			BroadcastCarWaiting(11);											// send "car waiting in lane 1 + beep" command
 	}
 	else if (!VehicleIsPresent)
 	{
-#ifdef SECOND_BASE_CODE
-		if (FIRST_BASE && (base_station).SecondBoardPresent)					// let the second base process VD also
-			SendPCMCommand(VEHICLE_DET_ind + VehicleIsPresent);
-#endif
 		if ((base_station).DisplayScreen == MAIN)								// display no car on pad icon
 			CopyToUartTxBuffer((UByte *)"m lane_1:lbl_1\r", 15);
 		else
 			CopyToUartTxBuffer((UByte *)"set e2 1\r", 9);						// notify that car is not on pad
 		(base_station).VehicleDetectIsActive = FALSE;
 		(base_station).CarIsWaiting = FALSE;
-#ifdef SECOND_BASE_CODE
-		if (FIRST_BASE)
-#endif
-		{
-			AFEDisablePostMicPath();											// disable DECT MIC input
-			GRILL_SPEAKER_OFF;													// turn off grill speaker
-			(base_station).GrillShouldBeOn = FALSE;
-			MENU_SPKR_AMP_OFF;													// turn off post speaker (enables GREET audio path in to DECT MICP/N)
-		}
+		AFEDisablePostMicPath();												// disable DECT MIC input
+		GRILL_SPEAKER_OFF;														// turn off grill speaker
+		(base_station).GrillShouldBeOn = FALSE;
+		MENU_SPKR_AMP_OFF;														// turn off post speaker (enables GREET audio path in to DECT MICP/N)
 	    BroadcastCarWaiting(0);													// send "no car waiting" command
 		for (i = 0; i < MAX_Allowed_Users; i++)
 		{
@@ -320,9 +234,12 @@ void ServiceVehicleDetect(BOOLEAN VehicleIsPresent)
 //		PrintStatus(0, "*** CB is LO, GREET_N is HI *** ");
 		SET_CB_LO;																// drive CB low
 		GREET_N_HI;																// drive GREET_N high connects DECT SPKR+/- audio path out to BC5
-		if ((base_station).MessageIsPlaying > 0)
-			RunGreetClock(MESSAGE_PLAY_STOP, (base_station).MessageIsPlaying);
-		PlayQueuedMessage();													// play any waiting alert or reminder
+		if ((base_station).GreeterActive)
+		{
+			if ((base_station).MessageIsPlaying > 0)
+				RunGreetClock(MESSAGE_PLAY_STOP, (base_station).MessageIsPlaying);
+			PlayQueuedMessage();												// play any waiting alert or reminder
+		}
 		if (((base_station).DisplayScreen == GREETER_SETUP) ||
 			((base_station).DisplayScreen == MESSAGE_SETUP1) ||
 			((base_station).DisplayScreen == MESSAGE_SETUP2))					// configure post mic/speaker for greeter recording
@@ -740,6 +657,10 @@ void CheckForActiveMessage()
 	{
 		(base_station).ActiveMessages = (base_station).ActiveMessages | (1 << (NUM_OF_MESSAGES - NUM_OF_GREETS - 1));
 	}
+	else
+	{
+		(base_station).ActiveMessages = (base_station).ActiveMessages & ~(1 << (NUM_OF_MESSAGES - NUM_OF_GREETS - 1));
+	}
 //char *ptr;
 //ptr = StringPrint(StatusString, "(base_station).ActiveMessages = 0x");
 //ptr = StrPrintHexWord(ptr, (base_station).ActiveMessages);
@@ -752,6 +673,7 @@ void PlayQueuedMessage()
 	BOOLEAN AnyMicIsOpen = FALSE;
 	UByte i;
 
+	// if (no vehicle detect active) AND (the alarm alert message is active) AND (there's an alert waiting to be played)
 	if (!(base_station).VehicleDetectIsActive && (((base_station).ActiveMessages & 0x2000) == 0x2000) && (base_station).AlertWaiting)
 	{
 		if ((base_station).SystemMode == SPEED_TEAM)
@@ -776,8 +698,10 @@ void PlayQueuedMessage()
 		(base_station).AlertWaiting = FALSE;
 		(base_station).AlertPlayed = TRUE;
 	}
+	// else if any alert is waiting to be played
 	else if (((base_station).ActiveMessages & 0x1FFF) != 0x0000)
 	{
+		// if (no vehicle detect active) AND (not in speed team mode)
 		if (!(base_station).VehicleDetectIsActive && (base_station).SystemMode != SPEED_TEAM)
 		{
 			//look for next active message
@@ -796,6 +720,7 @@ void PlayQueuedMessage()
 				}
 			}
 		}
+		// if (the greeter is active) AND (in speed team mode)
 		else if ((base_station).GreeterActive && ((base_station).SystemMode == SPEED_TEAM))
 		{
 			// check for any on keyed headsets before playing active message
@@ -861,19 +786,6 @@ static void wentworth_fptask(MailType * MailPtr)
 			break;
 		case TIMEOUT:
 			break;
-#ifdef SECOND_BASE_CODE
-		case PCM_ind:
-//			ptr = StringPrint(StatusString, "PCM_ind:0x");
-//			ptr = StrPrintHexByte(ptr, msg_ptr->Data[0]);
-//			ptr = StrPrintHexByte(ptr, msg_ptr->Data[1]);
-//			PrintStatus(0, StatusString);
-//			WORD cmd = (WORD)(msg_ptr->Data[0] << 8) + msg_ptr->Data[1];
-//			ptr = StringPrint(StatusString, "cmd:0x");
-//			ptr = StrPrintHexWord(ptr, cmd);
-//			PrintStatus(0, StatusString);
-			ServicePCMCommand((WORD)(msg_ptr->Data[0] << 8) + msg_ptr->Data[1]);
-			break;
-#endif
 		default:
 			// save the display command and arguments and call ServiceDisplay()
 			(base_station).DisplayCommand = msg_ptr->Primitive;
@@ -919,9 +831,7 @@ static void generalbc5tasktimer(MailType * MailPtr)
   switch (MailPtr->Primitive)
   {
     case INITTASK:
-      P1_SET_DATA_REG = Px_3_SET;						// drive BC5 RESETN high
-      PrintStatus(0, "*** BC5 RESETN is HI ");
-      OSStartTimer(GENERALBC5TASKTIMER, 200); 			// 200 x 10ms = 2s pause before pulsing PIO2
+      OSStartTimer(GENERALBC5TASKTIMER, 200); 			// 200 x 10ms = 2s pause before reading the EEPROM
       break;
     case TIMEOUT:
 #ifdef ECT_DSP_MESSAGES
@@ -1019,23 +929,13 @@ static void clocktasktimer(MailType * MailPtr)
 		if ((base_station).DayTime != PreviousDayTime)
 			RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
 
-		CheckForActiveGreet();
+		if ((base_station).GreeterActive)
+		{
+			CheckForActiveGreet();
 
-		CheckForActiveMessage();
-		PlayQueuedMessage();
-
-#ifdef SECOND_BASE_CODE
-		// for dual base systems, check for mis-subscribed headsets to ensure no one is "hidden"
-		if ((base_station).SecondBoardPresent)
-			for(i = MAX_Allowed_Users_Dual; i < MAX_Allowed_Users; i++)
-			{
-				if(QuickData[i].EmptyMarker == 0)
-				{
-					PrintStatus(0, "Rogue headset unsubscribed");
-					fp_subscription_removeSubscription(i);
-				}
-			}
-#endif
+			CheckForActiveMessage();
+			PlayQueuedMessage();
+		}
 
 		if ((base_station).BaseRTC || (base_station).GreetRTC)
 		{
@@ -1091,20 +991,11 @@ static void systemmodetasktimer(MailType * MailPtr)
 		if ((base_station).OrderTakerID != 0xFF)
 		{
 		  // reset the order taker when system mode changes
-#ifdef SECOND_BASE_CODE
-		  if ((base_station).SecondBoardPresent && ((base_station).OrderTakerID >= MAX_Allowed_Users_Dual))
-			SendPCMCommand(ORDER_TAKER_ind + 0xFF);
-		  else
-#endif
-			BroadcastOrderTaker((base_station).OrderTakerID, 0);
+		  BroadcastOrderTaker((base_station).OrderTakerID, 0);
 		  (base_station).OrderTakerID = 0xFF;
 		}
 		if ((base_station).NewSystemMode == SPEED_TEAM)
-#ifdef SECOND_BASE_CODE
-		  ServiceVehicleDetect(FALSE, FALSE);
-#else
 		  ServiceVehicleDetect(FALSE);
-#endif
 		AFEDisablePostMicPath();				// disable DECT MIC input initially in all modes
 		MENU_SPKR_AMP_OFF;						// mute the menu board speaker initially in all modes (enables GREET audio path in to DECT MICP/N)
 		if ((base_station).NewSystemMode == PUSH_TO_TALK)
@@ -1118,20 +1009,6 @@ static void systemmodetasktimer(MailType * MailPtr)
 			  (base_station).MicIsOn[i] = FALSE;
 			}
 		  }
-#ifdef SECOND_BASE_CODE
-		  if ((base_station).SecondBoardPresent)
-		  {
-			SendPCMCommand(CAR_WAITING_ind);	// turn off all headsets on second base
-			for (i = MAX_Allowed_Users_Dual; i < MAX_Allowed_Users; i++)
-			{
-			  // if any headset is on from the previous mode, now it is off
-			  if (((base_station).HeadsetIsOn[i]) && ((base_station).MicIsOn[i]))
-			  {
-				(base_station).MicIsOn[i] = FALSE;
-			  }
-			}
-		  }
-#endif
 		}
 		else if (((base_station).NewSystemMode == HANDS_FREE) || ((base_station).NewSystemMode == AUTO_HANDS_FREE))
 		{
@@ -1145,7 +1022,7 @@ static void systemmodetasktimer(MailType * MailPtr)
 			  if ((base_station).P33UsedForGreetMux)
 				GREET_IN_PP_OFF;					// enable BC5 audio path only (no GREET) is enabled to DECT MICP/N
 			  MENU_SPKR_AMP_ON;						// enables BC5 audio path in to DECT MICP/N
-			  if ((base_station).GrillSpeakerVolume > 0)
+			  if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
 				GRILL_SPEAKER_ON;
 			  (base_station).GrillShouldBeOn = TRUE;
 			  // TODO: CRP - convert usec_pause to use timer
@@ -1155,26 +1032,6 @@ static void systemmodetasktimer(MailType * MailPtr)
 			  i = MAX_Allowed_Users;
 			}
 		  }
-#ifdef SECOND_BASE_CODE
-		  if ((base_station).SecondBoardPresent)
-		  {
-			for (i = MAX_Allowed_Users_Dual; i < MAX_Allowed_Users; i++)
-			{
-			  // if any headset from the second base is on from the previous mode, turn the menu board mic back on
-			  if (((base_station).HeadsetIsOn[i]) && ((base_station).MicIsOn[i]))
-			  {
-				AFEEnablePostMicPath();				// enable DECT MIC input
-				if ((base_station).GrillSpeakerVolume > 0)
-				  GRILL_SPEAKER_ON;
-				(base_station).GrillShouldBeOn = TRUE;
-				if ((base_station).P33UsedForGreetMux)
-				  GREET_IN_PP_OFF;					// enable BC5 audio path only (no GREET) in to DECT MICP/N
-				MENU_SPKR_AMP_ON;					// enables BC5 audio path in to DECT MICP/N
-				i = MAX_Allowed_Users;
-			  }
-			}
-		  }
-#endif
 		}
 		BroadcastSystemModeState(-1);
 		(base_station).NewSystemMode = 0;
@@ -1198,16 +1055,21 @@ static void displaytasktimer(MailType * MailPtr)
       OSStartTimer(DISPLAYTASKTIMER, 30000);				// start 5 minute timer
       break;
     case TIMEOUT:
-	  if (!(base_station).DisplayIsLocked)
-	  {
-		(base_station).DisplayIsLocked = 1;
-		CopyToUartTxBuffer((UByte *)"set e0 1\r", 9);
-	  }
-	  else
-	  {
-		CopyToUartTxBuffer((UByte *)"bv 200\r", 7);			// refresh the default beep loudness
-		CopyToUartTxBuffer((UByte *)"bb 10\r", 6);			// refresh the default beep length
-	  }
+      (base_station).DisplayIsLocked = 1;					// refresh the DECT lock flag
+      CopyToUartTxBuffer((UByte *)"set e0 1\r", 9);			// refresh the display lock flag
+      CopyToUartTxBuffer((UByte *)"bv 200\r", 7);			// refresh the default beep loudness
+      CopyToUartTxBuffer((UByte *)"bb 10\r", 6);			// refresh the default beep length
+
+      if (((base_station).DualBase == DUAL_BASE_SLAVE) && ((base_station).DisplayScreen == REGISTRATION))
+      {
+  		if ((base_station).RegistrationButtonPressed)
+  		{
+  		  (base_station).RegistrationButtonPressed = FALSE;
+  		  (base_station).RegistrationAllowed = FALSE;
+  		}
+		CopyToUartTxBuffer((UByte *)"m delayed_switch_button_pressed\r", 32);	// virtual button press to switch back to MASTER
+      }
+
 	  OSStartTimer(DISPLAYTASKTIMER, 30000);				// re-start 5 minute timer in case Display doesn't receive "m main" command ...
 	  CopyToUartTxBuffer((UByte *)"m main\r", 7);			// this will cause the 5 minute timer in ServiceDisplay() to be started again
       break;
@@ -1220,20 +1082,15 @@ static void vehicledetecttasktimer(MailType * MailPtr)
   switch (MailPtr->Primitive)
   {
     case INITTASK:
-#ifdef SECOND_BASE_CODE
-      if (FIRST_BASE)
-#endif
-    	OSStartTimer(VEHICLEDETECTTASKTIMER, 500); 			// 500 x 10ms = 5s before for checking vehicle detector
+      OSStartTimer(VEHICLEDETECTTASKTIMER, 500); 			// 500 x 10ms = 5s before for checking vehicle detector
       break;
     case TIMEOUT:
-#ifdef SECOND_BASE_CODE
-      if (FIRST_BASE)
-#endif
-      {
-    	check_VD_pins();
-    	check_external_relay_pin();
-    	OSStartTimer(VEHICLEDETECTTASKTIMER, 20); 			// 20 x 10ms = 200ms for checking vehicle detector
-      }
+	  check_VD_pins();
+	  if ((base_station).GreeterActive)
+		  check_external_relay_pin();
+	  if ((base_station).DualBase == DUAL_BASE_SLAVE)
+		check_shutdown_grill_pin();
+	  OSStartTimer(VEHICLEDETECTTASKTIMER, 20); 			// 20 x 10ms = 200ms for checking vehicle detector
       break;
   }
 }
@@ -1259,7 +1116,30 @@ static void listenonlytasktimer(MailType * MailPtr)
     case INITTASK:
       break;
     case TIMEOUT:
-      RegistrationScreen(0x1F);
+      // check P3[4] when dual base for UART control of display
+      if ((base_station).DualBase == DUAL_BASE_MASTER)
+      {
+    	if (P34_STATUS == Px_4_DATA)
+    	{
+    	  // P34_STATUS has gone HI so stop polling
+    	  SWITCH_DISPLAY_TO_MASTER;									// switch UART control back to MASTER
+    	}
+    	else
+    	{
+    	  // otherwise keep polling P34_STATUS
+    	  OSStartTimer(LISTENONLYTASKTIMER, 50); 					// 50 x 10ms = 500ms pause before checking P0[2]
+    	}
+      }
+      else if ((base_station).DualBase == DUAL_BASE_SLAVE)
+      {
+    	// bring SLAVE STATUS back LO
+    	SET_P34_INACTIVE;
+      }
+      // if not dual base, process normal LISTEN-ONLY command
+      else
+      {
+    	RegistrationScreen(0x1F);
+      }
       break;
   }
 }
@@ -1345,17 +1225,6 @@ static void ConfigUART()
 
 static void ConfigOptionPins()
 {
-	// P3[3] not currently used
-	// P3[4] to be used for Message Repeater Alert Message (was "C - Timer Alert" on base pin header)
-
-	P3_MODE_REG &= ~P3_3_MODE;					// P3[3] is unused
-	P3_DIR_REG &= ~Px_3_DIR;					// P3[3] is input
-	P3_DIR_REG |= (Px_3_DIR & 0x0040);			// P3[3] is input, with pull-up resistor
-
-	P3_MODE_REG &= ~P3_4_MODE;					// P3[4] used to sense external relay state
-	P3_DIR_REG &= ~Px_4_DIR;					// P3[4] is input
-	P3_DIR_REG |= (Px_4_DIR & 0x0100);			// P3[4] is input, with pull-up resistor
-
 	// if possible, switch P3[3] to output for Greet in PP option
 	if ((P3_DATA_REG & Px_3_DATA) == Px_3_DATA)
 	{
@@ -1414,17 +1283,20 @@ static void ConfigureRemainingPorts()
 	//	P0[6]	Output-LO-OD-BP			UPDOWN_GRILL (volume control for grill speaker, normally low)
 	//	P0[7]	Output-HI-OD-BP			GREET_N
 	//	P1[1]	Input-PU				MENU_VEHICLE_3 (3V signal from loop detector)
-	//	P1[2]	Input-PU				MENU_VEHICLE_12 (12V signal from loop detector)
+	//	P1[2]	Input-PU				EXTERNAL_ALARM_INPUT (signal(s) from external alarm relays)
 	//	P2[0]	Output-LO-OD-BP			SHUTDOWN_AMP_GRILL_N (grill speaker amp shutdown)
+	//	P2[0]	Input					SHUTDOWN_AMP_GRILL_N (grill speaker amp shutdown sense from MASTER in dual base configuration)
 	//	P2[1]	Output-LO-OD-BP			TBD (used as clock for external watchdog timer as well as for WT greet board)
 	//	P2[6]	Output-LO-BP			SET_RTC (used to control RTC/PCM pass through mux)
 	//	P2[7]	Output-LO-OD-BP			GREET_ENABLE_DATA (used as output to WT greet board)
+	//	P3[4]	Input-PD		 		MASTER read STATUS (read signal from slave for dual base configuration)
+	//	P3[4]	Output-LO-OD-BP			SLAVE send STATUS (driven signal from slave for dual base configuration)
 	//	P3[6]	Input-PU				TIMER_ALERT (input from timer)
-	//	P3[7]	Input-PU				SLAVE (input from cable to determine if 2nd board is present: no 2nd board=HI, 2nd board present=LO)
+	//	P3[7]	Output-HI				UART_CONTROL (output signal to control DISPLAY input: MASTER_CONNECTED=HI, SLAVE_CONNECTED=LO)
 	//	LED1	Output-LO				SHUTDOWN_AMP_MENU_N (MENU speaker amp shutdown)
 
 	// set P0[7:4] to be driven by P0_OUT_DATA_REG[7:4]
-	P0_MODE_REG &= ~(0x3FC0);
+	P0_MODE_REG &= ~(P0_4_MODE | P0_5_MODE | P0_6_MODE | P0_7_MODE);
 
 	// set P1[2:1] to be driven by P1_OUT_DATA_REG[2:1]
 	P1_MODE_REG &= ~(P1_2_MODE | P1_1_MODE);
@@ -1432,23 +1304,28 @@ static void ConfigureRemainingPorts()
 	// set P2[7,6,1,0] to be driven by P2_OUT_DATA_REG[7,6,1,0]
 	P2_MODE_REG &= ~(P2_7_MODE | P2_6_MODE | P2_1_MODE | P2_0_MODE);
 
-	// set P3[7:6] to be driven by P3_OUT_DATA_REG[7:6]
-	P3_MODE_REG &= ~(0xF000);
+	// set P3[7:6,4] to be driven by P3_OUT_DATA_REG[7:6,4]
+	P3_MODE_REG &= ~(P3_4_MODE | P3_6_MODE | P3_7_MODE);
 
 	// set P0[7:4] as outputs
-	P0_DIR_REG &= ~(0xFF00);
-	P0_DIR_REG |= (0xFF00);
+	P0_DIR_REG &= ~(Px_4_DIR | Px_5_DIR | Px_6_DIR | Px_7_DIR);
+	P0_DIR_REG |= (Px_4_DIR | Px_5_DIR | Px_6_DIR | Px_7_DIR);
 
 	// set P1[2:1] as inputs with pull-up resistors
-	P1_DIR_REG &= ~(0x003C);
+	P1_DIR_REG &= ~(Px_1_DIR | Px_2_DIR);
 	P1_DIR_REG |= (0x0014);
 
 	// set P2[7,6,1,0] as outputs
-	P2_DIR_REG |= (0xF00F);
+	P2_DIR_REG |= (Px_0_DIR | Px_1_DIR | Px_6_DIR | Px_7_DIR);
 
-	// set P3[7:6] as inputs with pull-up resistors
-	P3_DIR_REG &= ~(0xF000);
-	P3_DIR_REG |= (0x5000);
+	// set P3[6] as input with pull-up resistor
+	// set P3[4] as input with pull-down resistor
+	P3_DIR_REG &= ~(Px_4_DIR | Px_6_DIR);
+	P3_DIR_REG |= (0x1200);
+
+	// set P3[7] as output driven HI
+	P3_DIR_REG |= (Px_7_DIR);
+	SWITCH_DISPLAY_TO_MASTER;
 
 	// set P0[7:4] and P2[1:0] to be open-drain
 	PAD_CTRL_REG &= ~(P04567_OD | P21_OD | P20_OD);
@@ -1484,12 +1361,26 @@ static void ConfigureRemainingPorts()
 	GREET_N_HI;									// drive GREET_N high connects DECT SPKR+/- audio path out to BC5
 	PrintStatus(0, "*** init: CB is LO, GREET_N is HI *** ");
 
-	// set MAX5407 to tap 14 (it's 31 at power up, so move 16 taps "up" from tap 31 to tap 15)
+	// NOTE: after a watchdog reboot, MAX5407 will NOT be at tap 31, so let's make sure it is first ...
+	// increment MAX5407 (tap ? "down" towards tap 31 direction) to increase attenuation (decrease volume)
+	UPDOWN_GRILL_DOWN;							// set up for decrement mode
+	usec_pause(1);
+	VOL_CS_HI;									// lock in decrement mode
+	int i;
+	for (i = 31; i > 0; i--)
+	{
+		UPDOWN_GRILL_LO;
+		UPDOWN_GRILL_HI;
+		usec_pause(1);
+		UPDOWN_GRILL_LO;
+	}
+	VOL_CS_LO;									// freeze tap
+
+	// now set MAX5407 to tap 14 (it's now at tap 31, so move 16 taps "up" from tap 31 to tap 15)
 	// increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
 	UPDOWN_GRILL_UP;							// set up for increment mode
 	usec_pause(1);
 	VOL_CS_HI;									// lock in increment mode
-	int i;
 	for (i = 16; i > 0; i--)
 	{
 		UPDOWN_GRILL_LO;
@@ -1499,52 +1390,31 @@ static void ConfigureRemainingPorts()
 	}
 	VOL_CS_LO;									// freeze tap
 	(base_station).GrillSpeakerVolume = 0;		// set as 0 volume baseline; volume 0 = tap 15, volume 15 = tap 0
-
 }
 
 static void StartPCM()
 {
-#ifdef SECOND_BASE_CODE
-	if (FIRST_BASE)
-#endif
-	{
-		// P3[7] (SLAVE) is HIGH indicating this is 1st base station board
-		// so start PCM bus as slave for board to board communication
-		PrintStatus(0, "*** Starting PCM as SLAVE for FP #1 - FIRST Base");
+	// P3[7] (SLAVE) is HIGH indicating this is 1st base station board
+	// so start PCM bus as slave for board to board communication
+	PrintStatus(0, "*** Starting PCM as SLAVE for FP #1 - FIRST Base");
 
-		P2_DIR_REG &= ~Px_5_DIR;					// enable PCM_FSC as an input w/no pull resistor
-		P2_DIR_REG |=  Px_4_DIR;					// enable PCM_DO as an output
-		P2_DIR_REG &= ~Px_3_DIR;					// enable PCM_DI as an input w/no pull resistor
-		P2_DIR_REG &= ~Px_2_DIR;					// enable PCM_CLK as an input w/no pull resistor
+	P2_DIR_REG &= ~Px_5_DIR;					// enable PCM_FSC as an input w/no pull resistor
+	P2_DIR_REG |=  Px_4_DIR;					// enable PCM_DO as an output
+	P2_DIR_REG &= ~Px_3_DIR;					// enable PCM_DI as an input w/no pull resistor
+	P2_DIR_REG &= ~Px_2_DIR;					// enable PCM_CLK as an input w/no pull resistor
 
-		CLK_CODEC_REG = 0x0000;						// disable all clocks
-	}
-#ifdef SECOND_BASE_CODE
-	else
-	{
-		// P3[7] (SLAVE) is LOW indicating this is the 2nd base station board
-		// so start PCM bus as master for board to board communication
-		PrintStatus(0, "*** Starting PCM as MASTER for FP #2 - SECOND Base");
-
-		P2_DIR_REG |=  Px_5_DIR;					// enable PCM_FSC as an output
-		P2_DIR_REG |=  Px_4_DIR;					// enable PCM_DO as an output
-		P2_DIR_REG &= ~Px_3_DIR;					// enable PCM_DI as an input w/no pull resistor
-		P2_DIR_REG |=  Px_2_DIR;					// enable PCM_CLK as an output
-
-		CLK_CODEC_REG = 0x4000;						// disable all clocks except 1.152MHz PCM clock (CLK_PCM_EN)
-	}
-#endif
+	CLK_CODEC_REG = 0x0000;						// disable all clocks
 
 	P2_MODE_REG &= ~(P2_5_MODE | P2_4_MODE | P2_3_MODE | P2_2_MODE);	// clear all the bits in question first
-	P2_MODE_REG |= (P2_5_MODE & 0x0400);			// enable PCM_FSC
-	P2_MODE_REG |= (P2_4_MODE & 0x0100);			// enable PCM_DO
-	P2_MODE_REG |= (P2_3_MODE & 0x0040);			// enable PCM_DI
-	P2_MODE_REG |= (P2_2_MODE & 0x0010);			// enable PCM_CLK
+	P2_MODE_REG |= (P2_5_MODE & 0x0400);		// enable PCM_FSC
+	P2_MODE_REG |= (P2_4_MODE & 0x0100);		// enable PCM_DO
+	P2_MODE_REG |= (P2_3_MODE & 0x0040);		// enable PCM_DI
+	P2_MODE_REG |= (P2_2_MODE & 0x0010);		// enable PCM_CLK
 
-	DSP_MAIN_SYNC1_REG = 0;							// clear the entire register: everything at 8kHz
+	DSP_MAIN_SYNC1_REG = 0;						// clear the entire register: everything at 8kHz
 
-	DSP_PCM_CTRL_REG &= ~PCM_FSC0LEN;				// clear PCM_FSC0LEN bits first (PCM_FSC0LEN is 1-bit)
-	DSP_PCM_CTRL_REG |= PCM_EN;						// ensure that PCM bus is enabled (MASTER vs SLAVE is set in gen2dsp_init()
+	DSP_PCM_CTRL_REG &= ~PCM_FSC0LEN;			// clear PCM_FSC0LEN bits first (PCM_FSC0LEN is 1-bit)
+	DSP_PCM_CTRL_REG |= PCM_EN;					// ensure that PCM bus is enabled (MASTER vs SLAVE is set in gen2dsp_init()
 }
 
 static void ConfigureBaseStationVariables()
@@ -1552,31 +1422,15 @@ static void ConfigureBaseStationVariables()
 	int i, ii;
 
 	(base_station).PowerOnStatus = 0;
-	(base_station).BC5PulseState = 0;
-	(base_station).BC5Decrement = 0;
-	(base_station).BC5Increment = 0;
 	(base_station).DualLane = FALSE;
 	(base_station).BaseRTC = FALSE;
 	(base_station).GreetRTC = FALSE;
 	(base_station).UpdateFromRTC = FALSE;
 	for (i = 0; i < 5; i++)
-	{
 		(base_station).FP_ARI[i] = 0xFF;
-#ifdef SECOND_BASE_CODE
-		(base_station).FP2_ARI[i] = 0xFF;
-#endif
-	}
 	for (i = 0; i < 10; i++)
-	{
 		(base_station).SerialNumber[i] = (unsigned char)(i + 48);
-#ifdef SECOND_BASE_CODE
-		(base_station).SerialNumber2[i] = (unsigned char)(i + 48);
-#endif
-	}
 	(base_station).SerialNumber[10] = '\0';
-#ifdef SECOND_BASE_CODE
-	(base_station).SerialNumber2[10] = '\0';
-#endif
 	(base_station).DisplayTime.timeHourMSB = 1;						// hour (10's)
 	(base_station).DisplayTime.timeHourLSB = 2;						// hour (1's)
 	(base_station).DisplayTime.timeMinMSB = 3;						// minute (10's)
@@ -1627,6 +1481,10 @@ static void ConfigureBaseStationVariables()
 	(base_station).DisplayMasterPin[1] = 5;
 	(base_station).DisplayMasterPin[2] = 8;
 	(base_station).DisplayMasterPin[3] = 0;
+	(base_station).DisplayCalPPPin[0] = 1;
+	(base_station).DisplayCalPPPin[1] = 7;
+	(base_station).DisplayCalPPPin[2] = 9;
+	(base_station).DisplayCalPPPin[3] = 3;
 	(base_station).DisplayIsLocked = 0;
 	(base_station).InboundVol = 3;									// 0-9 (dB is 2x: 0dB-18dB)
 	(base_station).CurrentInboundVolumeMixerAtten = MIXER_ATTEN;
@@ -1651,6 +1509,9 @@ static void ConfigureBaseStationVariables()
 	(base_station).AlertPlayed = FALSE;
 	(base_station).BC5Bypassed = FALSE;
 	(base_station).P33UsedForGreetMux = FALSE;
+	(base_station).PPCalibration = FALSE;
+	(base_station).CalibratingPPMic = FALSE;
+	(base_station).CalibratingPPRcv = FALSE;
 	(base_station).MsgCounter = NUM_OF_MESSAGES;
 	(base_station).MsgBeingEdited = 0;
 	(base_station).MsgDayBeingEdited = MONDAY;
@@ -1700,23 +1561,10 @@ static void ConfigureBaseStationVariables()
 		(base_station).Message[i].StopIsPressed = FALSE;
 		(base_station).Message[i].OnOffIsPressed = FALSE;
 	}
-#ifdef SECOND_BASE_CODE
-	(base_station).LastPCMCmdRx = 0x0000;
-	(base_station).SecondBoardPresent = FALSE;
-	for (i = 0; i < MAX_Allowed_Users_Dual; i++)
-	{
-		(base_station).QuickDataBoard2[i].EmptyMarker = 1;
-		(base_station).QuickDataBoard2[i].Upi[0] = 0xFF;
-		(base_station).QuickDataBoard2[i].Upi[1] = 0xFF;
-		(base_station).QuickDataBoard2[i].Upi[2] = 0xFF;
-		(base_station).QuickDataBoard2[i].Upi[3] = 0xFF;
-	}
-	(base_station).QuickDataIndex = 0;
-#endif
 	(base_station).PowerOnCount = 1;
 	(base_station).AlangoNear = TRUE;
-	(base_station).UsingP34ForAlarm = TRUE;
 	(base_station).PlayGreetInPP = FALSE;
+	(base_station).DualBase = 0;										// 0: single base, 1: dual base - master, 2: dual base - slave
 }
 
 void InitWentworth_fp(void)
@@ -1729,7 +1577,7 @@ void InitWentworth_fp(void)
 
 	ConfigureBaseStationVariables();				// set up all the initial states and display info
 
-	ConfigOptionPins();								// setup P3[3]/P3[4] as base (vs headset) / US (vs Europe)
+	ConfigOptionPins();								// setup P3[3] to support GREET in headset option
 
 	ConfigureRemainingPorts();						// set up all ports per DECT_pin_configs_revx.xls file
 

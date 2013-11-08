@@ -176,14 +176,14 @@ PrintStatus(0, "@@@@@@@ let 0x16 timer expire");
   else if (subEvent == 0x79)
   {
     StartTonegeneratorPP(0x5A83,0x5A83,0);
-    //PlayRingingMelody(sound_ring_once);
+//    PlayRingingMelody(sound_ring_once);
     tonegenerator_running=0;
     general_startTimer(0, 0x7A, NULL, 0, 200);
   }
   else if (subEvent == 0x7A)
   {
     StartTonegeneratorPP(0x5A83,0x5A83,0);
-    //PlayRingingMelody(sound_ring_once);
+//    PlayRingingMelody(sound_ring_once);
   }
   else if (subEvent == 0x7B)
   {
@@ -198,64 +198,70 @@ PrintStatus(0, "@@@@@@@ let 0x16 timer expire");
   }
   else if (subEvent == 0xA0)
   {
-	  AFEEnableMicPathPP();
+	AFEEnableMicPathPP();
   }
   else if (subEvent == 0xA1)
   {
-	  PlaySoundPP(sound_double_beep);
+	PlaySoundPP(sound_double_beep);
   }
   else if (subEvent == 0xA2)
   {
-	  AFEDisableMicPathPP();
+	AFEDisableMicPathPP();
   }
   else if (subEvent == 0xA3)
   {
-	  CheckCallControlPP(CALL_BUTTON);
+	CheckCallControlPP(CALL_BUTTON);
   }
   else if (subEvent == TOGGLE_LED)
   {
-	  if (headset.RedLEDisOn)
-	  {
-		  TurnOffRedLED;
-		  headset.RedLEDisOn = FALSE;
-		  TurnOnGreenLED;
-		  headset.GreenLEDisOn = TRUE;
-	  }
-	  else
-	  {
-		  TurnOffGreenLED;
-		  headset.GreenLEDisOn = FALSE;
-		  TurnOnRedLED;
-		  headset.RedLEDisOn = TRUE;
-	  }
-	  general_startTimer(0, TOGGLE_LED, NULL, 0, 100);
+	if (headset.RedLEDisOn)
+	{
+	  TurnOffRedLED;
+	  headset.RedLEDisOn = FALSE;
+	  TurnOnGreenLED;
+	  headset.GreenLEDisOn = TRUE;
+	}
+	else
+	{
+	  TurnOffGreenLED;
+	  headset.GreenLEDisOn = FALSE;
+	  TurnOnRedLED;
+	  headset.RedLEDisOn = TRUE;
+	}
+	general_startTimer(0, TOGGLE_LED, NULL, 0, 100);
   }
 #ifdef ENABLE_CHANNEL_MESSAGES
   else if (subEvent == CHECK_CHANNEL)
   {
-	  if (headset.GreenLEDisOn && (headset.LEDCount++ > 3))
-	  {
-		  TurnOffGreenLED;
-		  headset.GreenLEDisOn = FALSE;
-		  headset.LEDCount = 0;
-	  }
-	  UByte channel_check = get_locked_channel();
-	  if (channel_check != headset.ChannelInfo)
-	  {
-		  ptr = StringPrint(StatusString, "changed from Freq/Slot 0x");
-		  ptr = StrPrintHexByte(ptr, headset.ChannelInfo);
-		  ptr = StringPrint(ptr, " to 0x");
-		  ptr = StrPrintHexByte(ptr, channel_check);
-		  ptr = StringPrint(ptr, " ");
-		  PrintStatus(0, StatusString);
-		  headset.ChannelInfo = channel_check;
-		  TurnOnGreenLED;
-		  headset.GreenLEDisOn = TRUE;
-		  headset.LEDCount = 1;
-	  }
-	  general_startTimer(0, CHECK_CHANNEL, NULL, 0, 500);	// check again in 5sec
+	if (headset.GreenLEDisOn && (headset.LEDCount++ > 3))
+	{
+	  TurnOffGreenLED;
+	  headset.GreenLEDisOn = FALSE;
+	  headset.LEDCount = 0;
+	}
+	UByte channel_check = get_locked_channel();
+	if (channel_check != headset.ChannelInfo)
+	{
+	  ptr = StringPrint(StatusString, "changed from Freq/Slot 0x");
+	  ptr = StrPrintHexByte(ptr, headset.ChannelInfo);
+	  ptr = StringPrint(ptr, " to 0x");
+	  ptr = StrPrintHexByte(ptr, channel_check);
+	  ptr = StringPrint(ptr, " ");
+	  PrintStatus(0, StatusString);
+	  headset.ChannelInfo = channel_check;
+	  TurnOnGreenLED;
+	  headset.GreenLEDisOn = TRUE;
+	  headset.LEDCount = 1;
+	}
+	general_startTimer(0, CHECK_CHANNEL, NULL, 0, 500);	// check again in 5sec
   }
 #endif
+  else if (subEvent == CHECK_OFFSET)
+  {
+	// check for headset.GainVolume and headset.SpkrVolOffset offsets
+	if (general_eeprom_read_req(EE_FREE2, 4, 0) == 1)
+	  PrintStatus(0, "**** EE_FREE2 read failed");
+  }
   else
   {
     return 0;
@@ -413,13 +419,13 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
       headset.GainSpkrVolume = ((WWMSFptr->Sub.SetSystemMode.SystemMode & 0x00F0) >> 3) - 7;	// GainSpkrVolume = (base_station).InboundVol x 2 - 7 offset
       if (WWMSFptr->Sub.SetSystemMode.SystemMode & 0x8000)
       {
-          AFESetGainSpkrVolumePP(0);					// set up pre-LSR gain
+          AFESetGainSpkrVolumePP(headset.SpkrVolOffset);		// set up pre-LSR gain
     	  BC5BypassPP;
       }
       else
       {
     	  BC5IsUsedPP;
-          AFESetGainSpkrVolumePP(12);					// set up pre-LSR gain
+          AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);	// set up pre-LSR gain
       }
 //char *ptr;
 //ptr = StringPrint(StatusString, "headset.GainSpkrVolume[");
@@ -496,6 +502,73 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
 		headset.OrderTaker = TRUE;
 	  else
 		headset.OrderTaker = FALSE;
+	  break;
+	case CAL_PP_CMD:
+	  // headset.GainVolume has a range of -5 to +7 for +/- 6dB calibration
+	  // headset.SpkrVolOffset has a range of -6 to +6 for +/- 6dB calibration
+	  switch (WWMSFptr->Sub.SetPPOffset.PPOffset)
+	  {
+	  case 0:	// - PP MIC offset
+		if (headset.GainVolume > -5)
+		  --headset.GainVolume;
+		AFESetVolume(headset.GainVolume);
+		break;
+	  case 1:	// reset PP MIC offset
+		headset.GainVolume = 1;
+		AFESetVolume(headset.GainVolume);
+		break;
+	  case 2:	// + PP MIC offset
+		if (headset.GainVolume < 7)
+		  ++headset.GainVolume;
+		AFESetVolume(headset.GainVolume);
+		break;
+	  case 3:	// - PP RCV offset
+		if (headset.SpkrVolOffset > -6)
+		  --headset.SpkrVolOffset;
+		AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
+		break;
+	  case 4:	// reset PP RCV offset
+		headset.SpkrVolOffset = 0;
+		AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
+		break;
+	  case 5:	// + PP RCV offset
+		if (headset.SpkrVolOffset < 6)
+		  ++headset.SpkrVolOffset;
+		AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
+		break;
+	  }
+	  // now set up EEPROM values
+	  if (headset.GainVolume == 1)
+	  {
+		data[0] = 0xFF;
+		data[1] = 0xFF;
+	  }
+	  else if (headset.GainVolume > 1)
+	  {
+		data[0] = 0x00;
+		data[1] = headset.GainVolume - 1;
+	  }
+	  else
+	  {
+		data[0] = 0x01;
+		data[1] = 1 - headset.GainVolume;
+	  }
+	  if (headset.SpkrVolOffset == 0)
+	  {
+		data[2] = 0xFF;
+		data[3] = 0xFF;
+	  }
+	  else if (headset.SpkrVolOffset > 0)
+	  {
+		data[2] = 0x00;
+		data[3] = headset.SpkrVolOffset;
+	  }
+	  else
+	  {
+		data[2] = 0x01;
+		data[3] = 0 - headset.SpkrVolOffset;
+	  }
+	  general_eeprom_write_req(EE_FREE2, data, 4, 0);
 	  break;
     default:
       break;
@@ -602,15 +675,25 @@ void pp_msf_setupreq_format1_received(UByte setupSpec1, char * displayText, char
 }
 
 
+extern void enableAudio();
 extern char *getReadableARI(UByte* rfpi);
 void pp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte length)
 {
-  PrintStatus(0, "PP EEPROM read");
   if (status == 1 && length == sizeof(WENTWORTHEEpromStruct))
   {
+	PrintStatus(0, "EE_CUSTOMER_AREA read");
     char * readable;
     char * tmp = StatusString;
     memcpy((BYTE *) &WENTWORTHeepromData, data, length);
+
+    if (WENTWORTHeepromData.action_after_logon == 0x22)
+    {
+      PrintStatus(0, "--- AMI TEST MODE ---");
+      headset.ProductionTest = TRUE;
+      enableAudio();
+      gdsp_BC5SpeakerPath(0x10);
+    }
+
     /* Print */
     tmp = StringPrint(tmp, "ARI Received: ");
     tmp = StrPrintHexByte(tmp, WENTWORTHeepromData.BaseAri[0]);
@@ -642,9 +725,36 @@ void pp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
   }
   else if (status == 1 && length == 5)
   {
+	PrintStatus(0, "EEPROM[0-5] read");
     memcpy((BYTE *) &headset.PP_IPEI, data, length);
     PrintStatus(0, "*** saved PP_IPEI ***");
     ConvertIpeiToSN(0, headset.SerialNumber, headset.PP_IPEI);
+  }
+  else if (status == 1 && length == 4)
+  {
+	PrintStatus(0, "*** EE_FREE2 read ***");
+	if (data[0] != 0xFF)
+	{
+	  if (data[0] == 0)
+		headset.GainVolume = 1 + data[1];
+	  else
+		headset.GainVolume = 1 - data[1];
+	}
+	else
+	{
+	  headset.GainVolume = 1;
+	}
+	if (data[2] != 0xFF)
+	{
+	  if (data[2] == 0)
+		headset.SpkrVolOffset = data[3];
+	  else
+		headset.SpkrVolOffset = 0 - data[3];
+	}
+	else
+	{
+	  headset.SpkrVolOffset = 0;
+	}
   }
 }
 
@@ -668,5 +778,6 @@ void pp_system_init()
 {
   PrintStatus(0, "pp user application initialized....");
   general_eeprom_read_req(EE_CUSTOMER_AREA, sizeof(WENTWORTHEEpromStruct), 0);
+  general_startTimer(0, CHECK_OFFSET, NULL, 0, 10);		// check for headset.GainVolume offset in 100ms
 }
 

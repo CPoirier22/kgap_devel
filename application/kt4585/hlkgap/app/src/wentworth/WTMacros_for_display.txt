@@ -14,6 +14,10 @@
 //#				Copyright © 2013 Wentworth Technology
 //#
 //#############################################################################
+// Update v1.3-AL CRP 8/16/2013 - supported by FP rev1.5-AL
+// 1) added delayed_switch_button_pressed macro to support dual bases
+//
+//=================================================
 // Update v1.2-AL CRP 4/19/2013 - supported by FP rev1.2-AL
 // 1) disable beeps during play/record/stop messages
 //
@@ -2848,6 +2852,17 @@ out "\xFF\xFF\x4D\x12\x02\x1F\x00\x1F"			// send make headset listen only reques
 #end
 
 //---------------------------------------------------------------------------------------
+// MACRO: delayed_switch_button_pressed
+// Handles refreshing the registration screen for two base system
+//
+//---------------------------------------------------------------------------------------
+#define delayed_switch_button_pressed
+out "\xFF\xFF\x4D\x12\x02\x1F\x00\x1F"			// send make headset listen only request to base to trigger display mux switch
+w 1000											// delay 1 second for display mux to switch
+m register_main									// refresh the register_main screen
+#end
+
+//---------------------------------------------------------------------------------------
 // MACRO: delete_button_pressed
 // Handles deleting a registered headset
 //
@@ -3552,13 +3567,13 @@ t "  www.wentworthtechnology.com"	13 100 T
 :single
 t "   Firmware Version - `0`.`1`-AL"13 150 T	// Display the firmware version number.
 t "   Base Serial # - `2`"       	13 175 T	// Display the master serial number.
-t "   Copyright \xA9 2013  v1.2-AL" 13 250 T
+t "   Copyright \xA9 2013  v1.3-AL" 13 250 T
 touch on										// enable screen touches
 :dual
 t " Firmware Version - `0`.`1`-AL" 	13 150 T	// Display the firmware version number.
 t " 1st Base Serial # - `2`"       	13 175 T	// Display the master serial number.
 t " 2nd Base Serial # - `3`"       	13 200 T	// Display the slave number.
-t "  Copyright \xA9 2013  v1.2-AL"  13 250 T
+t "  Copyright \xA9 2013  v1.3-AL"  13 250 T
 touch on										// enable screen touches
 #end
 

@@ -131,10 +131,7 @@ int gen2dsp_init(void)
     init_str.no_contexts = 2;
     interface_str.int_enabled = TRUE;
     interface_str.int_priority = 7;
-	if (P3_DATA_REG & Px_7_DATA)
-		interface_str.pcm_interf_mode = GDSP_SLAVE;
-	else
-	    interface_str.pcm_interf_mode = GDSP_MASTER;
+	interface_str.pcm_interf_mode = GDSP_MASTER;
     result = gen2dspblock_init_fp(&init_str, &interface_str);
     PrintStatus(0,"Initialising DSP for FP mode");
     // IMPORTANT - make sure DSP is maxed out, otherwise we don't have enough DSP processing power for a 6-7 party conference with ADPCM encoding/decoding

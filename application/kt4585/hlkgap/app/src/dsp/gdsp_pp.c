@@ -164,8 +164,8 @@ void gdsp_BC5SpeakerPath(unsigned char bypass)
     GdspConnect(&(p_gendspcodecdestinations->codecdataoutsrc), &(p_gendspgainconstant_pp->value));
   if (bypass & 0x08)		// Connect from our microphone
     GdspConnect(&(p_gendspcodecdestinations->codecdataoutsrc), &(p_gain_encoder_pp->out));
-  if (bypass & 0x10)		// Connect from GainVolume out to GainSpkrVolume in
-    GdspConnect(&(p_gain_spkr_pp->in_ptr), &(p_gain_encoder_pp->out));
+  if (bypass & 0x10)		// loop gain_encoder_pp back into summator
+	GdspConnect(&(p_summator->in1_ptr), &(p_gain_encoder_pp->out));
   if (bypass & 0x20)		// Connect from PCM0 out to LSR
     GdspConnect(&(p_gendspcodecdestinations->codecdataoutsrc), &(p_gendsppcmsource->pcm0insrc));
   if (bypass & 0x40)		// Connect from PCM0 out to pre LSR gain

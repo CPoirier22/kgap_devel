@@ -28,7 +28,6 @@
 #ifndef GDSP_LOCAL_DEFINES_H_
 #define GDSP_LOCAL_DEFINES_H_
 
-//#define SECOND_BASE_CODE
 //#define ENABLE_TONEGEN
 //#define ECT_DSP_MESSAGES
 

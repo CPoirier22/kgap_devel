@@ -31,11 +31,6 @@ void SendConfiguration(PPIDType user);
 extern UByte getSpeechBufferIndex(BYTE Pmid[3]);
 extern void CheckNightVolumeTime(void);
 extern void RunGreetClock(UByte greet_cmd, UByte greet_selection);
-#ifdef SECOND_BASE_CODE
-extern void ConnectPCM(void);
-extern void SendQuickData(UByte user);
-extern void SendPCMCommand(WORD cmd);
-#endif
 extern void WTInfoDebugScreen();
 
 #ifdef ENABLE_TONEGEN
@@ -114,10 +109,6 @@ void voice_callDisconnected(PPIDType disconnectedUser, PPIDType wasConnectedTo,U
 		(base_station).PageMode[(getSpeechBufferIndex(pmid) >> 1)] = FALSE;
   		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = MIXER6_ATTEN;
 	}
-#ifdef SECOND_BASE_CODE
-    if (!FIRST_BASE)
-    	SendPCMCommand(PP_ON_ind + (disconnectedUser << 4) + 0);
-#endif
     if ((base_station).DisplayScreen == REGISTRATION)
     {
     	UByte buffer[50];
@@ -143,10 +134,6 @@ void voice_callDisconnected(PPIDType disconnectedUser, PPIDType wasConnectedTo,U
     if (disconnectedUser == (base_station).OrderTakerID)
     {
     	(base_station).OrderTakerID = 0xFF;
-#ifdef SECOND_BASE_CODE
-		if (!FIRST_BASE)
-			SendPCMCommand(ORDER_TAKER_ind + 0xFF);
-#endif
     }
 }
 
@@ -288,12 +275,7 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
 //        PrintStatus(0, StatusString);
 //      }
 //    }
-#ifdef SECOND_BASE_CODE
-      if (!FIRST_BASE)
-		SendPCMCommand(PP_MIC_ind + (user << 4) + (WWMSFptr->Sub.SetMicMute.MicMute & 0x000F));
-      else
-#endif
-    	if ((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 1)
+   	  if ((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 1)
       {
 //PrintStatus(0, "MicMute == 1");
     	(base_station).MicIsOn[user] = FALSE;
@@ -324,22 +306,6 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
 //ptr = StrPrintDecByte(ptr, (base_station).VehicleDetectIsActive);
 //ptr = StringPrint(ptr, ") ");
 //PrintStatus(0, StatusString);
-#ifdef SECOND_BASE_CODE
-		// TODO: review this ... the above code does this already so this is redundant?
-		if ((base_station).SecondBoardPresent)
-		  for (i = MAX_Allowed_Users_Dual; i < MAX_Allowed_Users; i++)
-		  {
-			if (((base_station).HeadsetIsOn[i]) && ((base_station).MicIsOn[i]))
-			{
-//ptr = StringPrint(StatusString, "Headset[");
-//ptr = StrPrintDecByte(ptr, i);
-//ptr = StringPrint(ptr, "] is on ");
-//PrintStatus(0, StatusString);
-			  OkToTurnMicOff = FALSE;
-			  i = MAX_Allowed_Users;
-			}
-		  }
-#endif
 		// if no other headset MICs are on and no vehicle is detected, turn off menu board MIC
 		if (OkToTurnMicOff && !(base_station).VehicleDetectIsActive)
 		{
@@ -386,11 +352,6 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
     	  {
     		PrintStatus(0, "canceling existing OT");
     		// cancel the existing OT
-#ifdef SECOND_BASE_CODE
-      	  if ((base_station).SecondBoardPresent && (user >= MAX_Allowed_Users_Dual))
-  			SendPCMCommand(ORDER_TAKER_ind + (user - MAX_Allowed_Users_Dual));
-      	  else
-#endif
           	BroadcastOrderTaker((base_station).OrderTakerID, 0);
     	  }
 		  PrintStatus(0, "assigning new OT");
@@ -401,12 +362,7 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
       	{
       	  // when in Auto Hands Free mode, assign new order taker if current order taker doesn't exist
       	  (base_station).OrderTakerID = user;
-#ifdef SECOND_BASE_CODE
-      	  if ((base_station).SecondBoardPresent && (user >= MAX_Allowed_Users_Dual))
-  			SendPCMCommand(ORDER_TAKER_ind + (user - MAX_Allowed_Users_Dual));
-      	  else
-#endif
-          	BroadcastOrderTaker((base_station).OrderTakerID, 1);
+      	  BroadcastOrderTaker((base_station).OrderTakerID, 1);
       	}
 //char *ptr;
 //ptr = StringPrint(StatusString, "2 - OrderTakerID:(0x");
@@ -428,7 +384,7 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
     	  if ((base_station).P33UsedForGreetMux)
     		GREET_IN_PP_OFF;									// enable BC5 audio path only (no GREET) in to DECT MICP/N
     	  MENU_SPKR_AMP_ON;										// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
-    	  if ((base_station).GrillSpeakerVolume > 0)
+    	  if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
     		GRILL_SPEAKER_ON;									// turn on grill speaker
     	  (base_station).GrillShouldBeOn = TRUE;
     	  // TODO: CRP - convert usec_pause to use timer
@@ -534,10 +490,6 @@ void BroadcastBlinkLED(unsigned char value)
 	WWMSFVal.SubStatusType = BLINK_LED_CMD;
 	WWMSFVal.Sub.SetLEDColor.LEDColor = value;
 	msf_send_broadcast((UByte *)&WWMSFVal, sizeof(WWMSFVal), 0);
-#ifdef SECOND_BASE_CODE
-	if ((base_station).SecondBoardPresent || !FIRST_BASE)
-		SendPCMCommand(BLINK_LED_ind + value);
-#endif
 }
 
 PPIDType start_BroadcastSystemModeState_ppid = 0;
@@ -545,10 +497,6 @@ void BroadcastSystemModeState(PPIDType user)
 {
     start_BroadcastSystemModeState_ppid = 0;
 	general_startTimer(user, SYSTEM_MODE_CMD, NULL, 0, 20);    	// wait for 200ms
-#ifdef SECOND_BASE_CODE
-	if (FIRST_BASE && (base_station).SecondBoardPresent && (user == (PPIDType) -1))
-		SendPCMCommand(SYSTEM_MODE_ind + ((base_station).InboundVol << 4) + (base_station).SystemMode);
-#endif
 }
 
 void BroadcastOrderTaker(PPIDType user, unsigned char value)
@@ -556,6 +504,13 @@ void BroadcastOrderTaker(PPIDType user, unsigned char value)
 	WWMSFVal.SubStatusType = SET_OT_CMD;
 	WWMSFVal.Sub.SetOrderTaker.OrderTaker = value;
 	general_startTimer(user, SET_OT_CMD, (UByte *)&WWMSFVal, sizeof(WWMSFVal), 50);
+}
+
+void BroadcastCalOffset(PPIDType user, unsigned char offset)
+{
+	WWMSFVal.SubStatusType = CAL_PP_CMD;
+	WWMSFVal.Sub.SetPPOffset.PPOffset = offset;
+	general_startTimer(user, CAL_PP_CMD, (UByte *)&WWMSFVal, sizeof(WWMSFVal), 50);
 }
 
 //static unsigned long m_z = 362436069, m_w = 521288629;
@@ -576,12 +531,7 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
         if ((base_station).HeadsetIsOn[start_BroadcastSystemModeState_ppid])
           msf_send_ppstatusReq(start_BroadcastSystemModeState_ppid, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
         start_BroadcastSystemModeState_ppid++;
-#ifdef SECOND_BASE_CODE
-        if ((!(base_station).SecondBoardPresent && (start_BroadcastSystemModeState_ppid < MAX_Allowed_Users)) ||
-             ((base_station).SecondBoardPresent && (start_BroadcastSystemModeState_ppid < MAX_Allowed_Users_Dual)))
-#else
         if (start_BroadcastSystemModeState_ppid < MAX_Allowed_Users)
-#endif
           general_startTimer(-1, SYSTEM_MODE_CMD, NULL, 0, 100);    // wait for 1s
 	  }
 	  else
@@ -608,10 +558,6 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  else
 		WWMSFVal.Sub.SetSystemMode.SystemMode = ((base_station).InboundVol << 4) + (base_station).SystemMode;
 	  msf_send_ppstatusReq(user, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
-#ifdef SECOND_BASE_CODE
-	  if (!FIRST_BASE)
-		general_startTimer(-1, WRITE_WTDATA_EEPROM, NULL, 0, 5);	// write current values to EEPROM
-#endif
 	}
 	else if (subEvent == SET_OT_CMD)
 	{
@@ -624,6 +570,14 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 //		  PrintStatus(0, "send SET_OT_CMD error");
 //	  else
 //		  PrintStatus(0, "send SET_OT_CMD success");
+	}
+	else if (subEvent == CAL_PP_CMD)
+	{
+//PrintStatus(0, "sending CAL_PP_CMD ....");
+	  WWMSF *WWMSFptr = (WWMSF *) dataPtr; // typecast to known structure
+	  WWMSFVal.SubStatusType = CAL_PP_CMD;
+	  WWMSFVal.Sub.SetPPOffset.PPOffset = WWMSFptr->Sub.SetPPOffset.PPOffset;
+	  msf_send_ppstatusReq(user, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
 	}
 	else if (subEvent == READ_EEPROM)
 	{
@@ -748,8 +702,8 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  test[a++] = (base_station).PowerOnCount >> 8;
 	  test[a++] = (base_station).PowerOnCount & 0x00FF;
 	  test[a++] = (base_station).AlangoNear;
-	  test[a++] = (base_station).UsingP34ForAlarm;
 	  test[a++] = (base_station).PlayGreetInPP;
+	  test[a++] = (base_station).DualBase;
 
 	  result = general_eeprom_write_req(EE_WTDATA, test, a, 0);
 	  ptr = StringPrint(StatusString,"****** eeprom write req result: ");
@@ -806,29 +760,18 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);											// eB multi-lane
 	  CopyByteToUartTxBuffer('\r');																// complete command string
 
-#ifdef SECOND_BASE_CODE
-	  if (!(base_station).SecondBoardPresent && !(base_station).BaseRTC && !(base_station).GreetRTC)
-#else
 	  if (!(base_station).BaseRTC && !(base_station).GreetRTC)
-#endif
 	  {
 		PrintStatus(0, "Running as single base system with no PCM bus");
-		GdspUnhookVector(PCM_BUFFER_INT, DSP1); 												// unhook PCM[3] command interrupt handler
-		GdspStop((unsigned short*)p_pcm_buffer);												// shut down p_pcm_buffer DP resource
 	  }
 	  else
 	  {
-#ifdef SECOND_BASE_CODE
-		if ((base_station).SecondBoardPresent)
-		  PrintStatus(0, "Running PCM bus for dual base system");
-		if ((base_station).BaseRTC || (base_station).GreetRTC)
-#endif
-		  PrintStatus(0, "Running PCM bus for Real Time Clock");
+		PrintStatus(0, "Running PCM bus for Real Time Clock");
 	  }
 	}
 	else if (subEvent == CHECK_TEOM)
 	{
-	  UByte P3_6 = (P3_DATA_REG & Px_6_DATA);
+	  UByte P3_6 = (P3_DATA_REG & Px_6_DATA);					// P3[6] is TIMER_ALERT: input from external timer or WT greeter
 
 	  // check TEOM during playback
 	  if (((base_station).MessageIsPlaying > 0) && (P3_6 == 0x00))
@@ -854,21 +797,14 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 		  // greet played because of vehicle detect and has finished or reminder has finished, re-connect post mic and grill speaker
 		  PrintStatus(0, "*** CB is HI, GREET_N is HI *** ");
 		  if ((base_station).VehicleDetectIsActive)
-		  {
 			BroadcastCarWaiting(11);							// send "car waiting in lane 1 + beep" command
-#ifdef SECOND_BASE_CODE
-			if ((base_station).SecondBoardPresent)
-			  SendPCMCommand(CAR_WAITING_ind + 11);				// send "car waiting in lane 1 + beep" command to second base
-#endif
-		  }
 		  SET_CB_HI;											// drive CB high
 		  GREET_N_HI;											// drive GREET_N high connects DECT SPKR+/- audio path out to BC5
 		  AFESetGainInboundVolumeFP(NORMAL_INBOUND);
 		  RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
 		  if ((base_station).P33UsedForGreetMux)
 			GREET_IN_PP_OFF;									// enable BC5 audio path only (no GREET) in to DECT MICP/N
-		  MENU_SPKR_AMP_ON;										// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
-		  if ((base_station).GrillSpeakerVolume > 0)
+		  if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
 			GRILL_SPEAKER_ON;									// turn on grill speaker
 		  (base_station).GrillShouldBeOn = TRUE;
 		  // TODO: CRP - convert usec_pause to use timer
@@ -880,9 +816,15 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 			MENU_SPKR_AMP_OFF;									// mute the menu board speaker for SPEED TEAM mode (enables GREET audio path in to DECT MICP/N)
 		  }
 		  else if ((base_station).VehicleDetectIsActive)
+		  {
 			AFEEnablePostMicPath();								// enable DECT MIC input
+			MENU_SPKR_AMP_ON;									// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
+		  }
 		  else
+		  {
 			AFEDisablePostMicPath();							// disable DECT MIC input
+			MENU_SPKR_AMP_OFF;									// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
+		  }
 	  	  OSStartTimer(VEHICLEDETECTTASKTIMER, 20); 			// 20 x 10ms = 200ms resume checking vehicle detector
 		}
 		(base_station).MessageIsPlaying = 0;
@@ -913,36 +855,6 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 		general_startTimer(-1, CHECK_TEOM, NULL, 0, 1);			// check TEOM again in 10ms
 	  }
 	}
-#ifdef SECOND_BASE_CODE
-	else if (subEvent == SETUP_SECOND_BASE)
-	{
-	  (base_station).SecondBoardPresent = TRUE;
-	  ConnectPCM();								// connect the PCM bus for audio
-
-	  // tell first base that there is a second base and send FP_ARI[] data
-	  SendPCMCommand(SECOND_BOARD_ind + (0 << 8) + (base_station).FP_ARI[0]);
-	  SendPCMCommand(SECOND_BOARD_ind + (1 << 8) + (base_station).FP_ARI[1]);
-	  SendPCMCommand(SECOND_BOARD_ind + (2 << 8) + (base_station).FP_ARI[2]);
-	  SendPCMCommand(SECOND_BOARD_ind + (3 << 8) + (base_station).FP_ARI[3]);
-	  SendPCMCommand(SECOND_BOARD_ind + (4 << 8) + (base_station).FP_ARI[4]);
-
-	  StopTimer(VEHICLEDETECTTASKTIMER);		// no need to run the VD timer
-	  p_dynmixer0->weights[6] = 0x0000;			// mute the post MIC input to prevent adding any noise
-	  p_dynmixer1->weights[6] = 0x0000;			// mute the post MIC input to prevent adding any noise
-	  p_dynmixer2->weights[6] = 0x0000;			// mute the post MIC input to prevent adding any noise
-	  p_dynmixer3->weights[6] = 0x0000;			// mute the post MIC input to prevent adding any noise
-	  p_dynmixer4->weights[6] = 0x0000;			// mute the post MIC input to prevent adding any noise
-	  p_dynmixer5->weights[6] = 0x0000;			// mute the post MIC input to prevent adding any noise
-	  p_dynmixer7->weights[6] = 0x0000;			// mute the post MIC input to prevent adding any noise
-
-	  // this is second base, we'll still use for debug purposes
-	  general_startTimer(-1, SETUP_DISPLAY, NULL, 0, 50);    // wait for 500ms
-	}
-	else if (subEvent == DISPLAY_WT_DEBUG_INFO)
-	{
-	  WTInfoDebugScreen();
-	}
-#endif
 	else
 	{
 	  return 0;
@@ -999,39 +911,6 @@ void fp_subscription_locationRegistration(PPIDType user, IPEIType ipei, UByte st
 
     PrintStatus(0, StatusString);
 
-#ifdef SECOND_BASE_CODE
-    if ((base_station).SecondBoardPresent && (fp_subscription_getNumberOfSubscriptions() >= MAX_Allowed_Users_Dual))
-    {
-    	// if this is second base, release registration button if necessary
-    	if ((!FIRST_BASE) && (base_station).RegistrationButtonPressed)
-    	{
-	    	PrintStatus(0, "second base full - no more registrations allowed on second base");
-			CopyToUartTxBuffer((UByte *)"ssb 28 0\r", 9);
-    	}
-    	// if this is first base, check second base before releasing registration button
-    	else if (FIRST_BASE && (base_station).RegistrationButtonPressed)
-    	{
-    		int i;
-		    UByte base2 = 0;
-		    for(i = 0; i < MAX_Allowed_Users_Dual; i++)
-		    {
-		        if((base_station).QuickDataBoard2[i].EmptyMarker == 0)
-		        {
-		        	base2++;
-		        }
-		    }
-		    if (base2 >= MAX_Allowed_Users_Dual)
-		    {
-		    	PrintStatus(0, "first base full - no more registrations allowed");
-		    	CopyToUartTxBuffer((UByte *)"ssb 28 0\r", 9);
-		    }
-		    else
-		    	PrintStatus(0, "first base full - only allowing registrations on second base");
-    	}
-    	// stop allowing registrations to this base
-    	(base_station).RegistrationAllowed = FALSE;
-    }
-#else
     if (fp_subscription_getNumberOfSubscriptions() >= MAX_Allowed_Users)
     {
     	PrintStatus(0, "base full - no more registrations allowed");
@@ -1039,7 +918,6 @@ void fp_subscription_locationRegistration(PPIDType user, IPEIType ipei, UByte st
     	// stop allowing registrations to this base
     	(base_station).RegistrationAllowed = FALSE;
     }
-#endif
 }
 
 UByte fp_subscription_locationRegistrationRequested(PPIDType user, IPEIType ipei)
@@ -1176,13 +1054,30 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 			(base_station).PowerOnCount = data[a++] << 8;
 			(base_station).PowerOnCount += data[a++] + 1;					// increment to count this power on cycle
 			(base_station).AlangoNear = data[a++];
-			(base_station).UsingP34ForAlarm = data[a++];
 			(base_station).PlayGreetInPP = data[a++];
+			(base_station).DualBase = data[a++];
 
 			general_startTimer(-1, WRITE_WT_DEBUG_EEPROM, NULL, 0, 1);		// update power on counter to EEPROM
 		}
 
 		ConvertHexSNtoAriSN((base_station).FP_ARI, (base_station).SerialNumber);
+
+		if ((base_station).DualBase == 0)
+			PrintStatus(0, "Production - single base");
+		else if ((base_station).DualBase == DUAL_BASE_MASTER)
+			PrintStatus(0, "Production - dual base - Master");
+		else if ((base_station).DualBase == DUAL_BASE_SLAVE)
+		{
+			PrintStatus(0, "Production - dual base - Slave");
+
+			P3_DIR_REG &= ~(Px_4_DIR);							// set P3[4] as output driven LO
+			P3_DIR_REG |= (0x0300);
+			SET_P34_INACTIVE;
+
+			P2_DIR_REG &= ~(Px_0_DIR);							// set P2[0] as input, no pull resistor
+		}
+		else
+			PrintStatus(0, "Warning - DualBase variable invalid !!!!");
 
 		UByte code[4];
 		for (i = 0; i < 4; i++)
@@ -1340,14 +1235,13 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 				}
 			}
 		}
+
+		P1_SET_DATA_REG = Px_3_SET;						// drive BC5 RESETN high to bring BC5 up
+		PrintStatus(0, "*** BC5 RESETN is HI ");
+
 		SetupPCMBus();
 
-#ifdef SECOND_BASE_CODE
-		if (!FIRST_BASE)
-			general_startTimer(-1, SETUP_SECOND_BASE, NULL, 0, 10);
-		else
-#endif
-			general_startTimer(-1, SETUP_DISPLAY, NULL, 0, 50);    // wait for 500ms
+		general_startTimer(-1, SETUP_DISPLAY, NULL, 0, 50);    // wait for 500ms
 	}
 }
 

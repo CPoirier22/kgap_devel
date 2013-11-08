@@ -172,8 +172,6 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
 
   result &= GdspAdd((const unsigned long*)&gendsppcmsource_code,sizeof(gendsppcmsource_code)/4,(unsigned short**)&p_gendsppcmsource,sizeof(gdsp_pcmsource)/2,DSP1_8KHZ);
   result &= GdspAdd((const unsigned long*)&gendsppcmmasterdestinations_code,sizeof(gendsppcmmasterdestinations_code)/4,(unsigned short**)&p_gendsppcmmasterdestinations,sizeof(gdsp_pcmmasterdestinations)/2,DSP1_8KHZ);
-  result &= GdspAdd((const unsigned long*)&pcm_buffer_code,sizeof(pcm_buffer_code)/4,(unsigned short**)&p_pcm_buffer,sizeof(gdsp_recordbuffer_18)/2,FP_CONTEXT);
-  result &= GdspAdd((const unsigned long*)0,0,(unsigned short**)&p_gendsp_pcm_command_out,sizeof(gdsp_constant)/2,FP_CONTEXT);
 
   if (GDSP_SUCCESS != result)
     PrintStatus(0, "*** GdspAdd() failed *** ");
@@ -182,8 +180,6 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
 
   result &= GdspInitFunctionBlock((const unsigned short*)&gendsppcmsource,(unsigned short*)p_gendsppcmsource);
   result &= GdspInitFunctionBlock((const unsigned short*)&gendsppcmmasterdestinations,(unsigned short*)p_gendsppcmmasterdestinations);
-  result &= GdspInitFunctionBlock((const unsigned short*)&pcm_buffer,(unsigned short*)p_pcm_buffer);
-  result &= GdspInitFunctionBlock((const unsigned short*)&gendspgainconstant,(unsigned short*)p_gendsp_pcm_command_out);
 
 #ifdef ENABLE_TONEGEN
   result &= GdspInitFunctionBlock((const unsigned short*) &playbackbuffer, (unsigned short*) p_playbackbuffer);
@@ -331,13 +327,6 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
   // connect the CODEC_MIC to the gain_inbound block
   GdspConnect(&(p_gain_inbound->in_ptr), &(p_gendspcodecsource->codecdatainsrc));
 
-  // NULL the unused PCM slot2, use PCM slot3 for sending commands
-  GdspConnect(&(p_gendsppcmmasterdestinations->scrptr2), &(p_gendspgainconstant_fp->value));
-  GdspConnect(&(p_gendsppcmmasterdestinations->scrptr3), &(p_gendsp_pcm_command_out->value));		// for sending cmds to other FP
-
-  // connect PCM[3] to PCM buffer for receiving commands
-  GdspConnect(&(p_pcm_buffer->in_ptr), &(p_gendsppcmsource->pcm3insrc));
-
   // Connect 7 sources to each of the mixer inputs
   // no ch0 input needed to mixer0
   GdspConnect(&(p_dynmixer0->inputs[0]), &(p_g726decoder[1]->g_out1));
@@ -473,7 +462,6 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
 
   result &= GdspStart((unsigned short*)p_gendsppcmsource);
   result &= GdspStart((unsigned short*)p_gendsppcmmasterdestinations);
-  result &= GdspStart((unsigned short*)p_pcm_buffer);
 
 #ifdef ENABLE_TONEGEN
   result &= GdspStart((unsigned short*) p_playbackbuffer);
@@ -589,20 +577,3 @@ void EnableTonegeneratorFPToMixer(void)
     GdspConnect(&(p_g726encoder[5]->g_in1_ptr), &(p_tonegen->tone_out));
 }
 #endif
-
-void ConnectPCM(void)
-{
-	// connect audio in from PCM[0] bus when it is known that a second FP is present
-	GdspConnect(&(p_dynmixer0->inputs[5]), &(p_gendsppcmsource->pcm0insrc));			// entire conference audio in from other base on PCM[0]
-	GdspConnect(&(p_dynmixer1->inputs[5]), &(p_gendsppcmsource->pcm0insrc));			// entire conference audio in from other base on PCM[0]
-	GdspConnect(&(p_dynmixer2->inputs[5]), &(p_gendsppcmsource->pcm0insrc));			// entire conference audio in from other base on PCM[0]
-	GdspConnect(&(p_dynmixer3->inputs[5]), &(p_gendsppcmsource->pcm0insrc));			// entire conference audio in from other base on PCM[0]
-	GdspConnect(&(p_dynmixer4->inputs[5]), &(p_gendsppcmsource->pcm0insrc));			// entire conference audio in from other base on PCM[0]
-	GdspConnect(&(p_dynmixer5->inputs[5]), &(p_gendsppcmsource->pcm0insrc));			// entire conference audio in from other base on PCM[0]
-	GdspConnect(&(p_gendsppcmmasterdestinations->scrptr0), &(p_dynmixer7->out));		// entire conference audio out to other base on PCM[0]
-	// connect audio without PAGED PPs on PCM[1] bus for use at POST
-	if (P3_DATA_REG & Px_7_DATA)
-		GdspConnect(&(p_dynmixer6->inputs[6]), &(p_gendsppcmsource->pcm1insrc));		// audio from second base (without PAGED PPs for post) on PCM[1]
-	else
-		GdspConnect(&(p_gendsppcmmasterdestinations->scrptr1), &(p_dynmixer6->out));	// audio out to first base (without PAGED PPs for post) on PCM[1]
-}

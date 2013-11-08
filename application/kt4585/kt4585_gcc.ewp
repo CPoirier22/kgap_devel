@@ -1377,9 +1377,6 @@
       <name>$PROJ_DIR$\application\kt4585\hlkgap\app\src\wentworth\greeter.c</name>
     </file>
  	<file>
-      <name>$PROJ_DIR$\application\kt4585\hlkgap\app\src\wentworth\second_base.c</name>
-    </file>
- 	<file>
       <name>$PROJ_DIR$\application\kt4585\hlkgap\app\src\wentworth\access_bus.c</name>
     </file>
   </group>

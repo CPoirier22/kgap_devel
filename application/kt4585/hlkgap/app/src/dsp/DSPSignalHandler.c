@@ -592,59 +592,6 @@ void ToneDetectInt(WORD intvec)
   CLEAR_PENDING_DSP_INTERRUPT;
 }
 
-/*
- * Continuously checks PCM[3] for a change.  Changes are noted and sent out to be handled.
- *
- * Idea is that the normal state of the bus is 0x0000.
- * The initiator sends a command for about 4ms.
- * Currently there is no handshaking/acknowledgment.
- *
- */
-void PCMBusCmdInt(WORD intvec)
-{
-  // snoop incoming FP to FP commands on PCM[3]
-  if ((p_pcm_buffer->taps[17] == 0x0000) && ((base_station).LastPCMCmdRx == 0x0000))
-  {
-  }
-  else if (p_pcm_buffer->taps[17] && (p_pcm_buffer->taps[17] != 0xFFFF) && (p_pcm_buffer->taps[17] != (base_station).LastPCMCmdRx))
-  {
-	(base_station).LastPCMCmdRx = p_pcm_buffer->taps[17];
-	// send mail to handle received command here ...
-	PutInterruptMail(PCM_ind);
-	PutInterruptMail((base_station).LastPCMCmdRx >> 8);
-	PutInterruptMail((base_station).LastPCMCmdRx & 0x00FF);
-	DeliverInterruptMail(WENTWORTHTASK);
-//char *ptr;
-//ptr = StringPrint(StatusString, "pcm:=");
-//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[0]);
-//ptr = StringPrint(ptr, " ");
-//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[8]);
-//ptr = StringPrint(ptr, " ");
-//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[16]);
-//ptr = StringPrint(ptr, " ");
-//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[17]);
-//ptr = StringPrint(ptr, " ");
-//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[18]);
-//ptr = StringPrint(ptr, " ");
-////ptr = StrPrintHexWord(ptr, p_pcm_buffer->read_idx);
-////ptr = StringPrint(ptr, ", write=");
-////ptr = StrPrintHexWord(ptr, p_pcm_buffer->write_idx);
-////ptr = StringPrint(ptr, ", buffer_ptr=");
-////ptr = StrPrintHexWord(ptr, p_pcm_buffer->buffer_ptr);
-////ptr = StringPrint(ptr, ", buffer_irq_size=");
-////ptr = StrPrintHexWord(ptr, p_pcm_buffer->buffer_irq_size);
-////ptr = StringPrint(ptr, ", irq=");
-////ptr = StrPrintHexWord(ptr, p_pcm_buffer->irq);
-////ptr = StringPrint(ptr, " ");
-//PrintStatus(0, StatusString);
-  }
-  else if ((p_pcm_buffer->taps[17] == 0x0000) && ((base_station).LastPCMCmdRx != 0x0000))
-  {
-	(base_station).LastPCMCmdRx = 0x0000;
-  }
-  CLEAR_PENDING_DSP_INTERRUPT;
-}
-
 void StartDSP(void)
 {
   WORD i;
@@ -676,7 +623,6 @@ void StartDSP(void)
   else
   {
     GdspHookVector(DURATIONCOUNTER_INT, CopySpeechBufferInterrupt, DSP1); // hook up playback interrupt handler
-    GdspHookVector(PCM_BUFFER_INT, PCMBusCmdInt, DSP1); // hook up PCM[3] command interrupt handler
   }
   DSP_INT_MASK_REG = 0; // GetHookVector enables the mask, but if we do that, the duration interrupt crashes
 
@@ -695,7 +641,6 @@ void StartDSP(void)
   else
   {
     DSP_INT_REG |= (DURATIONCOUNTER_INT);
-    DSP_INT_REG |= (PCM_BUFFER_INT);
   }
   CLEAR_PENDING_DSP_INTERRUPT;
 
@@ -706,10 +651,7 @@ void EnableSpeechbufferInterrupt(void)
 {
 //  PrintStatus(0,"EnableSpeechbufferInterrupt");
   DSP_INT_REG |= (DURATIONCOUNTER_INT | PLAYBACKBUFFER_INT);
-  DSP_INT_REG |= PCM_BUFFER_INT;
   DSP_INT_MASK_REG |= (DURATIONCOUNTER_INT); // For some reason this need to be enabled a little bit later otherwise it crashes
-  DSP_INT_MASK_REG |= PCM_BUFFER_INT;
-  p_pcm_buffer->mode = 0x0001;
 //  P2_MODE_REG |= (1 << 13); // EnAble DSP WTF output
 //  PrintStatus(0,"leaving EnableSpeechbufferInterrupt ... ");
 }
@@ -826,10 +768,10 @@ void DSPSignalHandlerPP(SignalType *signal)
     	AFEConnectAudioPathPP();
         voice_active = 1;
       }
-      AFEDisableMicPathPP();						// disable MIC; CB controls MIC
-      AFESetVolume(headset.GainVolume);				// set up MIC gain
+      AFEDisableMicPathPP();															// disable MIC; CB controls MIC
+      AFESetVolume(headset.GainVolume);													// set up MIC gain
       AFESetGainInboundVolumePP(headset.GainSpkrVolume + (headset.SpeakerVolume - 8));	// set up post decoder gain
-      AFESetGainSpkrVolumePP(12);					// set up pre-LSR gain
+      AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);								// set up pre-LSR gain
     }
       break;
     case STARTADPCM_EVENT:

@@ -28,8 +28,8 @@
 #define FPPP_COMMON_H_
 
 #define FW_REV_MAJOR	1
-#define FW_REV_MINOR	4
-#define FW_REV_STR 	"WT FW 1.4-AL *** added -10dB lower end to outbound volume; steps are now 2dB instead of 1dB *** "
+#define FW_REV_MINOR	5
+#define FW_REV_STR 	"WT FW 1.5-AL *** added support for dual listen-only base and headset production testing *** "
 // max length ==>   "___________________________________________________________________________________________________"
 
 //#define ENABLE_CHANNEL_MESSAGES
@@ -42,11 +42,17 @@ extern UByte WENTWORTHTASKTIMER;
 // this is located in the EE_FREE2 area of EEPROM (0x021D / 541 bytes available)
 #define EE_WTDATA				0x03E3	// beginning of WT data area
 
-// in case we only need to read a specific value from EEPROM
+// in case we only need to read a specific value from PP EEPROM
+#define EE_WT_PP_MIC_GAIN_FLAG	0x03E3	// 1	0xFF is no offset, 0x00 is positive offset, 0x01 is negative offset
+#define EE_WT_PP_MIC_GAIN_VALUE	0x03E4	// 1	offset to headset.GainVolume
+#define EE_WT_PP_RCV_GAIN_FLAG	0x03E5	// 1	0xFF is no offset, 0x00 is positive offset, 0x01 is negative offset
+#define EE_WT_PP_RCV_GAIN_VALUE	0x03E6	// 1	offset to headset.SpkrVolOffset
+
+// in case we only need to read a specific value from FP EEPROM
 #define EE_FW_REV_MAJOR			0x03E3	// 1
 #define EE_FW_REV_MINOR			0x03E4	// 1
 #define EE_WT_USER_PIN			0x03E5	// 4
-#define EE_WT_MODE_LOCK			0x03E9	// 1	<= [7:4]mode; [3:0]lock {added in rev237}
+#define EE_WT_MODE_LOCK			0x03E9	// 1	([7:4]mode; [3:0]lock)
 #define EE_WT_INBOUND			0x03EA	// 1
 #define EE_WT_GRILL				0x03EB	// 1
 #define EE_WT_OUTBOUND_DAY		0x03EC	// 1
@@ -60,8 +66,9 @@ extern UByte WENTWORTHTASKTIMER;
 #define EE_WT_GREET_AUTH_CODE	0x04BE	// 4
 #define EE_WT_POWER_ON_COUNT	0x04C2	// 2
 #define EE_WT_ALANGO_STATE		0x04C4	// 1
-#define EE_WT_USING_P34_STATE	0x04C5	// 1
-#define EE_WT_PLAY_GREET_IN_PP	0x04C6	// 1	=> 29 + 63 + 126 + 10 = 228 bytes
+#define EE_WT_PLAY_GREET_IN_PP	0x04C5	// 1
+#define EE_WT_DUAL_BASE			0x04C6	// 1	(0 = no dual base; 1 = MASTER; 2 = SLAVE)
+										//====> 29 + 63 + 126 + 10 = 228 bytes
 
 #define EE_WT_NUM_BYTES			0x00E4	// 228 bytes
 
@@ -77,6 +84,7 @@ extern UByte WENTWORTHTASKTIMER;
 #define READ_CONF				0x1A
 #define READ_EEPROM_HEX_ARI		0x1B
 #define LISTEN_ONLY_MODE_CMD	0x1C
+#define CAL_PP_CMD				0x1D
 #define CONF_FROM_BS			0x80
 #define WRITE_WT_DEBUG_EEPROM	0x81
 #define READ_WTDATA_EEPROM		0x82
@@ -86,9 +94,6 @@ extern UByte WENTWORTHTASKTIMER;
 #define CHECK_CHANNEL			0x85
 #endif
 #define CHECK_TEOM				0x86
-#ifdef SECOND_BASE_CODE
-#define	SETUP_SECOND_BASE		0x87
-#endif
 #define DISPLAY_WT_DEBUG_INFO	0x88
 #define HM_TIMER_TESTING		0x2A
 
@@ -140,6 +145,11 @@ typedef struct
   WORD OrderTaker;		// 0 is headset is not Order Taker, 1 is headset is Order Taker
 } SetOrderTakerStruct;
 
+typedef struct
+{
+  WORD PPOffset; 		// 0/3 is negative, 1/4 is reset, 2/5 is positive
+} SetPPOffsetStruct;
+
 typedef union
 {
   SetMicMuteStruct SetMicMute;
@@ -150,6 +160,7 @@ typedef union
   SetPageStruct SetPage;
   SetConfStruct SetConf;
   SetOrderTakerStruct SetOrderTaker;
+  SetPPOffsetStruct SetPPOffset;
 } SubType;
 
 typedef struct

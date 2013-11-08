@@ -53,54 +53,15 @@
 #define GRILL						15		// max grill volume
 #define OUTBOUND_NEAR				11		// max outbound volume for Alango NEAR setting
 #define OUTBOUND_FAR				11		// max outbound volume for Alango FAR setting
+#define DUAL_BASE_MASTER			1
+#define DUAL_BASE_SLAVE				2
 
-#define PCM_ind						0xD5	// use _FILLER_D5 for 2nd FP commands over PCM bus
+//#define PCM_ind					0xD5	// use _FILLER_D5 for 2nd FP commands over PCM bus
 //#define REGISTER_PP_ind			0xD6	// use _FILLER_D6 for 2nd FP ???
 //#define REGISTER_PP_ind			0xD7	// use _FILLER_D7 for 2nd FP ???
 //#define REGISTER_PP_ind			0xD8	// use _FILLER_D8 for 2nd FP ???
 //#define REGISTER_PP_ind			0xD9	// use _FILLER_D9 for 2nd FP ???
 //#define REGISTER_PP_ind			0xDA	// use _FILLER_DA for 2nd FP ???
-
-#define MAX_Allowed_Users_Dual		5		// limit subscribed PPs to 5 per base for two base systems
-
-#ifdef SECOND_BASE_CODE
-// commands between FPs
-#define SECOND_BOARD_ind			0xA000	// when second base is present & FP_ARI[0] of second base's ARI
-//									0xA1nn - 0xA4nn // FP_ARI[1-4] of second base's ARI
-#define REQUEST_PP_SN_ind			0x1A00	// request for PP EmptyMarker & SNs info
-//									0x10nn - 0x14nn	// PP[0-4]'s EmptyMarker & SN info
-#define PP_ON_ind					0x1B00	// report headset on/off from second base
-//									0x1Bn0	// PP[n] off
-//									0x1Bn1	// PP[n] on
-#define VEHICLE_DET_ind				0x1C00	// report VD state to second base for messaging
-//									0x1C00	// car not present
-//									0x1C01	// car present
-//									0x1C11	// car present and greet active
-#define PP_MIC_ind					0x1D00	// report PP MIC_MUTE state to second base for messaging
-//									0x1Dn0	// PP[n] MIC is not muted
-//									0x1Dn1	// PP[n] MIC is muted
-#define ORDER_TAKER_ind				0x1E00	// report new order taker assignment to second base
-//									0x1E0n  // PP[n] is new order taker
-//									0x1EFF  // there is no longer an order taker
-#define SYSTEM_MODE_ind				0x1F00	// report SYSTEM_MODE command to second base for messaging
-//									0x1Fnn	// nn is SYSTEM_MODE state sent to second base
-#define BLINK_LED_ind				0x2000	// report BLINK_LED command to second base for messaging
-//									0x20nn	// nn is BLINK_LED argument sent to PPs
-#define CAR_WAITING_ind				0x2100	// report CAR_WAITING command to second base for messaging
-//									0x21nn	// nn is CAR_WAITING argument sent to PPs
-#define REGISTER_PP_ind				0x2200	// report REGISTER command to second base
-//									0x2200	// do not allow registrations
-//									0x2201	// allow registrations
-#define DELETE_PP_ind				0x2300	// when DELETE button is pressed on the display
-//									0x230n	// PP[n] is being deleted from second base
-#define LISTEN_ONLY_PP_ind			0x2400	// when LISTEN_ONLY button is pressed on the display
-//									0x24n0	// PP[n] is now in LISTEN_ONLY mode
-//									0x24n1	// PP[n] is no longer in LISTEN_ONLY mode
-#define REQUEST_POWER_ON_COUNT_ind	0x2500	// request power on count from second base
-//									0x25nn  // reply from second base with MSB of count
-#define REQUEST_POWER_ON_COUNT2_ind	0x2600	// request power on count from second base to be reset
-//									0x26nn  // reply from second base with LSB of count
-#endif
 
 typedef struct
 {
@@ -124,7 +85,8 @@ typedef enum {
 	GREETER_SETUP,
 	MESSAGE_SETUP1,
 	MESSAGE_SETUP2,
-	NEW_NIGHT_TIME
+	NEW_NIGHT_TIME,
+	CAL_PP_PIN
 } Screens;
 
 typedef struct
@@ -150,28 +112,12 @@ typedef struct
 	BOOLEAN StartIsPressed, StopIsPressed, OnOffIsPressed;
 } MsgStruct;
 
-#ifdef SECOND_BASE_CODE
-typedef struct
-{
-    UByte	EmptyMarker;			// 1
-    UByte	Upi [MaxUpiOctets];		// 4   Total 5
-} QuickDatabaseCopyType;
-#endif
-
 typedef struct
 {
 	UByte PowerOnStatus;
-	UByte BC5PulseState;
-	UByte BC5Decrement, BC5Increment;
 	BOOLEAN DualLane, BaseRTC, GreetRTC, UpdateFromRTC;
 	UByte FP_ARI[5];
-#ifdef SECOND_BASE_CODE
-	UByte FP2_ARI[5];
-#endif
 	char SerialNumber[11];
-#ifdef SECOND_BASE_CODE
-	char SerialNumber2[11];
-#endif
 	TimeStruct DisplayTime;
 	UByte CurrentDay;
 	BOOLEAN DayTime, NighTimeInEffect;
@@ -192,26 +138,20 @@ typedef struct
 	BOOLEAN DisplayValueChanged;
 	UByte PinDigitIndex;
 	UByte TempPin[4], TempPin2[4];										// used to hold PIN being entered
-	UByte DisplayMasterPin[4];											// is always 2580
+	UByte DisplayMasterPin[4], DisplayCalPPPin[4];						// is always 2580 & 1793
 	UByte SystemMode, NewSystemMode;
 	BOOLEAN RegistrationAllowed, RegistrationButtonPressed;
 	UByte OrderTakerID;
 	BOOLEAN GreeterInstalled;
 	UByte ActiveGreetNumber;
 	WORD ActiveMessages;
-	BOOLEAN FillingMsgDisplay, GreetClockRunning, AlertWaiting, AlertPlayed, BC5Bypassed, P33UsedForGreetMux;
+	BOOLEAN FillingMsgDisplay, GreetClockRunning, AlertWaiting, AlertPlayed, BC5Bypassed, P33UsedForGreetMux, PPCalibration, CalibratingPPMic, CalibratingPPRcv;
 	UByte MsgCounter;
 	UByte MsgBeingEdited;
 	MsgDayNames MsgDayBeingEdited;
 	UByte MessageIsPlaying, MessageIsRecording;
 	UByte CurrentOutboundVolume;
 	WORD CurrentInboundVolumeMixerAtten;
-	WORD LastPCMCmdRx;
-#ifdef SECOND_BASE_CODE
-	BOOLEAN SecondBoardPresent;
-	QuickDatabaseCopyType QuickDataBoard2[MAX_Allowed_Users_Dual];		// [Empty, SN1, SN2, SN3, SN4] for MAX_Allowed_Users_Dual
-	UByte QuickDataIndex;
-#endif
 
 	// these things need to be saved in EEPROM
 	//	WORD FW_REV_MAJOR & FW_REV_MINOR								// 2
@@ -225,8 +165,9 @@ typedef struct
 	MsgStruct Message[NUM_OF_MESSAGES];									// 9 x (7 + 13 + 1) (9 bytes for each of 21 messages)
 	BOOLEAN GreeterActive;												// 1
 	UByte GrtrMsgrAuthCode[4];											// 4 = 194 bytes (for greeter info)
-	WORD PowerOnCount, PowerOnCount2;									// 2
-	BOOLEAN AlangoNear, UsingP34ForAlarm, PlayGreetInPP;				// 3
+	WORD PowerOnCount;													// 2
+	BOOLEAN AlangoNear, PlayGreetInPP;									// 2
+	UByte DualBase;														// 1
 } wt_base_station;														// EEPROM total = 29 + 194 + 5 = 228 bytes
 extern wt_base_station base_station;
 
@@ -240,6 +181,7 @@ extern wt_base_station base_station;
 #define UPDOWN_GRILL_DOWN			P0_RESET_DATA_REG = Px_6_RESET
 
 //	P2[0] = SHUTDOWN_AMP_GRILL_N (grill speaker amp shutdown) = enable (HI) or disable (LO) grill speaker amp
+#define P20_STATUS					(P2_DATA_REG & Px_0_DATA)
 #define GRILL_SPEAKER_ON			P2_SET_DATA_REG = Px_0_SET
 #define GRILL_SPEAKER_OFF			P2_RESET_DATA_REG = Px_0_RESET
 
@@ -259,10 +201,6 @@ extern wt_base_station base_station;
 #define ALANGO_PROFILE_0			P1_RESET_DATA_REG = Px_5_RESET
 #define ALANGO_PROFILE_1			P1_SET_DATA_REG = Px_5_SET
 
-#ifdef SECOND_BASE_CODE
-#define FIRST_BASE					(P3_DATA_REG & Px_7_DATA)
-#endif
-
 // P0[5] is	Output-OD-BP for CB (call button signal to external timer)
 #define SET_CB_HI					P0_SET_DATA_REG = Px_5_SET
 #define SET_CB_LO					P0_RESET_DATA_REG = Px_5_RESET
@@ -274,6 +212,15 @@ extern wt_base_station base_station;
 // P2[7] is	Output-OD-BP for GREET_ENABLE_IN (data to WT greet/message repeater board)
 #define SET_MESSAGE_DATA_HI			P2_SET_DATA_REG = Px_7_SET
 #define SET_MESSAGE_DATA_LO			P2_RESET_DATA_REG = Px_7_RESET
+
+// P3[7] is mux control for display UART
+#define SWITCH_DISPLAY_TO_MASTER	P3_SET_DATA_REG = Px_7_SET
+#define SWITCH_DISPLAY_TO_SLAVE		P3_RESET_DATA_REG = Px_7_RESET
+
+// P3[4] is	MASTER_IN/SLAVE_OUT ACTIVE status
+#define P34_STATUS					(P3_DATA_REG & Px_4_DATA)
+#define SET_P34_ACTIVE				P3_SET_DATA_REG = Px_4_SET
+#define SET_P34_INACTIVE			P3_RESET_DATA_REG = Px_4_RESET
 
 #define GREETER_DISPLAY_SETUP_DELAY	35									// delay before filling screen with buttons
 

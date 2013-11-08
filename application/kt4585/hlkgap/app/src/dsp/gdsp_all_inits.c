@@ -283,34 +283,6 @@ const unsigned short spkr_buffer_code[8] =
 };
 gdsp_recordbuffer_128* p_spkr_buffer;
 
-const unsigned short pcm_buffer[] =
-{
-  GDSP_INIT_CTRL_DEFAULT | 1,
-  0x0001,                              // mode
-  GDSP_INIT_CTRL_PTR     | 1,
-  GDSP_INIT_CTRL_DEFAULT | 2,
-  0,                                   // out_ptr
-  0x0012,                              // buffer_size
-  GDSP_INIT_CTRL_REL_PTR | 1,
-  10,                                  // buffer_ptr
-  GDSP_INIT_CTRL_DEFAULT | 5,
-  0x0000,                              // read_idx
-  0x0000,                              // write_idx
-  0x0010,                              // buffer_irq_size
-  0,                                   // irq
-  0,                                   // out
-  GDSP_INIT_CTRL_ZERO | 18,            // taps
-  GDSP_INIT_CTRL_END                   // End of Init structure
-};
-const unsigned short pcm_buffer_code[8] =
-{
-  CALL_INSTR, CBUFFER,
-  LDO_INSTR, 0,
-  LDC_INSTR, 0,
-  CIRQ_INSTR, PCM_BUFFER_INT
-};
-gdsp_recordbuffer_18* p_pcm_buffer;
-
 const unsigned short g726decoder[] = 
 {
   GDSP_INIT_CTRL_DEFAULT | 12,
@@ -467,7 +439,6 @@ const unsigned short gendspgainconstant[] =
 gdsp_constant* p_gendspgainconstant_pp;
 gdsp_constant* p_gendspgainconstant_fp;
 gdsp_constant* p_gendspgainconstant_encoder;
-gdsp_constant* p_gendsp_pcm_command_out;
 
 const unsigned short gain[] = 
 {
