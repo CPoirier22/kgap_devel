@@ -394,7 +394,7 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
     	}
     	PPID2PMID((PMIDType *) pmid, user);
   		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = MIXER6_ATTEN;	// make sure channel to menu board speaker is on
-  	   	if ((base_station).CarIsWaiting && ((((base_station).SystemMode & 0x0F) == HANDS_FREE) || (((base_station).SystemMode & 0x0F) == PUSH_TO_TALK)))
+  	   	if ((base_station).CarIsWaiting && (((base_station).SystemMode & 0x0F) != SPEED_TEAM))
     	{
     	  PrintStatus(0, "*** CB is HI, GREET_N is HI *** ");
     	  SET_CB_HI;											// drive CB high
