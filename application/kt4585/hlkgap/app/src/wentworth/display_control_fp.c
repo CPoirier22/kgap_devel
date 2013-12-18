@@ -81,6 +81,11 @@ void WTInfoScreen()
 	}
 	CopyByteToUartTxBuffer('\r');
 
+	if ((base_station).DualBase == DUAL_BASE_MASTER)
+	{
+		CopyToUartTxBuffer((UByte *)"t \"         SpeedThru EXP\" 13 125 T\r", 36);
+	}
+
 //	general_startTimer(-1, WT_HEAP_CHECK, NULL, 0, 200);
 }
 
@@ -465,6 +470,11 @@ void RegistrationScreen(UByte cmd)
 				if ((base_station).DualBase == DUAL_BASE_MASTER)
 				{
 					// this is MASTER so switch UART to SLAVE ...
+					if ((base_station).RegistrationButtonPressed)										// disable accepting registrations to MASTER
+					{
+						(base_station).RegistrationButtonPressed = FALSE;
+						(base_station).RegistrationAllowed = FALSE;
+					}
 					SWITCH_DISPLAY_TO_SLAVE;
 					// start polling SLAVE STATUS (P3[4]); when it goes HIGH switch display back to MASTER
 					OSStartTimer(LISTENONLYTASKTIMER, 50); 												// 50 x 10ms = 500ms pause before checking P3[4]
@@ -472,6 +482,11 @@ void RegistrationScreen(UByte cmd)
 				else
 				{
 					// this is SLAVE so set up P3[4] HIGH to tell MASTER to switch UART back to MASTER ...
+					if ((base_station).RegistrationButtonPressed)										// disable accepting registrations to SLAVE
+					{
+						(base_station).RegistrationButtonPressed = FALSE;
+						(base_station).RegistrationAllowed = FALSE;
+					}
 					SET_P34_ACTIVE;
 					// set SLAVE STATUS P3[4] to HIGH for 1 second
 					OSStartTimer(LISTENONLYTASKTIMER, 100); 											// 100 x 10ms = 1000ms pause before resetting P3[4] to LO
