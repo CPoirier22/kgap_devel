@@ -27,10 +27,8 @@
 #include "../include/common/common_hardware_callback.h"
 #include "../include/common/common_hardware_functions.h"
 #include "../../../include/machlinterface/include/maclink.h"
-#include "../../../include/machlinterface/include/application_mac_tunnel.h"
+
 #include "../../kt4585/hlkgap/app/src/wentworth/wentworth_fp.h"
-#include "../../kt4585/hlkgap/app/src/wentworth/fppp_common.h"
-#include "../../../include/common/include/map_480_gcc.h"
 
 extern Boolean NewBuffer(int BufferLength, void **BufferPointer);
 extern void *_memcpy(void *DST, const void *SRC, unsigned int LENGTH);
@@ -47,14 +45,6 @@ static PMIDType tmpPmid;
 extern MACLink macLink;
 
 int created = 0;
-void PrintStatusByte(unsigned char level,char *str,unsigned int data)
-{
-  char *ptr;
-  ptr = StringPrint(StatusString,str);
-  ptr = StringPrint(ptr ,":");
-  ptr = StrPrintHexWord(ptr ,data);
-  PrintStatus(level,StatusString);
-}
 
 ApplicationInstanceType * getApplicationInstance(PMIDType PMID)
 {
@@ -97,21 +87,16 @@ void handleReleasePrim(SignalType * TheSignal, ApplicationInstanceType * applica
         DeleteBuffer(applicationInstanceData);
         applicationInstanceData = 0;
         created--;
-        PrintStatus(0, "deleted----: ");
+        PrintStatus(0, "deleted----: \r\n");
     } else {
         PrintStatus(0, "Not deleted");
     }
 }
 
-extern UByte getSpeechBufferIndex(BYTE Pmid[3]);
-
 void handleConnectPrim(PMIDType pmid, ApplicationInstanceType * applicationInstanceData)
 {
     SignalType *ccconnectSignal;
-    char* tmp;
-    tmp = StringPrint(StatusString,"HM:handleConnectPrim-Speechbuffer:");
-    tmp = StrPrintHexByte(tmp, getSpeechBufferIndex(pmid));
-    PrintStatus(0, StatusString);
+
     NewSignal(sizeof(SignalType) + 5, (void**) &ccconnectSignal);
     memcpy(ccconnectSignal->Address, pmid, 3); /*pmid in address field*/
     getSignalData(ccconnectSignal)[0] = 0x05; /*info element offset*/
@@ -124,31 +109,13 @@ void handleConnectPrim(PMIDType pmid, ApplicationInstanceType * applicationInsta
     SendSignal(ccconnectSignal, APP_CC_PROCESS_ID, APP_CC_PRIMITIVE, APPCCConnectAckReq);
 }
 
-extern BYTE GetChNoByPmid(BYTE *Pmid);
 void handleAPPCCSetupInd(SignalType * TheSignal, ApplicationInstanceType * applicationInstanceData)
 {
     SignalType *appccSetupAckReqSignal;
-    char* tmp;
-    //int dataLength = data[15];
-    //char *input = (char*) &data[];
-
-    tmp = StringPrint(StatusString, "Application: outgoing call start: pmid:");
-    tmp = StrPrintHexByte(tmp, *TheSignal->Address);
-    tmp = StringPrint(tmp, " ****** channel|slot:");
-    tmp = StrPrintHexByte(tmp, GetChNoByPmid(TheSignal->Address));
-    tmp = StringPrint(tmp, " ****** ");
-
-    /*if (dataLength)
-      tmp = StringPrint(tmp, " No Calling party number");
-    else
-      tmp = StringPrint(tmp, " Calling party number: ");*/
-    //tmp = StringPrint(tmp, " Data: ");
-
-    //tmp = StringPrint(tmp, (char*) (getSignalData(TheSignal) + 1));
-    //ptr = StringPrint(StatusString,"Setup-Dialling:");
-    /*for (c = 0; c < 17; c++) {
-      tmp = StrPrintHexByte(tmp, data[c]);
-    }*/
+    char StatusString[256];
+    char* tmp = StatusString;
+    tmp = StringPrint(tmp, "\r\nApplication: outgoing call start: Calling party number: ");
+    tmp = StringPrint(tmp, (char*) (getSignalData(TheSignal) + 1));
     PrintStatus(0, StatusString);
 
     applicationInstanceData->state = outgoingcall;
@@ -287,11 +254,6 @@ UByte msf_send_ppstatusReq(PPIDType to, UByte statusType, UByte * data, UByte da
 
 UByte msf_send_broadcast(UByte *data, UByte length, UByte repetitions)
 {
-//char *tmp;
-//tmp = StringPrint(StatusString, "*** msf_send_broadcast: # of bytes: ");
-//tmp = StrPrintDecByte(tmp, length);
-//tmp = StringPrint(tmp, " *** ");
-//PrintStatus(0, StatusString);
 	int i;
 	BYTE dataCounter = 0;
 	BYTE Buff[37];
@@ -464,11 +426,11 @@ UByte voice_callUser(PPIDType called, PPIDType caller)
             return 1;
         } else {
             DeleteBuffer(signal);
-            PrintStatus(0, "number found, but user already active.\n");
+            PrintStatus(0, "\r\nnumber found, but user already active.\n");
             return 2;
         }
     } else {
-        PrintStatus(0, "number not found...");
+        PrintStatus(0, "\r\nnumber not found...");
         return 3;
     }
 }
@@ -524,21 +486,16 @@ void handleAPPCCInfoInd(SignalType * TheSignal, ApplicationInstanceType * applic
     if (applicationInstanceData->state == outgoingcall)
     {
         UByte c;
-        char *ptr;
         PPIDType ppid = 0;
         UByte *data = getSignalData(TheSignal);
         int dataLength = data[15];
         char *input = (char*) &data[16];
-        ptr = StringPrint(StatusString,"Dialing:");
         for (c = 0; c < dataLength && input[c] >= '0' && input[c] <= '9'; c++)
         {
             ppid *= 10;
             ppid += input[c] - '0';
-            *ptr = input[c];
-            ptr++;
-            *ptr=0;
         }
-        PrintStatus(0,StatusString);
+
         voice_outgoingCallRequest(PMID2PPID(applicationInstanceData->pmid), ppid);
     }
 }
@@ -642,7 +599,6 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
             {
                 case APPCCSetupInd:
                 {
-                	PrintStatusByte(0,"APPCCSetupInd",PMID2PPID(applicationInstanceData->pmid));
                     handleAPPCCSetupInd(TheSignal, applicationInstanceData);
 
                     // set up registration display "green" button here
@@ -676,7 +632,6 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
                 break;
                 case APPCCInfoInd:
                 {
-                  PrintStatusByte(0,"APPCCInfoInd",PMID2PPID(applicationInstanceData->pmid));
                     handleAPPCCInfoInd(TheSignal, applicationInstanceData);
                 }
                 break;
@@ -698,15 +653,6 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
                     fp_module2module_ack_received(PMID2PPID(TheSignal->Address), &data[1]);
                 }
                 break;
-
-                case MAC_APP_TUNNEL:
-                {
-                    KeyActionType * key = (KeyActionType*) TheSignal;
-                    if (key->key == MAC_TO_APP_BROADCAST_CFM) {
-                    	msf_broadcast_cfm(key->action);
-                    }
-                }
-				break;
 
                 case SS_MSF_prim:
                 {
@@ -785,22 +731,20 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
             {
                 case CC_ALERTING_prim:
                 {
-                  PrintStatusByte(0,"CC_ALERTING_prim",PMID2PPID(applicationInstanceData->pmid));
                   if (applicationInstanceData != NULL) {
                         voice_incommingCallAlerting(PMID2PPID(applicationInstanceData->pmid), applicationInstanceData->connectedTo);
                     }
-//                    PrintStatus(0, "Application: alerting....\n");
+                    PrintStatus(0, "Application: alerting....\n");
                 }
                 break;
                 case CC_CONNECT_prim:
                 {
-                  PrintStatusByte(0,"CC_CONNECT_prim",PMID2PPID(applicationInstanceData->pmid));
                     if(applicationInstanceData->connectedTo < MAX_Allowed_Users && QuickData[applicationInstanceData->connectedTo].EmptyMarker == 0){
                         extern void setupvoice(PPIDType a, PPIDType b);
                         setupvoice(PMID2PPID(applicationInstanceData->pmid), applicationInstanceData->connectedTo);
                     }
 
-//                    PrintStatus(0, "fp_application: CC_CONNECT_prim");
+                    PrintStatus(0, "fp_application: CC_CONNECT_prim");
 
                     handleConnectPrim(TheSignal->Address, applicationInstanceData);
                     voice_callConnected(PMID2PPID(applicationInstanceData->pmid), applicationInstanceData->connectedTo);
@@ -808,7 +752,6 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
                 break;
                 case CC_RELEASE_prim:
                 {
-                  PrintStatusByte(0,"CC_RELEASE_prim",PMID2PPID(applicationInstanceData->pmid));
                     if(applicationInstanceData->connectedTo < MAX_Allowed_Users && QuickData[applicationInstanceData->connectedTo].EmptyMarker == 0){
                         ApplicationInstanceType * wasConnectedTo;
                         PPID2PMID(&tmpPmid, applicationInstanceData->connectedTo);
@@ -826,7 +769,6 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
 
         case APP_SS_PRIMITIVE:
         {
-          PrintStatus(0,"APP_SS_PRIMITIVE");
             switch (TheSignal->SubEvent)
             {
                 case SIO_MSF_SETUP_req: /*from serial / ip*/

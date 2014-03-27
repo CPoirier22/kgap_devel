@@ -67,8 +67,6 @@ UByte PPTIMERSEQTASK1;
 UByte PPTIMERSEQTASK1TIMER;
 UByte PPTOUCHTIMERSEQTASK1;
 UByte PPTOUCHTIMERSEQTASK1TIMER;
-//UByte PPAUDIOINTASK;
-//UByte PPAUDIOINTASKTIMER;
 
 wt_headset headset;
 
@@ -631,23 +629,6 @@ static void pptouchtimerseqtask1(MailType * MailPtr)
   }
 }
 
-//// timer to be used for checking headset audio input
-//extern void CheckSpeechBufferLoop(void);
-//static void ppaudiointask(MailType * MailPtr)
-//{
-//  switch (MailPtr->Primitive)
-//  {
-//    case INITTASK:
-//      CheckSpeechBufferLoop();
-//      OSStartTimer(PPAUDIOINTASKTIMER, 100); 					// 100 x 10ms = 1s
-//      break;
-//    case TIMEOUT:
-//      CheckSpeechBufferLoop();
-//      OSStartTimer(PPAUDIOINTASKTIMER, 100); 					// 100 x 10ms = 1s
-//      break;
-//  }
-//}
-
 void initializeWentworth_ppTask(void)
 {
 	WENTWORTHTASK = OSRegisterTask(wentworth_pptask, "wentworth_pptask", REALPPTASK);
@@ -695,12 +676,6 @@ void initializePPTouchTimerTask(void)
 	PPTOUCHTIMERSEQTASK1 = OSRegisterTask(pptouchtimerseqtask1, "pptouchtimerseqtask1", REALPPTASK);
 	PPTOUCHTIMERSEQTASK1TIMER = OSRegisterTimer(PPTOUCHTIMERSEQTASK1);
 }
-
-//void initializePPAudioInTask(void)
-//{
-//	PPAUDIOINTASK = OSRegisterTask(ppaudiointask, "ppaudiointask", REALPPTASK);
-//	PPAUDIOINTASKTIMER = OSRegisterTimer(PPAUDIOINTASK);
-//}
 
 static void ConfigUART()
 {

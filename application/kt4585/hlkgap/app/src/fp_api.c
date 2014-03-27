@@ -5,6 +5,7 @@
 #include "../../../../api/include/fp/fp_msf_functions.h"
 #include "../../../../api/include/fp/fp_module2module_callback.h"
 #include "../../../../api/include/fp/fp_module2module_functions.h"
+#include "../../../../api/include/fp/fp_subscription_functions.h"
 #include "../../../../api/include/common/common_general_callback.h"
 #include "../../../../api/include/common/common_general_functions.h"
 #include "../../../../api/include/common/common_hardware_callback.h"
@@ -52,7 +53,7 @@ void voice_outgoingCallRequest(PPIDType a, PPIDType b)
 	voice_updateDisplay(a,"Calling");
 }
 
-void msf_IWUToIWUReceived(unsigned char *data)
+void fp_IWUToIWUReceived(unsigned char *data)
 {
   IwuToIwuType *IwuToIwuIE = (IwuToIwuType *)data;
   int f;
@@ -80,6 +81,7 @@ void voice_incommingCallAlerting(PPIDType called, PPIDType caller)
 void voice_callConnected(PPIDType called, PPIDType caller)
 {
 	voice_updateDisplay(called,"Connected");
+	voice_updateDisplay(caller,"Connected");
 }
 
 extern void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length);
@@ -1243,14 +1245,6 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 
 		general_startTimer(-1, SETUP_DISPLAY, NULL, 0, 50);    // wait for 500ms
 	}
-}
-
-void msf_broadcast_cfm(UByte result)
-{
-//	char *ptr;
-//	ptr = StringPrint(StatusString, "Broadcast cfm: ");
-//	ptr = StrPrintHexByte(ptr, result);
-//	PrintStatus(0, StatusString);
 }
 
 void fp_system_init()

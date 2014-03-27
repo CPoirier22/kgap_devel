@@ -1,33 +1,6 @@
 #include "gdsp_local_config.h"         // User h-file for defining where to get opcodes from
 #include "gdsp_all_inits.h"
 
-const unsigned short custom_paec_es7_fix[] =
-{
-  GDSP_INIT_CTRL_PTR | 5,
-  GDSP_INIT_CTRL_DEFAULT | 1,
-  64,
-  GDSP_INIT_CTRL_END    // End of Init structure
-};
-gdsp_custom_paec_es7_fix* p_custom_paec_es7_fix;
-
-const unsigned short custom_paec_vad[] =
-{
-  GDSP_INIT_CTRL_PTR | 1, // &PAEC_params, // paec_data_ptr  // remember to set by GdspConnect -> p_paec->spkr_ptr is first entry
-  GDSP_INIT_CTRL_DEFAULT | (9+15),
-  0x6666, // vadsm1
-  0x0148, // vadsm2
-  0x2000, // new_thresh
-  0x0400, // xpow_thresh
-  14, // dflt value for paec_params.intshift_maxnorm
-  6, // bandshift_max
-  -6, // bandshift_min
-  0, // wfevad
-  0, // detect
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // fevad[NPART]
-  GDSP_INIT_CTRL_END                   // End of Init structure
-};
-gdsp_custom_paec_vad* p_custom_paec_vad;
-
 const unsigned short custom_backgroundtrigger[] =
 {
   GDSP_INIT_CTRL_PTR | 1,

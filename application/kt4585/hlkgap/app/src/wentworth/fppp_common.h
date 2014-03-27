@@ -28,8 +28,8 @@
 #define FPPP_COMMON_H_
 
 #define FW_REV_MAJOR	1
-#define FW_REV_MINOR	5
-#define FW_REV_STR 	"WT FW 1.5-AL *** added support for dual listen-only base and headset production testing *** "
+#define FW_REV_MINOR	6
+#define FW_REV_STR 	"WT FW 1.6-AL *** ECT/SpectraLink msf_send_broadcast() bug fix *** "
 // max length ==>   "___________________________________________________________________________________________________"
 
 //#define ENABLE_CHANNEL_MESSAGES

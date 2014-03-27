@@ -8,32 +8,6 @@ typedef struct
 
 typedef struct
 {
-  unsigned short tx_rec_buf_buffer_ptr;
-  unsigned short rx_rec_buf_buffer_ptr;
-  unsigned short tx_rec_buf_writeidx_ptr;
-  unsigned short rx_rec_buf_writeidx_ptr;
-  unsigned short paec_ibuf_idx_ptr;
-  unsigned short Framesize;
-} gdsp_custom_paec_es7_fix;
-
-typedef struct
-{
-  unsigned short  paec_data_ptr; // Pointer to PAEC data struct
-  unsigned short  vadsm1; // Attact TC; equal to or larger than smoothtop
-  unsigned short  vadsm2; // Decay TC; equal to or larger than smoothlow
-  unsigned short  new_thresh; // Voice probability threshold
-  unsigned short  xpow_thresh; // Voice band powerlevel threshold
-  unsigned short  maxnorm_dflt; // default setting for PAEC param intshift_maxnorm
-  unsigned short  bandshift_max; // max bandshift limit
-  unsigned short  bandshift_min; // min bandshift limit
-  unsigned short  wfevad; // Actual speech probability (state)
-  unsigned short  detect; // Speech detected (0x8000) / not detected (0x0000)
-  unsigned short  fevad[15]; // 12? Actual band speech probability (state)
-} gdsp_custom_paec_vad;
-
-
-typedef struct
-{
   unsigned short b_nr_bits1;           // 
   unsigned short b_nr_bits2;           // 
   unsigned short b_nr_bits3;           // 

@@ -75,13 +75,6 @@ extern UByte msf_ppstatus_ind_received(PPIDType user, UByte statusType, UByte * 
  * @param result		The status of the send broadcast. 1 if the broadcast has been send. 0 if it has been discarded.
  * @return void
  */
-extern void msf_broadcast_cfm(UByte result);
-
-/**
- * This function is called when an IWU To IWU element is received
- * @param data			The IWU To IWU element
- * @return void
- */
-extern void msf_IWUToIWUReceived(unsigned char *data);
+extern void msf_broadcast_cfm();
 
 #endif
