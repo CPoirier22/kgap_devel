@@ -48,11 +48,11 @@
 #define NUM_LABEL_NAMES				16		// number of different greet/message labels
 #define GREET_COMFORT_VOL			-5		// for -10dB gain_inbound during GREET message headset playback
 #define NORMAL_INBOUND				1		// for 2dB gain_inbound during normal operation
-#define INBOUND_NEAR				9		// max inbound volume for Alango NEAR setting
-#define INBOUND_FAR					9		// max inbound volume for Alango FAR setting
+#define INBOUND_P1					9		// max inbound volume for Alango profile1 setting
+#define INBOUND_P0					9		// max inbound volume for Alango profile0 setting
 #define GRILL						15		// max grill volume
-#define OUTBOUND_NEAR				11		// max outbound volume for Alango NEAR setting
-#define OUTBOUND_FAR				11		// max outbound volume for Alango FAR setting
+#define OUTBOUND_P1					11		// max outbound volume for Alango profile1 setting
+#define OUTBOUND_P0					11		// max outbound volume for Alango profile0 setting
 #define DUAL_BASE_MASTER			1
 #define DUAL_BASE_SLAVE				2
 
@@ -166,7 +166,7 @@ typedef struct
 	BOOLEAN GreeterActive;												// 1
 	UByte GrtrMsgrAuthCode[4];											// 4 = 194 bytes (for greeter info)
 	WORD PowerOnCount;													// 2
-	BOOLEAN AlangoNear, PlayGreetInPP;									// 2
+	BOOLEAN AlangoProfile1, PlayGreetInPP;								// 2
 	UByte DualBase;														// 1
 } wt_base_station;														// EEPROM total = 29 + 194 + 5 = 228 bytes
 extern wt_base_station base_station;

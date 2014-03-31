@@ -703,7 +703,7 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  test[a++] = (base_station).GrtrMsgrAuthCode[3];
 	  test[a++] = (base_station).PowerOnCount >> 8;
 	  test[a++] = (base_station).PowerOnCount & 0x00FF;
-	  test[a++] = (base_station).AlangoNear;
+	  test[a++] = (base_station).AlangoProfile1;
 	  test[a++] = (base_station).PlayGreetInPP;
 	  test[a++] = (base_station).DualBase;
 
@@ -1055,7 +1055,7 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 			(base_station).GrtrMsgrAuthCode[3] = data[a++];
 			(base_station).PowerOnCount = data[a++] << 8;
 			(base_station).PowerOnCount += data[a++] + 1;					// increment to count this power on cycle
-			(base_station).AlangoNear = data[a++];
+			(base_station).AlangoProfile1 = data[a++];
 			(base_station).PlayGreetInPP = data[a++];
 			(base_station).DualBase = data[a++];
 
@@ -1142,19 +1142,19 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 		(base_station).CurrentOutboundVolume = (base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight;
 		AFESetGainSpkrVolumeFP((base_station).CurrentOutboundVolume);
 
-		if ((base_station).AlangoNear)
+		if ((base_station).AlangoProfile1)
 		{
-			if ((base_station).InboundVol > INBOUND_NEAR)
-				AFESetGainPP2PPMixer(INBOUND_NEAR);
-			if ((base_station).CurrentOutboundVolume > OUTBOUND_NEAR)
+			if ((base_station).InboundVol > INBOUND_P1)
+				AFESetGainPP2PPMixer(INBOUND_P1);
+			if ((base_station).CurrentOutboundVolume > OUTBOUND_P1)
 			{
-				AFESetGainSpkrVolumeFP(OUTBOUND_NEAR);
-				(base_station).CurrentOutboundVolume = OUTBOUND_NEAR;
+				AFESetGainSpkrVolumeFP(OUTBOUND_P1);
+				(base_station).CurrentOutboundVolume = OUTBOUND_P1;
 			}
-			if ((base_station).PostSpeakerVolumeDay > OUTBOUND_NEAR)
-				(base_station).PostSpeakerVolumeDay = OUTBOUND_NEAR;
-			if ((base_station).PostSpeakerVolumeNight > OUTBOUND_NEAR)
-				(base_station).PostSpeakerVolumeNight = OUTBOUND_NEAR;
+			if ((base_station).PostSpeakerVolumeDay > OUTBOUND_P1)
+				(base_station).PostSpeakerVolumeDay = OUTBOUND_P1;
+			if ((base_station).PostSpeakerVolumeNight > OUTBOUND_P1)
+				(base_station).PostSpeakerVolumeNight = OUTBOUND_P1;
 			ALANGO_PROFILE_1;
 		}
 		else

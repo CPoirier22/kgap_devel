@@ -1562,7 +1562,7 @@ static void ConfigureBaseStationVariables()
 		(base_station).Message[i].OnOffIsPressed = FALSE;
 	}
 	(base_station).PowerOnCount = 1;
-	(base_station).AlangoNear = TRUE;
+	(base_station).AlangoProfile1 = FALSE;
 	(base_station).PlayGreetInPP = FALSE;
 	(base_station).DualBase = 0;										// 0: single base, 1: dual base - master, 2: dual base - slave
 }

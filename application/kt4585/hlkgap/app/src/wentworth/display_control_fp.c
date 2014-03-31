@@ -101,13 +101,13 @@ void WTInfoDebugScreen()
 
 	// add a bitmap and command for toggling Alango mode
 	CopyToUartTxBuffer((UByte *)"f 13B\r", 6);
-	if ((base_station).AlangoNear)
-		CopyToUartTxBuffer((UByte *)"bdc 4 5 5 20 \"NEAR\" \"FAR\" 26 28\r", 32);
+	if ((base_station).AlangoProfile1)
+		CopyToUartTxBuffer((UByte *)"bdc 4 5 5 20 \"MA10\" \"MA11\" 26 28\r", 33);
 	else
-		CopyToUartTxBuffer((UByte *)"bdc 4 5 5 21 \"NEAR\" \"FAR\" 26 28\r", 32);
+		CopyToUartTxBuffer((UByte *)"bdc 4 5 5 21 \"MA10\" \"MA11\" 26 28\r", 33);
 	CopyToUartTxBuffer((UByte *)"f 14x24\r", 8);
-	CopyToUartTxBuffer((UByte *)"t \"Inbound noise\" 60 18 T\r", 26);
-	CopyToUartTxBuffer((UByte *)"t \"canceling\" 60 38 T\r", 22);
+	CopyToUartTxBuffer((UByte *)"t \"Post MIC\" 60 18 T\r", 21);
+	CopyToUartTxBuffer((UByte *)"t \"being used\" 60 38 T\r", 23);
 	CopyToUartTxBuffer((UByte *)"xa	4 p request_base_command 0\r", 30);
 	CopyToUartTxBuffer((UByte *)"xa	4 r request_base_command 1\r", 30);
 
@@ -180,27 +180,27 @@ void VolumeAdjustScreen()
 	(base_station).DisplayValueChanged = TRUE;
 	vol_item = (base_station).DisplayCommandData[0];		// which volume control: 0-detect, 1-inbound, 2-grill, 3-day, 4-night
 	requested_vol = (base_station).DisplayCommandData[1];	// volume requested
-	// INBOUND volume can be 0 - INBOUND_NEAR or 0 - INBOUND_FAR
+	// INBOUND volume can be 0 to INBOUND_P1 or 0 to INBOUND_P0
 	if (vol_item == 1)
 	{
-		if ((base_station).AlangoNear)
+		if ((base_station).AlangoProfile1)
 		{
-			// INBOUND volume can be 0 - INBOUND_NEAR (Alango NEAR setting)
-			if (requested_vol > INBOUND_NEAR)
+			// INBOUND volume can be 0 to INBOUND_P1 (Alango profile1 setting)
+			if (requested_vol > INBOUND_P1)
 			{
-				requested_vol = INBOUND_NEAR;
+				requested_vol = INBOUND_P1;
 			}
 		}
 		else
 		{
-			// INBOUND volume can be 0 - INBOUND_FAR (Alango FAR setting)
-			if (requested_vol > INBOUND_FAR)
+			// INBOUND volume can be 0 to INBOUND_P0 (Alango profile0 setting)
+			if (requested_vol > INBOUND_P0)
 			{
-				requested_vol = INBOUND_FAR;
+				requested_vol = INBOUND_P0;
 			}
 		}
 	}
-	// GRILL volume can be 0 - GRILL
+	// GRILL volume can be 0 to GRILL
 	else if (vol_item == 2)
 	{
 		if (requested_vol > GRILL)
@@ -208,23 +208,23 @@ void VolumeAdjustScreen()
 			requested_vol = GRILL;
 		}
 	}
-	// OUTBOUND volumes are 0 - OUTBOUND_NEAR or OUTBOUND_FAR
+	// OUTBOUND volumes are 0 to OUTBOUND_P1 or OUTBOUND_P0
 	else if ((vol_item == 3) || (vol_item == 4))
 	{
-		if ((base_station).AlangoNear)
+		if ((base_station).AlangoProfile1)
 		{
-			// OUTBOUND volume can be 0 - OUTBOUND_NEAR (Alango NEAR setting)
-			if (requested_vol > OUTBOUND_NEAR)
+			// OUTBOUND volume can be 0 to OUTBOUND_P1 (Alango profile1 setting)
+			if (requested_vol > OUTBOUND_P1)
 			{
-				requested_vol = OUTBOUND_NEAR;
+				requested_vol = OUTBOUND_P1;
 			}
 		}
 		else
 		{
-			// OUTBOUND volume can be 0 - OUTBOUND_FAR (Alango FAR setting)
-			if (requested_vol > OUTBOUND_FAR)
+			// OUTBOUND volume can be 0 to OUTBOUND_P0 (Alango profile0 setting)
+			if (requested_vol > OUTBOUND_P0)
 			{
-				requested_vol = OUTBOUND_FAR;
+				requested_vol = OUTBOUND_P0;
 			}
 		}
 	}
@@ -1948,10 +1948,10 @@ void ServiceDisplay()
 		(base_station).DisplayScreen = VOLUME;
 		CopyToUartTxBuffer((UByte *)"m pre_volume", 12);															// send slider bar max values first
 		CopyByteToUartTxBuffer(' ');	SendAsciiValue(10);															// i1 detect max
-		CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).AlangoNear ? INBOUND_NEAR : INBOUND_FAR);		// i2 inbound max
+		CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).AlangoProfile1 ? INBOUND_P1 : INBOUND_P0);	// i2 inbound max
 		CopyByteToUartTxBuffer(' ');	SendAsciiValue(GRILL);														// i3 grill max
-		CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).AlangoNear ? OUTBOUND_NEAR : OUTBOUND_FAR);	// i4 day max
-		CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).AlangoNear ? OUTBOUND_NEAR : OUTBOUND_FAR);	// i5 night max
+		CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).AlangoProfile1 ? OUTBOUND_P1 : OUTBOUND_P0);	// i4 day max
+		CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).AlangoProfile1 ? OUTBOUND_P1 : OUTBOUND_P0);	// i5 night max
 		CopyByteToUartTxBuffer('\r');																				// complete command string
 
 		CopyToUartTxBuffer((UByte *)"m volume", 8);																	// start volume display with parameters
@@ -2275,24 +2275,24 @@ void ServiceDisplay()
 		switch ((base_station).DisplayCommandData[0])
 		{
 			case 0:
-				ALANGO_PROFILE_0;						// BC5 PIO6 = LO (far settings)
-				(base_station).AlangoNear = FALSE;
+				ALANGO_PROFILE_0;						// BC5 PIO6 = LO (profile0 settings)
+				(base_station).AlangoProfile1 = FALSE;
 				(base_station).DisplayValueChanged = TRUE;
 				break;
 			case 1:
-				if ((base_station).InboundVol > INBOUND_NEAR)
-					AFESetGainPP2PPMixer(INBOUND_NEAR);
-				if ((base_station).CurrentOutboundVolume > OUTBOUND_NEAR)
+				if ((base_station).InboundVol > INBOUND_P1)
+					AFESetGainPP2PPMixer(INBOUND_P1);
+				if ((base_station).CurrentOutboundVolume > OUTBOUND_P1)
 				{
-					AFESetGainSpkrVolumeFP(OUTBOUND_NEAR);
-					(base_station).CurrentOutboundVolume = OUTBOUND_NEAR;
+					AFESetGainSpkrVolumeFP(OUTBOUND_P1);
+					(base_station).CurrentOutboundVolume = OUTBOUND_P1;
 				}
-				if ((base_station).PostSpeakerVolumeDay > OUTBOUND_NEAR)
-					(base_station).PostSpeakerVolumeDay = OUTBOUND_NEAR;
-				if ((base_station).PostSpeakerVolumeNight > OUTBOUND_NEAR)
-					(base_station).PostSpeakerVolumeNight = OUTBOUND_NEAR;
-				ALANGO_PROFILE_1;						// BC5 PIO6 = HI (near settings)
-				(base_station).AlangoNear = TRUE;
+				if ((base_station).PostSpeakerVolumeDay > OUTBOUND_P1)
+					(base_station).PostSpeakerVolumeDay = OUTBOUND_P1;
+				if ((base_station).PostSpeakerVolumeNight > OUTBOUND_P1)
+					(base_station).PostSpeakerVolumeNight = OUTBOUND_P1;
+				ALANGO_PROFILE_1;						// BC5 PIO6 = HI (profile1 settings)
+				(base_station).AlangoProfile1 = TRUE;
 				(base_station).DisplayValueChanged = TRUE;
 				break;
 			case 2:
