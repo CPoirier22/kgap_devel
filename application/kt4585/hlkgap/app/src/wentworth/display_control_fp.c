@@ -1055,7 +1055,7 @@ void SetupGreeterScreen()
 		SendAsciiValue(btn);
 		CopyByteToUartTxBuffer('\r');
 
-		OSStartTimer(GENERALFPTASKTIMER, 7); 				// 7 x 10ms = 70ms pause before sending next button info
+		OSStartTimer(GENERALFPTASKTIMER, 10); 				// 10 x 10ms = 100ms pause before sending next button info
 	}
 	else
 	{
@@ -1490,7 +1490,7 @@ void SetupMessageScreen()
 			CopyByteToUartTxBuffer('\r');
 		}
 
-		OSStartTimer(GENERALFPTASKTIMER, 7); 				// 7 x 10ms = 70ms pause before sending next button info
+		OSStartTimer(GENERALFPTASKTIMER, 10); 				// 10 x 10ms = 100ms pause before sending next button info
 	}
 	else
 	{
