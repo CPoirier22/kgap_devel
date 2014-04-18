@@ -36,6 +36,7 @@
 #include "fppp_common.h"
 #include "../dsp/gdsp_all_inits.h"
 #include "access_bus.h"
+#include "afe.h"
 
 UByte WATCHDOGTASK;
 UByte WATCHDOGTASKTIMER;
@@ -113,7 +114,31 @@ void check_external_relay_pin(void)
 			else if (!(base_station).VehicleDetectIsActive)
 			{
 				MENU_SPKR_AMP_OFF;												// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
-				GRILL_SPEAKER_OFF;												// mute grill speaker during playback
+				if (((base_station).GrillSpeakerVolume > 0) && ((base_station).DualBase == DUAL_BASE_MASTER))
+				{
+					// save GRILL volume but turn it down to 0 to play messages in slave headsets
+					(base_station).GrillSpeakerPreviousVolume = (base_station).GrillSpeakerVolume;
+					(base_station).GrillSpeakerNeedsToBeRestored = TRUE;
+					while ((base_station).GrillSpeakerVolume > 0)
+					{
+						// decrement MAX5407 (tap 0 "down" towards tap 31 direction) to increase attenuation (decrease volume)
+						UPDOWN_GRILL_DOWN;										// set up for decrement mode
+						VOL_CS_HI;												// lock in decrement mode
+						UPDOWN_GRILL_LO;
+						UPDOWN_GRILL_HI;
+						usec_pause(1);
+						UPDOWN_GRILL_LO;
+						VOL_CS_LO;												// freeze tap
+						(base_station).GrillSpeakerVolume--;
+					}
+				}
+				if ((base_station).DualBase == DUAL_BASE_MASTER)
+				{
+					GRILL_SPEAKER_ON;											// enable LO headsets to hear message
+					AFEEnableMicSpkrPath();										// connect gain_inbound -> gain_spkr_fp
+				}
+				else
+					GRILL_SPEAKER_OFF;											// mute grill speaker during playback
 				AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);					// temporarily set inbound for playback comfort
 				AFEEnablePostMicPath();											// enable DECT MIC input
 				RunGreetClock(MESSAGE_PLAY_START, NUM_OF_MESSAGES);				// play the alarm message
@@ -188,9 +213,29 @@ void ServiceVehicleDetect(BOOLEAN VehicleIsPresent)
 		if ((base_station).P33UsedForGreetMux)
 			GREET_IN_PP_OFF;													// enable BC5 audio path only (no GREET) in to DECT MICP/N
 		MENU_SPKR_AMP_ON;														// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
+		if ((base_station).GrillSpeakerNeedsToBeRestored)
+		{
+			// restore GRILL volume
+			(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
+			while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
+			{
+				// increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
+				UPDOWN_GRILL_UP;												// set up for increment mode
+				usec_pause(1);
+				VOL_CS_HI;														// lock in increment mode
+				UPDOWN_GRILL_LO;
+				UPDOWN_GRILL_HI;
+				usec_pause(1);
+				UPDOWN_GRILL_LO;
+				VOL_CS_LO;														// freeze tap
+				(base_station).GrillSpeakerVolume++;
+			}
+		}
 		if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
 			GRILL_SPEAKER_ON;													// turn on grill speaker
 		(base_station).GrillShouldBeOn = TRUE;
+		if ((base_station).DualBase == DUAL_BASE_MASTER)
+			AFEDisableMicSpkrPath();											// re-connect p_dynmixer6 -> gain_spkr_fp
 		// TODO: CRP - convert usec_pause to use timer
 		usec_pause(65535);
 		usec_pause(65535);
@@ -691,7 +736,31 @@ void PlayQueuedMessage()
 				return;
 		}
 		MENU_SPKR_AMP_OFF;																	// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
-		GRILL_SPEAKER_OFF;																	// mute grill speaker during playback
+		if (((base_station).GrillSpeakerVolume > 0) && ((base_station).DualBase == DUAL_BASE_MASTER))
+		{
+			// save GRILL volume but turn it down to 0 to play messages in slave headsets
+			(base_station).GrillSpeakerPreviousVolume = (base_station).GrillSpeakerVolume;
+			(base_station).GrillSpeakerNeedsToBeRestored = TRUE;
+			while ((base_station).GrillSpeakerVolume > 0)
+			{
+				// decrement MAX5407 (tap 0 "down" towards tap 31 direction) to increase attenuation (decrease volume)
+				UPDOWN_GRILL_DOWN;															// set up for decrement mode
+				VOL_CS_HI;																	// lock in decrement mode
+				UPDOWN_GRILL_LO;
+				UPDOWN_GRILL_HI;
+				usec_pause(1);
+				UPDOWN_GRILL_LO;
+				VOL_CS_LO;																	// freeze tap
+				(base_station).GrillSpeakerVolume--;
+			}
+		}
+		if ((base_station).DualBase == DUAL_BASE_MASTER)
+		{
+			GRILL_SPEAKER_ON;																// enable LO headsets to hear message
+			AFEEnableMicSpkrPath();															// connect gain_inbound -> gain_spkr_fp
+		}
+		else
+			GRILL_SPEAKER_OFF;																// mute grill speaker during playback
 		AFEEnablePostMicPath();																// enable DECT MIC input
 		AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);										// temporarily set inbound for playback comfort
 		RunGreetClock(MESSAGE_PLAY_START, NUM_OF_MESSAGES);									// play the alert
@@ -712,7 +781,31 @@ void PlayQueuedMessage()
 				{
 					(base_station).ActiveMessages = (base_station).ActiveMessages & ~(1 << i);
 					MENU_SPKR_AMP_OFF;														// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
-					GRILL_SPEAKER_OFF;														// mute grill speaker during playback
+					if (((base_station).GrillSpeakerVolume > 0) && ((base_station).DualBase == DUAL_BASE_MASTER))
+					{
+						// save GRILL volume but turn it down to 0 to play messages in slave headsets
+						(base_station).GrillSpeakerPreviousVolume = (base_station).GrillSpeakerVolume;
+						(base_station).GrillSpeakerNeedsToBeRestored = TRUE;
+						while ((base_station).GrillSpeakerVolume > 0)
+						{
+							// decrement MAX5407 (tap 0 "down" towards tap 31 direction) to increase attenuation (decrease volume)
+							UPDOWN_GRILL_DOWN;												// set up for decrement mode
+							VOL_CS_HI;														// lock in decrement mode
+							UPDOWN_GRILL_LO;
+							UPDOWN_GRILL_HI;
+							usec_pause(1);
+							UPDOWN_GRILL_LO;
+							VOL_CS_LO;														// freeze tap
+							(base_station).GrillSpeakerVolume--;
+						}
+					}
+					if ((base_station).DualBase == DUAL_BASE_MASTER)
+					{
+						GRILL_SPEAKER_ON;													// enable LO headsets to hear message
+						AFEEnableMicSpkrPath();												// connect gain_inbound -> gain_spkr_fp
+					}
+					else
+						GRILL_SPEAKER_OFF;													// mute grill speaker during playback
 					AFEEnablePostMicPath();													// enable DECT MIC input
 					AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);							// temporarily set inbound for playback comfort
 					RunGreetClock(MESSAGE_PLAY_START, (i + 8));								// play the reminder
@@ -742,7 +835,31 @@ void PlayQueuedMessage()
 					{
 						(base_station).ActiveMessages = (base_station).ActiveMessages & ~(1 << i);
 						MENU_SPKR_AMP_OFF;													// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
-						GRILL_SPEAKER_OFF;													// mute grill speaker during playback
+						if (((base_station).GrillSpeakerVolume > 0) && ((base_station).DualBase == DUAL_BASE_MASTER))
+						{
+							// save GRILL volume but turn it down to 0 to play messages in slave headsets
+							(base_station).GrillSpeakerPreviousVolume = (base_station).GrillSpeakerVolume;
+							(base_station).GrillSpeakerNeedsToBeRestored = TRUE;
+							while ((base_station).GrillSpeakerVolume > 0)
+							{
+								// decrement MAX5407 (tap 0 "down" towards tap 31 direction) to increase attenuation (decrease volume)
+								UPDOWN_GRILL_DOWN;											// set up for decrement mode
+								VOL_CS_HI;													// lock in decrement mode
+								UPDOWN_GRILL_LO;
+								UPDOWN_GRILL_HI;
+								usec_pause(1);
+								UPDOWN_GRILL_LO;
+								VOL_CS_LO;													// freeze tap
+								(base_station).GrillSpeakerVolume--;
+							}
+						}
+						if ((base_station).DualBase == DUAL_BASE_MASTER)
+						{
+							GRILL_SPEAKER_ON;												// enable LO headsets to hear message
+							AFEEnableMicSpkrPath();											// connect gain_inbound -> gain_spkr_fp
+						}
+						else
+							GRILL_SPEAKER_OFF;												// mute grill speaker during playback
 						AFEEnablePostMicPath();												// enable DECT MIC input
 						AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);						// temporarily set inbound for playback comfort
 						RunGreetClock(MESSAGE_PLAY_START, (i + 8));							// play the reminder
@@ -1022,9 +1139,29 @@ static void systemmodetasktimer(MailType * MailPtr)
 			  if ((base_station).P33UsedForGreetMux)
 				GREET_IN_PP_OFF;					// enable BC5 audio path only (no GREET) is enabled to DECT MICP/N
 			  MENU_SPKR_AMP_ON;						// enables BC5 audio path in to DECT MICP/N
+			  if ((base_station).GrillSpeakerNeedsToBeRestored)
+			  {
+				// restore GRILL volume
+				(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
+				while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
+				{
+				  // increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
+				  UPDOWN_GRILL_UP;					// set up for increment mode
+				  usec_pause(1);
+				  VOL_CS_HI;						// lock in increment mode
+				  UPDOWN_GRILL_LO;
+				  UPDOWN_GRILL_HI;
+				  usec_pause(1);
+				  UPDOWN_GRILL_LO;
+				  VOL_CS_LO;						// freeze tap
+				  (base_station).GrillSpeakerVolume++;
+				}
+			  }
 			  if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
 				GRILL_SPEAKER_ON;
 			  (base_station).GrillShouldBeOn = TRUE;
+			  if ((base_station).DualBase == DUAL_BASE_MASTER)
+				AFEDisableMicSpkrPath();			// re-connect p_dynmixer6 -> gain_spkr_fp
 			  // TODO: CRP - convert usec_pause to use timer
 			  usec_pause(65535);
 			  usec_pause(65535);
@@ -1489,6 +1626,8 @@ static void ConfigureBaseStationVariables()
 	(base_station).InboundVol = 3;									// 0-9 (dB is 2x: 0dB-18dB)
 	(base_station).CurrentInboundVolumeMixerAtten = MIXER_ATTEN;
 	(base_station).GrillSpeakerVolume = 0;
+	(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
+	(base_station).GrillSpeakerPreviousVolume = 0;
 	(base_station).PostSpeakerVolumeDay = 6;						// initial value
 	(base_station).PostSpeakerVolumeNight = 6;						// initial value
 	(base_station).CurrentOutboundVolume = 6;						// initial value

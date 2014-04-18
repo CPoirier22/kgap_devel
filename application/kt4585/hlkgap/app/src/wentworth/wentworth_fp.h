@@ -152,6 +152,8 @@ typedef struct
 	UByte MessageIsPlaying, MessageIsRecording;
 	UByte CurrentOutboundVolume;
 	WORD CurrentInboundVolumeMixerAtten;
+	BOOLEAN GrillSpeakerNeedsToBeRestored;
+	UByte GrillSpeakerPreviousVolume;
 
 	// these things need to be saved in EEPROM
 	//	WORD FW_REV_MAJOR & FW_REV_MINOR								// 2

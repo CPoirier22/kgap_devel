@@ -277,3 +277,13 @@ void AFEEnablePostMicPath(void)		// Re-enable post mic audio path
 {
 	GdspConnect(&(p_gain_inbound->in_ptr), &(p_gendspcodecsource->codecdatainsrc));
 }
+
+void AFEEnableMicSpkrPath(void)		// to play messages to LO headsets in expanded system
+{
+	GdspConnect(&(p_gain_spkr_fp->in_ptr), &(p_gain_inbound->out));		// gain_inbound output which carries message audio
+}
+
+void AFEDisableMicSpkrPath(void)	// to stop playing messages to LO headsets in expanded system
+{
+	GdspConnect(&(p_gain_spkr_fp->in_ptr), &(p_dynmixer6->out));		// normal audio out to post gain block
+}

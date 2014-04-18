@@ -240,6 +240,25 @@ void VolumeAdjustScreen()
 		// adjust analog grill speaker circuit
 		// using P0[4] VOL_CS
 		// using P0[6] UPDOWN_GRILL
+		if ((base_station).GrillSpeakerNeedsToBeRestored)
+		{
+			// restore GRILL volume
+			(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
+			while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
+			{
+				// increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
+				UPDOWN_GRILL_UP;							// set up for increment mode
+				usec_pause(1);
+				VOL_CS_HI;									// lock in increment mode
+				UPDOWN_GRILL_LO;
+				UPDOWN_GRILL_HI;
+				usec_pause(1);
+				UPDOWN_GRILL_LO;
+				VOL_CS_LO;									// freeze tap
+				current_vol++;
+				(base_station).GrillSpeakerVolume++;
+			}
+		}
 		current_vol = (base_station).GrillSpeakerVolume;
 		while (requested_vol != current_vol)
 		{
@@ -1148,10 +1167,20 @@ void HandleGreetDisplay()
 		{
 			RunGreetClock(MESSAGE_PLAY_STOP, (base_station).MessageIsPlaying);		// stops playing a message
 			AFEDisablePostMicPath();												// disable DECT MIC input
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;													// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();												// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		}
 		else if (((base_station).MsgBeingEdited > 0) && (base_station).MessageIsRecording)
 		{
 			RunGreetClock(MESSAGE_RECORD_STOP, (base_station).MessageIsRecording);	// stops recording a message
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;													// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();												// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		}
 		(base_station).MsgBeingEdited = 0;
 		(base_station).Message[selected_greet].StartIsPressed = FALSE;
@@ -1566,10 +1595,20 @@ void HandleMessageDisplay()
 		{
 			RunGreetClock(MESSAGE_PLAY_STOP, (base_station).MessageIsPlaying);		// stops playing a message
 			AFEDisablePostMicPath();												// disable DECT MIC input
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;													// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();												// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		}
 		else if (((base_station).MsgBeingEdited > 0) && (base_station).MessageIsRecording)
 		{
 			RunGreetClock(MESSAGE_RECORD_STOP, (base_station).MessageIsRecording);	// stops recording a message
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;													// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();												// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		}
 		(base_station).MsgBeingEdited = 0;
 		(base_station).Message[selected_greet].StartIsPressed = FALSE;
@@ -2047,9 +2086,29 @@ void ServiceDisplay()
 					GREET_IN_PP_OFF;												// enable BC5 audio path only (no GREET) is enabled to DECT MICP/N
 				if ((base_station).MessageIsPlaying == 0)
 					MENU_SPKR_AMP_ON;												// turn post speaker back on (enable BC5 audio path in to DECT MICP/N)
+				if ((base_station).GrillSpeakerNeedsToBeRestored)
+				{
+					// restore GRILL volume
+					(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
+					while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
+					{
+						// increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
+						UPDOWN_GRILL_UP;											// set up for increment mode
+						usec_pause(1);
+						VOL_CS_HI;													// lock in increment mode
+						UPDOWN_GRILL_LO;
+						UPDOWN_GRILL_HI;
+						usec_pause(1);
+						UPDOWN_GRILL_LO;
+						VOL_CS_LO;													// freeze tap
+						(base_station).GrillSpeakerVolume++;
+					}
+				}
 				if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
 					GRILL_SPEAKER_ON;												// turn grill speaker back on
 				(base_station).GrillShouldBeOn = TRUE;
+				if ((base_station).DualBase == DUAL_BASE_MASTER)
+					AFEDisableMicSpkrPath();										// re-connect p_dynmixer6 -> gain_spkr_fp
 				// TODO: CRP - convert usec_pause to use timer
 				usec_pause(65535);
 				usec_pause(65535);
@@ -2192,6 +2251,29 @@ void ServiceDisplay()
 			RefreshOutboundVolume(3);												// temporarily "normalize" for recording level
 			AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);							// temporarily set inbound for playback comfort
 			AFEEnablePostMicPath();													// enable DECT MIC input
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+				if ((base_station).GrillSpeakerVolume > 0)
+				{
+					// save GRILL volume but turn it down to 0 to play messages in slave headsets
+					(base_station).GrillSpeakerPreviousVolume = (base_station).GrillSpeakerVolume;
+					(base_station).GrillSpeakerNeedsToBeRestored = TRUE;
+					while ((base_station).GrillSpeakerVolume > 0)
+					{
+						// decrement MAX5407 (tap 0 "down" towards tap 31 direction) to increase attenuation (decrease volume)
+						UPDOWN_GRILL_DOWN;											// set up for decrement mode
+						VOL_CS_HI;													// lock in decrement mode
+						UPDOWN_GRILL_LO;
+						UPDOWN_GRILL_HI;
+						usec_pause(1);
+						UPDOWN_GRILL_LO;
+						VOL_CS_LO;													// freeze tap
+						(base_station).GrillSpeakerVolume--;
+					}
+				}
+				GRILL_SPEAKER_ON;													// enable LO headsets to hear message
+				AFEEnableMicSpkrPath();												// connect gain_inbound -> gain_spkr_fp
+			}
 			RunGreetClock(MESSAGE_PLAY_START, (base_station).MsgBeingEdited);		// sets up and starts playing a message
 		}
 		else if ((base_station).DisplayCommandData[0] == 2)
@@ -2201,16 +2283,28 @@ void ServiceDisplay()
 			(base_station).GrillShouldBeOn = FALSE;
 			RefreshOutboundVolume(3);												// temporarily "normalize" for recording level
 			AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);							// temporarily set inbound for playback comfort
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			  AFEDisableMicSpkrPath();												// re-connect p_dynmixer6 -> gain_spkr_fp
 			RunGreetClock(MESSAGE_RECORD_START, (base_station).MsgBeingEdited);		// sets up and starts recording a message
 		}
 		else if ((base_station).MessageIsPlaying > 0)
 		{
 			RunGreetClock(MESSAGE_PLAY_STOP, (base_station).MessageIsPlaying);		// stops playing a message
 			AFEDisablePostMicPath();												// disable DECT MIC input
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;													// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();												// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		}
 		else if ((base_station).MessageIsRecording > 0)
 		{
 			RunGreetClock(MESSAGE_RECORD_STOP, (base_station).MessageIsRecording);	// stops recording a message
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;													// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();												// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		}
 		break;
 	case 0x1A:

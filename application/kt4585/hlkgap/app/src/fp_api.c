@@ -386,9 +386,29 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
     	  if ((base_station).P33UsedForGreetMux)
     		GREET_IN_PP_OFF;									// enable BC5 audio path only (no GREET) in to DECT MICP/N
     	  MENU_SPKR_AMP_ON;										// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
+    	  if ((base_station).GrillSpeakerNeedsToBeRestored)
+    	  {
+			// restore GRILL volume
+			(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
+			while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
+			{
+			  // increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
+			  UPDOWN_GRILL_UP;									// set up for increment mode
+			  usec_pause(1);
+			  VOL_CS_HI;										// lock in increment mode
+			  UPDOWN_GRILL_LO;
+			  UPDOWN_GRILL_HI;
+			  usec_pause(1);
+			  UPDOWN_GRILL_LO;
+			  VOL_CS_LO;										// freeze tap
+			  (base_station).GrillSpeakerVolume++;
+			}
+    	  }
     	  if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
     		GRILL_SPEAKER_ON;									// turn on grill speaker
     	  (base_station).GrillShouldBeOn = TRUE;
+		  if ((base_station).DualBase == DUAL_BASE_MASTER)
+			AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
     	  // TODO: CRP - convert usec_pause to use timer
     	  usec_pause(65535);
 		  usec_pause(65535);
@@ -806,9 +826,6 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 		  RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
 		  if ((base_station).P33UsedForGreetMux)
 			GREET_IN_PP_OFF;									// enable BC5 audio path only (no GREET) in to DECT MICP/N
-		  if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
-			GRILL_SPEAKER_ON;									// turn on grill speaker
-		  (base_station).GrillShouldBeOn = TRUE;
 		  // TODO: CRP - convert usec_pause to use timer
 		  usec_pause(65535);
 		  usec_pause(65535);
@@ -816,16 +833,49 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 		  {
 			AFEDisablePostMicPath();							// disable DECT MIC input for SPEED TEAM mode
 			MENU_SPKR_AMP_OFF;									// mute the menu board speaker for SPEED TEAM mode (enables GREET audio path in to DECT MICP/N)
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;								// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		  }
 		  else if ((base_station).VehicleDetectIsActive)
 		  {
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			  AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
 			AFEEnablePostMicPath();								// enable DECT MIC input
 			MENU_SPKR_AMP_ON;									// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
+			if ((base_station).GrillSpeakerNeedsToBeRestored)
+			{
+			  // restore GRILL volume
+			  (base_station).GrillSpeakerNeedsToBeRestored = FALSE;
+			  while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
+			  {
+			    // increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
+			    UPDOWN_GRILL_UP;									// set up for increment mode
+			    usec_pause(1);
+			    VOL_CS_HI;										// lock in increment mode
+			    UPDOWN_GRILL_LO;
+			    UPDOWN_GRILL_HI;
+			    usec_pause(1);
+			    UPDOWN_GRILL_LO;
+			    VOL_CS_LO;										// freeze tap
+			    (base_station).GrillSpeakerVolume++;
+			  }
+			}
+			if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
+			  GRILL_SPEAKER_ON;									// turn on grill speaker
+			(base_station).GrillShouldBeOn = TRUE;
 		  }
 		  else
 		  {
 			AFEDisablePostMicPath();							// disable DECT MIC input
 			MENU_SPKR_AMP_OFF;									// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
+			if ((base_station).DualBase == DUAL_BASE_MASTER)
+			{
+			  GRILL_SPEAKER_OFF;								// disable the LO headsets audio
+			  AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
+			}
 		  }
 	  	  OSStartTimer(VEHICLEDETECTTASKTIMER, 20); 			// 20 x 10ms = 200ms resume checking vehicle detector
 		}
