@@ -1189,7 +1189,9 @@ static void displaytasktimer(MailType * MailPtr)
   switch (MailPtr->Primitive)
   {
     case INITTASK:
+#ifndef FOR_TEST_BASE_ONLY
       OSStartTimer(DISPLAYTASKTIMER, 30000);				// start 5 minute timer
+#endif
       break;
     case TIMEOUT:
       (base_station).DisplayIsLocked = 1;					// refresh the DECT lock flag
@@ -1618,10 +1620,6 @@ static void ConfigureBaseStationVariables()
 	(base_station).DisplayMasterPin[1] = 5;
 	(base_station).DisplayMasterPin[2] = 8;
 	(base_station).DisplayMasterPin[3] = 0;
-	(base_station).DisplayCalPPPin[0] = 1;
-	(base_station).DisplayCalPPPin[1] = 7;
-	(base_station).DisplayCalPPPin[2] = 9;
-	(base_station).DisplayCalPPPin[3] = 3;
 	(base_station).DisplayIsLocked = 0;
 	(base_station).InboundVol = 3;									// 0-9 (dB is 2x: 0dB-18dB)
 	(base_station).CurrentInboundVolumeMixerAtten = MIXER_ATTEN;

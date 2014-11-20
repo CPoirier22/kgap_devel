@@ -342,6 +342,19 @@ void RegistrationScreen(UByte cmd)
 		// fill buttons with registered headsets
 		if ((base_station).HeadsetCounter < MAX_Allowed_Users)
 		{
+#ifdef FOR_TEST_BASE_ONLY
+			// !! THIS IS ONLY FOR IN-HOUSE TEST RELEASE !!
+			// use this code to activate calibration button on registration screen
+			if ((base_station).HeadsetCounter == 0 && !(base_station).PPCalibration)
+			{
+				// add a bitmap and command for opening headset calibration screen
+				CopyToUartTxBuffer((UByte *)"f 13B\r", 6);
+				CopyToUartTxBuffer((UByte *)"bdc 6 5 224 20 \"CAL\" \"CAL\" 26 28\r", 33);
+				CopyToUartTxBuffer((UByte *)"xa	6 p request_base_command 4\r", 30);
+				usec_pause(0xFFFF);									// to avoid over running the display input buffer
+			}
+#endif
+
 			if (((base_station).DualBase > 0) && ((base_station).HeadsetCounter == 0))
 			{
 				// for dual base system, re-paint LISTEN-ONLY button
@@ -412,21 +425,24 @@ void RegistrationScreen(UByte cmd)
 				CopyToUartTxBuffer((UByte *)"f 13B\r", 6);												// switch to smaller font
 				CopyToUartTxBuffer((UByte *)"r 0 0 480 50 1 00F\r", 19);								// draw a blue square to "erase" normal buttons
 				CopyToUartTxBuffer((UByte *)"f 13B\r", 6);												// switch to smaller font
-				CopyToUartTxBuffer((UByte *)"xd 28\r", 6);												// disable REGISTRATION button
+				CopyToUartTxBuffer((UByte *)"xd 15\r", 6);												// disable HELP button
 				CopyToUartTxBuffer((UByte *)"xd 29\r", 6);												// disable LISTEN ONLY button
-				CopyToUartTxBuffer((UByte *)"xd 30\r", 6);												// disable DELETE button
-				CopyToUartTxBuffer((UByte *)"bdc 28 10 0 1 \"- DECREASE MIC\" 13 13\r", 37);			// button for decrementing headset MIC volume offset
-				CopyToUartTxBuffer((UByte *)"xa 28 p request_base_command 28\r", 32);
-				CopyToUartTxBuffer((UByte *)"bdc 29 170 0 1 \"RESET MIC\" 13 13\r", 33);				// button for resetting headset MIC volume offset
-				CopyToUartTxBuffer((UByte *)"xa 29 p request_base_command 29\r", 32);
-				CopyToUartTxBuffer((UByte *)"bdc 30 330 0 1 \"+ INCREASE MIC\" 13 13\r", 38);			// button for incrementing headset MIC volume offset
-				CopyToUartTxBuffer((UByte *)"xa 30 p request_base_command 30\r", 32);
-				CopyToUartTxBuffer((UByte *)"bdc 31 10 46 1 \"- DECREASE RCV\" 13 13\r", 38);			// button for decrementing headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"bdc 31 10 0 1 \"- DECREASE MIC\" 13 13\r", 37);			// button for decrementing headset MIC volume offset
 				CopyToUartTxBuffer((UByte *)"xa 31 p request_base_command 31\r", 32);
-				CopyToUartTxBuffer((UByte *)"bdc 32 170 46 1 \"RESET RCV\" 13 13\r", 34);				// button for resetting headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"bdc 32 170 0 1 \"RESET MIC\" 13 13\r", 33);				// button for resetting headset MIC volume offset
 				CopyToUartTxBuffer((UByte *)"xa 32 p request_base_command 32\r", 32);
-				CopyToUartTxBuffer((UByte *)"bdc 33 330 46 1 \"+ INCREASE RCV\" 13 13\r", 39);			// button for incrementing headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"bdc 33 330 0 1 \"+ INCREASE MIC\" 13 13\r", 38);			// button for incrementing headset MIC volume offset
 				CopyToUartTxBuffer((UByte *)"xa 33 p request_base_command 33\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 34 10 46 1 \"- DECREASE RCV\" 13 13\r", 38);			// button for decrementing headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"xa 34 p request_base_command 34\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 35 170 46 1 \"RESET RCV\" 13 13\r", 34);				// button for resetting headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"xa 35 p request_base_command 35\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 36 330 46 1 \"+ INCREASE RCV\" 13 13\r", 39);			// button for incrementing headset RCV volume offset
+				CopyToUartTxBuffer((UByte *)"xa 36 p request_base_command 36\r", 32);
+				CopyToUartTxBuffer((UByte *)"bdc 28 330 222 20 \"REG\" \"REG\" 26 28\r", 36);			// replacement REGISTER button
+				CopyToUartTxBuffer((UByte *)"xmq 28 register_button_pressed register_button_released\r", 56);
+				CopyToUartTxBuffer((UByte *)"bdc 30 380 222 20 \"DEL\" \"DEL\" 26 26\r", 36);			// replacement DELETE button
+				CopyToUartTxBuffer((UByte *)"xmq 30 delete_button_pressed delete_button_pressed\r", 51);
 			}
 			(base_station).FillingRegistrationDisplay = FALSE;
 			CopyToUartTxBuffer((UByte *)"touch on\r", 9);
@@ -651,33 +667,8 @@ void PINScreen()
 				case NEW_CLOCK:
 				case GREETER_PIN:
 				case NEW_NIGHT_TIME:
-				case CAL_PP_PIN:
 					break;
 				}
-			}
-			else
-			{
-				CopyToUartTxBuffer((UByte *)"m back_key\r", 11);
-				CopyToUartTxBuffer((UByte *)"m thumbs_dn\r", 12);
-			}
-		}
-	}
-	// this handles PIN screen to access headset calibration screen
-	else if ((base_station).DisplayScreen == CAL_PP_PIN)
-	{
-		if ((base_station).PinDigitIndex == 0)
-		{
-			// draw blue square to erase possible thumbs down
-			CopyToUartTxBuffer((UByte *)"r 72 146 131 205 1 00F\r", 23);
-		}
-		else if ((base_station).PinDigitIndex > 2)
-		{
-			if ((memcmp(&(base_station).TempPin, &(base_station).DisplayCalPPPin, 4) == 0))
-			{
-				CopyToUartTxBuffer((UByte *)"set e0 0\r", 9);
-				(base_station).DisplayIsLocked = 0;
-				(base_station).DisplayValueChanged = TRUE;
-					CopyToUartTxBuffer((UByte *)"m register_main\r", 16);
 			}
 			else
 			{
@@ -1893,8 +1884,10 @@ void ServiceDisplay()
 //	ptr = StringPrint(ptr, ") ** ");
 //	PrintStatus(0, StatusString);
 
+#ifndef FOR_TEST_BASE_ONLY
 	StopTimer(DISPLAYTASKTIMER);
 	OSStartTimer(DISPLAYTASKTIMER, 30000);				// re-start 5 minute timer
+#endif
 
 	switch ((base_station).DisplayCommand)
 	{
@@ -2402,10 +2395,9 @@ void ServiceDisplay()
 				BroadcastSystemModeState(-1);
 				break;
 			case 4:
+				// enable calibration screen for testing headsets
 				(base_station).PPCalibration = TRUE;
-				(base_station).DisplayScreen = CAL_PP_PIN;
-				(base_station).PinDigitIndex = 0;
-				CopyToUartTxBuffer((UByte *)"m pin\r", 6);
+				CopyToUartTxBuffer((UByte *)"m register_main\r", 16);
 				break;
 			case 5:
 				// GREET in headset NO/YES button press here
@@ -2423,12 +2415,12 @@ void ServiceDisplay()
 				CopyToUartTxBuffer((UByte *)"touch off\r", 10);
 				StopTimer(WATCHDOGTASKTIMER);
 				break;
-			case 28:	// - PP MIC offset
-			case 29:	// reset PP MIC offset
-			case 30:	// + PP MIC offset
-			case 31:	// - PP RCV offset
-			case 32:	// reset PP RCV offset
-			case 33:	// + PP RCV offset
+			case 31:	// - PP MIC offset
+			case 32:	// reset PP MIC offset
+			case 33:	// + PP MIC offset
+			case 34:	// - PP RCV offset
+			case 35:	// reset PP RCV offset
+			case 36:	// + PP RCV offset
 				HandleDebugButton((base_station).DisplayCommandData[0]);
 				break;
 			default:

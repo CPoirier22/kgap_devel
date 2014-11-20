@@ -38,9 +38,9 @@ extern void WTInfoDebugScreen();
 UByte enable_tonegenerator_for_test=0;
 #endif
 
-static void usec_pause(unsigned int x)
+static void usec_pause(DWORD x)						// -2,147,483,648 to 2,147,483,647
 {
-    volatile unsigned int i;
+    volatile DWORD i;
     for (i = 0; i < x; i++)
     {
     	;
@@ -781,6 +781,19 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);											// eA volume lanes info
 	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);											// eB multi-lane
 	  CopyByteToUartTxBuffer('\r');																// complete command string
+
+#ifdef FOR_TEST_BASE_ONLY
+	  // !! THIS IS ONLY FOR IN-HOUSE TEST RELEASE !!
+	  // use this code to activate calibration button on registration screen
+	  usec_pause(300000);
+	  CopyToUartTxBuffer((UByte *)"zs 50\r", 6);
+	  CopyToUartTxBuffer((UByte *)"xs 128 0 0 479 271\r", 19);
+	  CopyToUartTxBuffer((UByte *)"xm 128 main\r", 12);
+	  CopyToUartTxBuffer((UByte *)"f 14x24\r", 8);
+	  CopyToUartTxBuffer((UByte *)"t \"                       \" 13 100 T\r", 37);
+	  CopyToUartTxBuffer((UByte *)"t \"         TEST BASE !!!!\" 13 100 T\r", 37);
+	  CopyToUartTxBuffer((UByte *)"t \"        TAP TO CONTINUE\" 13 150 T\r", 37);
+#endif
 
 	  if (!(base_station).BaseRTC && !(base_station).GreetRTC)
 	  {

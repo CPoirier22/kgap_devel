@@ -30,6 +30,7 @@
 
 //#define ENABLE_TONEGEN
 //#define ECT_DSP_MESSAGES
+#define FOR_TEST_BASE_ONLY				// !! THIS IS ONLY FOR IN-HOUSE TEST RELEASE !!  use this code to activate calibration button on registration screen
 
 #define DSP_SEGMENT_SIZE        	0x1A2C	// was 0x1E00; subtracted 0x428 after removing PAEC, 0x80 after adding message repeater, 0x2C after adding 2nd base, added 0x100 after moving iStack
 

@@ -85,8 +85,7 @@ typedef enum {
 	GREETER_SETUP,
 	MESSAGE_SETUP1,
 	MESSAGE_SETUP2,
-	NEW_NIGHT_TIME,
-	CAL_PP_PIN
+	NEW_NIGHT_TIME
 } Screens;
 
 typedef struct
@@ -138,7 +137,7 @@ typedef struct
 	BOOLEAN DisplayValueChanged;
 	UByte PinDigitIndex;
 	UByte TempPin[4], TempPin2[4];										// used to hold PIN being entered
-	UByte DisplayMasterPin[4], DisplayCalPPPin[4];						// is always 2580 & 1793
+	UByte DisplayMasterPin[4];											// is always 2580
 	UByte SystemMode, NewSystemMode;
 	BOOLEAN RegistrationAllowed, RegistrationButtonPressed;
 	UByte OrderTakerID;
