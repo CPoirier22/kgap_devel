@@ -1829,11 +1829,11 @@ void HandleDebugButton(UByte cmd)
 
 	switch (cmd)
 	{
-	case 28:	// - PP MIC offset
+	case 31:	// - PP MIC offset
 		(base_station).CalibratingPPMic = TRUE;
 		RegistrationScreen(0x1E);
 		break;
-	case 29:	// reset PP MIC offset
+	case 32:	// reset PP MIC offset
 		i = (base_station).HeadsetCounter++;
 		while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).HeadsetCounter < MAX_Allowed_Users))
 		{
@@ -1845,15 +1845,15 @@ void HandleDebugButton(UByte cmd)
 			BroadcastCalOffset(i, 1);
 		}
 		break;
-	case 30:	// + PP MIC offset
+	case 33:	// + PP MIC offset
 		(base_station).CalibratingPPMic = TRUE;
 		RegistrationScreen(0x1F);
 		break;
-	case 31:	// - PP RCV offset
+	case 34:	// - PP RCV offset
 		(base_station).CalibratingPPRcv = TRUE;
 		RegistrationScreen(0x1E);
 		break;
-	case 32:	// reset PP RCV offset
+	case 35:	// reset PP RCV offset
 		i = (base_station).HeadsetCounter++;
 		while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).HeadsetCounter < MAX_Allowed_Users))
 		{
@@ -1865,7 +1865,7 @@ void HandleDebugButton(UByte cmd)
 			BroadcastCalOffset(i, 4);
 		}
 		break;
-	case 33:	// + PP RCV offset
+	case 36:	// + PP RCV offset
 		(base_station).CalibratingPPRcv = TRUE;
 		RegistrationScreen(0x1F);
 		break;
