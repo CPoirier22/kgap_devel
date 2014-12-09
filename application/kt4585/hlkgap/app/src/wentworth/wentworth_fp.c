@@ -1104,20 +1104,15 @@ static void systemmodetasktimer(MailType * MailPtr)
 	  if (((base_station).SystemMode != (base_station).NewSystemMode) && ((base_station).NewSystemMode != 0))
 	  {
 		// a new system mode was selected that is different from current system mode
-		(base_station).SystemMode = (base_station).NewSystemMode;
-		if ((base_station).OrderTakerID != 0xFF)
-		{
-		  // reset the order taker when system mode changes
-		  BroadcastOrderTaker((base_station).OrderTakerID, 0);
-		  (base_station).OrderTakerID = 0xFF;
-		}
 		if ((base_station).NewSystemMode == SPEED_TEAM)
 		  ServiceVehicleDetect(FALSE);
-		AFEDisablePostMicPath();				// disable DECT MIC input initially in all modes
-		MENU_SPKR_AMP_OFF;						// mute the menu board speaker initially in all modes (enables GREET audio path in to DECT MICP/N)
+		(base_station).SystemMode = (base_station).NewSystemMode;
+		(base_station).OrderTakerID = 0xFF;								// reset OT (headsets reset themselves)
+		AFEDisablePostMicPath();										// disable DECT MIC input initially in all modes
+		MENU_SPKR_AMP_OFF;												// mute the menu board speaker initially in all modes (enables GREET audio path in to DECT MICP/N)
 		if ((base_station).NewSystemMode == PUSH_TO_TALK)
 		{
-		  BroadcastCarWaiting(0);				// turn off all headsets
+		  BroadcastCarWaiting(0);										// turn off all headsets
 		  for (i = 0; i < MAX_Allowed_Users; i++)
 		  {
 			// if any headset is on from the previous mode, now it is off
@@ -1621,14 +1616,14 @@ static void ConfigureBaseStationVariables()
 	(base_station).DisplayMasterPin[2] = 8;
 	(base_station).DisplayMasterPin[3] = 0;
 	(base_station).DisplayIsLocked = 0;
-	(base_station).InboundVol = 3;									// 0-9 (dB is 2x: 0dB-18dB)
+	(base_station).InboundVol = 2;									// initial value (dB is [-2x - 2.5dB] == -2.5dB to -20.5dB)
 	(base_station).CurrentInboundVolumeMixerAtten = MIXER_ATTEN;
 	(base_station).GrillSpeakerVolume = 0;
 	(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
 	(base_station).GrillSpeakerPreviousVolume = 0;
-	(base_station).PostSpeakerVolumeDay = 6;						// initial value
-	(base_station).PostSpeakerVolumeNight = 6;						// initial value
-	(base_station).CurrentOutboundVolume = 6;						// initial value
+	(base_station).PostSpeakerVolumeDay = 5;						// initial value (dB is [2x - 6dB] == -6dB to +16dB)
+	(base_station).PostSpeakerVolumeNight = 2;						// initial value
+	(base_station).CurrentOutboundVolume = 5;						// initial value
 	(base_station).SystemMode = HANDS_FREE;
 	(base_station).NewSystemMode = 0;
 	(base_station).RegistrationAllowed = FALSE;

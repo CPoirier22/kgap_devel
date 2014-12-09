@@ -186,7 +186,8 @@ typedef struct
   unsigned short linear_out;           // Linear coded output signal
 } gdsp_lawlin;
 
-#define MIXER_ATTEN		0x2636		   // used for setting default p_dynmixer attenuation at -10.5dB
+#define MIXER_ATTEN		0x3C8F		   // used for setting default p_dynmixer attenuation at -6.5dB (inbound volume = 2)
+#define MIC_A_ATTEN		0x4026		   // used for setting MIC(A) attenuation at -6dB
 #define MIXER6_ATTEN	0x1989		   // used after muting p_dynmixer6 during paging for -14dB
 
 typedef struct
@@ -200,113 +201,6 @@ typedef struct
   unsigned short inputs[7];            // inputs
   unsigned short weights[7];           // channel weights
 } gdsp_mixer;
-
-typedef struct
-{
-  unsigned short spkr_ptr;             // Pointer to speaker input array
-  unsigned short mic_ptr;              // Pointer to microphone input array
-  unsigned short out_ptr;              // Pointer to output array
-  unsigned short twiddle_ptr;          // Pointer to twiddle table (ROM)
-  unsigned short twiddle_size;         // Size of twiddle table
-  unsigned short window_ptr;           // Pointer to window table(ROM)
-  unsigned short window_size;          // Size of window table
-  unsigned short fftbuf_spkr_ptr;      // Pointer to complex FFT buffer of speaker signal
-  unsigned short fftbuf_mic_ptr;       // Pointer to complex FFT buffer of microphone signal
-  unsigned short paecband_ptr;         // Pointer to band states structure
-  unsigned short xpow_ptr;             // Pointer to array of speaker power spectrum coeffs
-  unsigned short ypow_ptr;             // Pointer to array of mic power spectrum coeffs
-  unsigned short ccxx_ptr;             // Pointer to array of speaker auto correlation coeffs
-  unsigned short ccxy_ptr;             // Pointer to array of speaker and mic auto correlation coeffs
-  unsigned short ccyy_ptr;             // Pointer to array of mic auto correlation coeffs
-  unsigned short cc_ptr;               // Pointer to array of Wiener-coefficients (active gain filter) for spectral substraction
-  unsigned short cc_af_ptr;            // Pointer to array of Wiener-coefficients (adapting gain filter) for spectral substraction
-  unsigned short fftsize;              // Size of FFT (128)
-  unsigned short framesize;            // Size of input frame (64)
-  unsigned short fftscale;             // FFT scale factor
-  unsigned short ifftscale;            // iFFT scale factor
-  unsigned short fftmode;              // FFT mode
-  unsigned short npart;                // Number of frequency bands
-  unsigned short mode;                 // Mode word
-  unsigned short delaycompspecs;       // Maximum expected delay of early echo in number of input frames
-  unsigned short ibuf_size;            // Input buffer size
-  unsigned short ibuf_idx;             // Input buffer read-index (one index for both input buffers)
-  unsigned short obuf_size;            // Output buffer size
-  unsigned short obuf_idx;             // Output buffer read index
-  unsigned short init;                 // Number of frames with initial 'fast' convergence time constants, multiplied with -1
-  unsigned short noiseestgainshft;     // Tx noise level estimation scaling factor
-  unsigned short noiseestspkgainshft;   // Rx noise level estimation scaling factor
-  unsigned short dtdcount_init;        // Double talk detection counter init value. Value is number of frames the DTD conditions must be true before adapting filter is copied to the active filter
-  unsigned short gamma;                // Scalling parameter of the echo removal filter
-  unsigned short cctc;                 // Time constant for the coloration effect filter (cross correlation and auto correlations)
-  unsigned short beta;                 // Gain given to echo estimate to avoid under-estimation
-  unsigned short attlimit;             // Attenuation Limit
-  unsigned short dtdthr;               // Doubletalk Detector absolute MSE threshold (foreground filter)
-  unsigned short dtdthr2;              // Doubletalk Detector relative MSE threshold (foreground filter vs background filter)
-  unsigned short dtdthr3;              // Doubletalk Detector 2nd relative MSE threshold
-  unsigned short dtdsmooth;            // Doubletalk Detector statistics estimation time constant
-  unsigned short dtddecay;             // Doubletalk Detector coloration effect filter update speed
-  unsigned short dtdwgain_full_thr;    // Doubletalk Detector absolute full band prediction gain threshold
-  unsigned short dtdwgain_part_thr;    // Doubletalk Detector absolute subband prediction gain threshold
-  unsigned short noiseest1;            // Noise Suppression attack time constant for noise level estimation
-  unsigned short noiseest2;            // Noise Suppression release time constant for noise level estimation
-  unsigned short noiseest3;            // Noise Suppression paramter
-  unsigned short noiseattlimit;        // Noise Suppression attenuation factor
-  unsigned short nsuppsmtra;           // Noise Suppression time constant for transient noise suppression gain smoothing
-  unsigned short nsuppsmsta;           // Noise Suppression time constant for stationary noise suppression gain smoothing
-  unsigned short nsstathr;             // Noise Suppression stationarity threshold
-  unsigned short retainnoisethr1div;   // Rx noise retaining threshold
-  unsigned short attlimitthr1div;      // Attenuation limit minimum threshold
-  unsigned short smooththr;            // Gain Filter Smoothing control threshold
-  unsigned short smoothdef;            // Gain Filter Smoothing control Rx mode time constant
-  unsigned short smoothlow;            // Gain Filter Smoothing control Doubletalk mode time constant 1. Controls suppression time of room echo tail
-  unsigned short smoothtop;            // Gain Filter Smoothing control Doubletalk mode time constant 2. Controls capture of early room echoes
-  unsigned short winitial;             // Flag indicating use of initial or steady state parameters
-  unsigned short dtdcount;             // Doubletalk Detection counter
-  unsigned short wdelay;               // Estimated echo path delay for foreground filter
-  unsigned short wdelay_af;            // Estimated echo path delay for background filter
-  unsigned short wgain;                // Prediction gain of foreground filter
-  unsigned short wgain_af;             // Prediction gain of background filter
-  unsigned short erlenum;              // ERLE estimation numerator
-  unsigned short erleden;              // ERLE estimation denominator
-  unsigned short mse;                  // Mean Square error of foreground filter
-  unsigned short mse_af;               // Mean Square error of background filter
-  unsigned short msenrm;               // Normalisation value for MSE estimation
-  unsigned short bandshift_ptr;        // Pointer to bandshift[npart] array
-  unsigned short extra_shift;          // Additional shift for internal scaling
-  unsigned short intshift_maxnorm;     // Headroom for internal dynamic scaling (16 - no of bits)
-  unsigned short mic_shift_ptr;        // Pointer to RFFTD scale value when using external FFTs
-  unsigned short spk_shift_ptr;        // Pointer to RFFTD scale value when using external FFTs
-  unsigned short dummy; // to align cmpl_buf to 32 bit
-  // HM : Next parameters are state variables and can be moved as needed (spkr, mic and out buffers can be placed with their respective CBUFFERS instead - Table 68 AN-D-129
-  //unsigned short spkr_buf[84];         // Speaker input buffer array
-  //unsigned short mic_buf[84];          // Microphone input buffer array
-  //unsigned short out_buf[84];          // PAEC output buffer array
-  unsigned short cmplx_buf[130];        // Complex FFT buffer
-//  unsigned short window[64];           // Window table
-  unsigned short xpow[48];             // Rx Signal Power spectrum array (with history)
-  unsigned short ypow[12];             // Tx Signal Power spectrum
-  unsigned short ccxx[48];             // Rx auto-correlation coefficients array (with history)
-  unsigned short ccxy[48];             // Rx and Tx cross-correlation coefficients array
-  unsigned short ccyy[12];             // Tx auto-correlation coefficients array
-  unsigned short cc[48];               // Gainfilter coefficients array (foreground filter)
-  unsigned short cc_af[48];            // Gainfilter coefficients array (background filter)
-  unsigned short paec_subband_1[21];   // PAEC subband 1
-  unsigned short paec_subband_2[21];   // PAEC subband 2
-  unsigned short paec_subband_3[21];   // PAEC subband 3
-  unsigned short paec_subband_4[21];   // PAEC subband 4
-  unsigned short paec_subband_5[21];   // PAEC subband 5
-  unsigned short paec_subband_6[21];   // PAEC subband 6
-  unsigned short paec_subband_7[21];   // PAEC subband 7
-  unsigned short paec_subband_8[21];   // PAEC subband 8
-  unsigned short paec_subband_9[21];   // PAEC subband 9
-  unsigned short paec_subband_10[21];   // PAEC subband 10
-  unsigned short paec_subband_11[21];   // PAEC subband 11
-  unsigned short paec_subband_12[21];   // PAEC subband 12
-//  unsigned short paec_subband_13[21];   // PAEC subband 13
-//  unsigned short paec_subband_14[21];   // PAEC subband 14
-//  unsigned short paec_subband_15[21];   // PAEC subband 15
-  unsigned short bandshift[15];
-} gdsp_paec;
 
 typedef struct
 {

@@ -10,139 +10,6 @@ const unsigned short custom_backgroundtrigger[] =
 };
 gdsp_custom_backgroundtrigger* p_custom_backgroundtrigger;
 
-const unsigned short paec[] =
-{
-  GDSP_INIT_CTRL_PTR     | 2,
-  GDSP_INIT_CTRL_REL_PTR | 1,
-  70,                                  // out_ptr
-  GDSP_INIT_CTRL_CONST_PTR | 1,
-  _CFFT_TWIDDLE_128,                   // twiddle_ptr
-  GDSP_INIT_CTRL_DEFAULT | 1,
-  0x0080,                              // twiddle_size
-  GDSP_INIT_CTRL_REL_PTR | 1,
-  72,                                  // window_ptr
-  GDSP_INIT_CTRL_DEFAULT | 1,
-  0x0080,                              // window_size
-  GDSP_INIT_CTRL_REL_PTR | 10,
-  71,                                  // fftbuf_spkr_ptr
-  71,                                  // fftbuf_mic_ptr
-  80,                                  // paecband_ptr
-  73,                                  // xpow_ptr
-  74,                                  // ypow_ptr
-  75,                                  // ccxx_ptr
-  76,                                  // ccxy_ptr
-  77,                                  // ccyy_ptr
-  78,                                  // cc_ptr
-  79,                                  // cc_af_ptr
-  GDSP_INIT_CTRL_DEFAULT | (824+20-64-63),//+10+30+2), (-64: window array; -63: 3 paecband arrays)
-  0x0080,                              // fftsize
-  0x0040,                              // framesize
-  0x8000,                              // fftscale
-  0x8000,                              // ifftscale
-  0x0000,                              // fftmode
-  0x000C,                              // npart
-  0x41BF,                              // mode   0x41BF SETS ALL NOISE STUFF OFF, 0x47FF ALL ON,
-  0x0004,                              // delaycompspecs
-  0x00C8,                              // ibuf_size
-  0x0000,                              // ibuf_idx
-  0x00C8,                              // obuf_size
-  0x0000,                              // obuf_idx
-  0x0000,                              // init
-  0x0001,                              // noiseestgainshft
-  0x0000,                              // noiseestspkgainshft
-  0x000F,                              // dtdcount_init
-  0x0002,                              // gamma
-  0x0106,                              // cctc
-  0x2000,                              // beta
-  0x0900,                              // attlimit				- default: 0x0100  my val 0x0401, 0x0900
-  0x0CCC,                              // dtdthr
-  0x6CCC,                              // dtdthr2
-  0x0666,                              // dtdthr3
-  0x036A,                              // dtdsmooth
-  0x0000,                              // dtddecay
-  0x2000,                              // dtdwgain_full_thr
-  0x3333,                              // dtdwgain_part_thr
-  0x000D,                              // noiseest1
-  0x020C,                              // noiseest2
-  0x0006,                              // noiseest3
-  0x7FFF,                              // noiseattlimit			- default: 0x2879  my val 0x7FFF
-  0x6666,                              // nsuppsmtra
-  0x0EA1,                              // nsuppsmsta
-  0xC000,                              // nsstathr
-  0x0148,                              // retainnoisethr1div
- //settings from version 15
-//  0x0050,                              // attlimitthr1div		- default: 0x0CCD my val 0x0050 DEFS FROM AN-162 appenA 0x3000 	0x0147 0x2FFF  0x0050
-//  0x0001,                              // smooththr				- default: 0x6000 my val 0x0001 DEFS FROM AN-162 appenA 0x7000 	0x2FFF 0x07FF  0x2FFF
-//  0x1000,                              // smoothdef				- default: 0x6000 my val 0x05FF DEFS FROM AN-162 appenA 0x5000 	0x0250 0x07FF
-//  0x0200,                              // smoothlow				- default: 0x0666 my val 0x0200 DEFS FROM AN-162 appenA 0x0333 	0x0666 0x0333  0x0333
-//  0x7FFF,                              // smoothtop				- default: 0x7600 my val 0x7FFF DEFS FROM AN-162 appenA 0x7600 	0x7FFF 0x7600  0x7600
-//settings Dave and Carl derived
-  0x0147,                              // attlimitthr1div		- default: 0x0CCD my val 0x0050 DEFS FROM AN-162 appenA 0x3000 	0x0147 0x2FFF  0x0050
-  0x2FFF,                              // smooththr				- default: 0x6000 my val 0x0001 DEFS FROM AN-162 appenA 0x7000 	0x2FFF 0x07FF  0x2FFF
-  0x1000,                              // smoothdef				- default: 0x6000 my val 0x05FF DEFS FROM AN-162 appenA 0x5000 	0x0250 0x07FF
-  0x0666,                              // smoothlow				- default: 0x0666 my val 0x0200 DEFS FROM AN-162 appenA 0x0333 	0x0666 0x0333  0x0333
-  0x7600,                              // smoothtop				- default: 0x7600 my val 0x7FFF DEFS FROM AN-162 appenA 0x7600 	0x7FFF 0x7600  0x7600
- //default settings
-//  0x0CCD,                              // attlimitthr1div		- default: 0x0CCD my val 0x0050 DEFS FROM AN-162 appenA 0x3000 	0x0147 0x2FFF  0x0050
-//  0x278A,                              // smooththr				- default: 0x6000 my val 0x0001 DEFS FROM AN-162 appenA 0x7000 	0x2FFF 0x07FF  0x2FFF
-//  0x7FFF,                              // smoothdef				- default: 0x6000 my val 0x05FF DEFS FROM AN-162 appenA 0x5000 	0x0250 0x07FF
-//  0x0A00,                              // smoothlow				- default: 0x0666 my val 0x0200 DEFS FROM AN-162 appenA 0x0333 	0x0666 0x0333  0x0333
-//  0x7FFF,                              // smoothtop				- default: 0x7600 my val 0x7FFF DEFS FROM AN-162 appenA 0x7600 	0x7FFF 0x7600  0x7600
-  0x0001,                              // winitial
-  0x000F,                              // dtdcount
-  0x0000,                              // wdelay
-  0x0000,                              // wdelay_af
-  0x0000,                              // wgain
-  0x0000,                              // wgain_af
-  0x0001,                              // erlenum
-  0x0001,                              // erleden
-  0x0000,                              // mse
-  0x0000,                              // mse_af
-  0x0001,                              // msenrm
-  0x0000,                              // bandshift_ptr
-  0x0000,                              // extra_shift
-  0x000E,                              // intshift_maxnorm
-  0x0000,                              // mic_shift_ptr
-  0x0000,                              // spk_shift_ptr
-  0x0000,                              // dummy for 32 bit alignment
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // cmplx_buf
-//  0x0192,0x04B6,0x07D9,0x0AFB,0x0E1C,0x113A,0x1455,0x176E,0x1A82,0x1D93,0x209F,0x23A6,0x26A8,0x29A3,0x2C99,0x2F87,0x326E,0x354D,0x3824,0x3AF2,0x3DB8,0x4073,0x4325,0x45CD,0x4869,0x4AFB,0x4D81,0x4FFB,0x5268,0x54C9,0x571D,0x5964,// window 0-31
-//  0x5B9C,0x5DC7,0x5FE3,0x61F0,0x63EE,0x65DD,0x67BC,0x698B,0x6B4A,0x6CF8,0x6E96,0x7022,0x719D,0x7307,0x745F,0x75A5,0x76D8,0x77FA,0x7909,0x7A05,0x7AEE,0x7BC5,0x7C88,0x7D39,0x7DD5,0x7E5F,0x7ED5,0x7F37,0x7F86,0x7FC1,0x7FE9,0x7FFD,// window 32-63
-  //  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // window
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // xpow
-  0,0,0,0,0,0,0,0,0,0,0,0,             // ypow
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // ccxx
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // ccxy
-  0,0,0,0,0,0,0,0,0,0,0,0,             // ccyy
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // cc
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,   // cc_af
-  //init,var_y ,var_e ,vareaf,w     ,w_af  ,attlim,attlim,nattli,nsvars,nsdeci,nsstat,noisee,noise2,noispk,ypowes,ypowaf,partms,partaf,partms,dtdcou
-  0x0002,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_1
-  0x0004,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_2
-  0x0006,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_3
-  0x0008,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_4
-  0x000A,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_5
-  0x000E,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_6
-  0x0013,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_7
-  0x001A,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_8
-  0x0022,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_9
-  0x002D,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_10
-  0x0036,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_11
-  0x0041,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_12
-//  0x0000,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_13
-//  0x0000,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_14
-//  0x0000,0x0001,0x0001,0x0001,0x04CC,0x04CC,0x0900,0x0900,0x7FFF,0x0001,0x0001,0x0001,0x0100,0x0001,0x0100,0x0001,0x0001,0x0000,0x0000,0x0000,0x000F,   // paec_subband_15
-  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // bandshift
-  GDSP_INIT_CTRL_END                   // End of Init structure
-};
-const unsigned short paec_code[6] =
-{
-  CALL_INSTR, PAEC,
-  LDO_INSTR, 0,
-  IRQ_INSTR, PAEC_INT
-};
-gdsp_paec* p_paec;
-
 const unsigned short out_buffer[] =
 {
   GDSP_INIT_CTRL_DEFAULT | 2,
@@ -463,7 +330,7 @@ const unsigned short dynmixer_pp[] =
   GDSP_INIT_CTRL_DEFAULT | 7,
   MIXER_ATTEN, MIXER_ATTEN,			   // weights
   MIXER_ATTEN, MIXER_ATTEN,
-  MIXER_ATTEN, 0x7FFF, 0x7FFF,
+  MIXER_ATTEN, 0x7FFF, MIC_A_ATTEN,
   GDSP_INIT_CTRL_END                   // End of Init structure
 };
 const unsigned short dynmixer_post[] =
@@ -497,7 +364,7 @@ const unsigned short dynmixer_pcm[] =
   GDSP_INIT_CTRL_DEFAULT | 7,
   MIXER_ATTEN, MIXER_ATTEN,			   // weights
   MIXER_ATTEN, MIXER_ATTEN,
-  MIXER_ATTEN, MIXER_ATTEN, 0x7FFF,
+  MIXER_ATTEN, MIXER_ATTEN, MIC_A_ATTEN,
   GDSP_INIT_CTRL_END                   // End of Init structure
 };
 const unsigned short dynmixer_code[4] =

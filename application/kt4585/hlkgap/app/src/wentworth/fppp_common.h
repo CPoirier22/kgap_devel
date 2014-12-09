@@ -28,8 +28,8 @@
 #define FPPP_COMMON_H_
 
 #define FW_REV_MAJOR	1
-#define FW_REV_MINOR	7
-#define FW_REV_STR 	"WT FW 1.7-AL *** alango base file revision from 20 to 21 *** "
+#define FW_REV_MINOR	8
+#define FW_REV_STR 	"WT FW 1.8-AL *** removed 6dB from inbound POST-MIC volume *** "
 // max length ==>   "___________________________________________________________________________________________________"
 
 //#define ENABLE_CHANNEL_MESSAGES
