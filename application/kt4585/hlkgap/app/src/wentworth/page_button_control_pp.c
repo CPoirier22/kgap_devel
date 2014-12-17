@@ -5,7 +5,7 @@
  *		Saco, Maine, USA 04072													*
  *		+1 207-571-9744															*
  *		www.wentworthtechnology.com												*
- *		copyright 2011															*
+ *		copyright 2014															*
  *																				*
  ********************************************************************************
  * $History:: page_button_control_pp.c										  $	*
@@ -35,10 +35,6 @@
 #include "wentworth_pp.h"
 #include "fppp_common.h"
 
-extern UByte PBTIMERSEQTASK1TIMER;
-extern UByte OTTIMERSEQTASK1TIMER;
-extern UByte DIAGTIMERSEQTASK1TIMER;
-
 extern wt_headset headset;
 
 extern void PlaySoundPP(unsigned char index);
@@ -49,60 +45,32 @@ void CheckPageControlPP(UByte key_pressed)
 {
 	if (headset.TakingOrder)
 	{
-		PrintStatus(0, "In Call Mode ... skipped");
+		PrintStatus(0, "In Call Mode ... PB press ignored");
 		return;
 	}
 
 	if (key_pressed & PAGE_BUTTON)
 	{
-		if (headset.PBtimer)
+		if (!(headset.Pager))
 		{
-			// PB pressed < "DoublePressWindow" after previous PB press == double press
-			// assign any "double press Page button" action here ...
-			StopTimer(PBTIMERSEQTASK1TIMER);
-			PrintStatus(0, "Page - double press");
-			headset.PBtimer = FALSE;
+			// PB first press == Pager
+			SendPageCmd(1);
+			PlaySoundPP(sound_PAGEmode);
+			TurnOffYellowLED;
+			TurnOnRedLED;
+			PrintStatus(0, "Page - on");
 			headset.Pager = TRUE;
-		}
-		else
-		{
-			if (!(headset.Pager))
-			{
-				// PB first press == Pager
-				SendPageCmd(1);
-				PlaySoundPP(sound_PAGEmode);
-				TurnOnRedLED;
-				PrintStatus(0, "Page - on");
-				headset.Pager = TRUE;
-				if (headset.DualLane)
-				{
-					headset.PBtimer = TRUE;
-					OSStartTimer(PBTIMERSEQTASK1TIMER, headset.DoublePressWindow);
-				}
-				general_startTimer(0, 0xA0, NULL, 0, 10);	// delay AFEEnableMicPathPP() 100ms until menu board speaker is muted
-				if (headset.SystemMode == AUTO_HANDS_FREE)
-				{
-					// allow for re-assignment of Order Taker
-					headset.OTtimer = TRUE;
-					OSStartTimer(OTTIMERSEQTASK1TIMER, headset.OTDoublePressWindow);
-				}
-			}
+			general_startTimer(0, 0xA0, NULL, 0, 10);		// delay AFEEnableMicPathPP() 100ms until menu board speaker is muted
 		}
 	}
 	else
 	{
 		// PB released == pager off
-		general_startTimer(0, 0xA2, NULL, 0, 10);	// delay AFEDisableMicPathPP() 100ms to be consistent with previous AFEEnableMicPathPP()
+		general_startTimer(0, 0xA2, NULL, 0, 10);			// delay AFEDisableMicPathPP() 100ms to be consistent with previous AFEEnableMicPathPP()
 		SendPageCmd(0);
 		PlaySoundPP(sound_double_beep);
 		PrintStatus(0, "Page - off");
 		headset.Pager = FALSE;
-
-		if (headset.OTtimer)
-		{
-			headset.OTtimer = FALSE;
-			StopTimer(OTTIMERSEQTASK1TIMER);
-		}
 
 		WWMSF WWMSFVal;
 		WWMSFVal.SubStatusType = BLINK_LED_CMD;

@@ -5,7 +5,7 @@
  *		Saco, Maine, USA 04072													*
  *		+1 207-571-9744															*
  *		www.wentworthtechnology.com												*
- *		copyright 2011															*
+ *		copyright 2014															*
  *																				*
  ********************************************************************************
  * $History:: hex_to_decimal_sn_conv.c										  $	*

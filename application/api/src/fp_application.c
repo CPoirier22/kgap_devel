@@ -1,44 +1,25 @@
-#include "../../../include/hlkgap/dduos/include/dduos.h"
-#include "../../../include/hlkgap/common/include/dispatch.h"
 #include "../../../include/hlkgap/iwu/include/fp/fiwuprim.h"
-#include "../../../include/hlkgap/app/include/f_app_cc.h"
 #include "../../../include/hlkgap/util/include/bintree.h"
 #include "../../../include/hlkgap/app/include/f_app_cc.h"
-#include "../../../include/hlkgap/app/include/apdbprim.h"
-#include "../../../include/common/include/_log.h"
 #include "../../../include/hlkgap/app/include/apssprim.h"
-#include "../../../include/common/include/app_util.h"
-#include "../../../include/hlkgap/hlme/include/ccfme.h"
-#include "../../../include/os/include/mailprim.h"
-#include "../../../include/os/include/maildef.h"
-#include "../../../include/os/include/os_mail.h"
-#include "../../../include/common/include/print_status.h"
-#include "../../../include/common/include/glibc.h"
-#include "../../include/common_application.h"
-#include "../include/fp/fp_api.h"
 #include "../include/fp/fp_voice_callback.h"
-#include "../include/fp/fp_voice_functions.h"
 #include "../include/fp/fp_msf_callback.h"
-#include "../include/fp/fp_msf_functions.h"
 #include "../include/fp/fp_module2module_callback.h"
-#include "../include/fp/fp_module2module_functions.h"
 #include "../include/common/common_general_callback.h"
 #include "../include/common/common_general_functions.h"
-#include "../include/common/common_hardware_callback.h"
-#include "../include/common/common_hardware_functions.h"
 #include "../../../include/machlinterface/include/maclink.h"
-
 #include "../../kt4585/hlkgap/app/src/wentworth/wentworth_fp.h"
+#include "../../kt4585/hlkgap/app/src/wentworth/fppp_common.h"
 
 extern Boolean NewBuffer(int BufferLength, void **BufferPointer);
 extern void *_memcpy(void *DST, const void *SRC, unsigned int LENGTH);
 extern void DeleteBuffer(void *BufferPointer);
 extern void ConvertIpeiToSN(PPIDType user, char SerialNumber[17], IPEIType Hex_SN);
 extern void CopyToUartTxBuffer(UByte * buffer, unsigned int length);
-extern void CopyByteToUartTxBuffer(UByte buffer);
+extern void SendQuickData(UByte user);
+extern void SendPCMCommand(WORD cmd);
 
-extern BYTE AlarmStatus;
-extern UByte BSCSFTASK;
+/*extern UByte BSCSFTASK;*/
 
 static BinTreeTopType applicationTree;
 static PMIDType tmpPmid;
@@ -439,8 +420,15 @@ extern void App_dBSendAppOmSubsRemoveReq(PPIDType PPID);
 
 UByte fp_subscription_removeSubscription(PPIDType user)
 {
-    if (QuickData[user].EmptyMarker == 0) {
+    if (QuickData[user].EmptyMarker == 0)
+    {
         App_dBSendAppOmSubsRemoveReq(user);
+		if (user == (base_station).OrderTakerID)
+			(base_station).OrderTakerID = 0xFF;
+		(base_station).ListenOnly[user] = 0xFF;
+	    if ((base_station).DualBase)
+	   		SendPCMCommand(PP_ON_ind + (user << 4) + 0);
+		general_startTimer(-1, WRITE_WTDATA_EEPROM, NULL, 0, 5);
         return 1;
     }
     return 0;
@@ -603,6 +591,13 @@ void ApplicationSignalHandler_FP(SignalType * TheSignal)
 
                     // set up registration display "green" button here
                     (base_station).HeadsetIsOn[PMID2PPID(applicationInstanceData->pmid)] = TRUE;
+
+                    if (base_station.DualBase)
+                    {
+                    	SendQuickData(PMID2PPID(applicationInstanceData->pmid));							// fill .EmptyMarker on other base
+                   		SendPCMCommand(PP_ON_ind + (PMID2PPID(applicationInstanceData->pmid) << 4) + 1);	// fill .HeadsetIsOn on other base
+                    }
+
                     if ((base_station).DisplayScreen == REGISTRATION)
                     {
                     	UByte buffer[50];

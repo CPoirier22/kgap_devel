@@ -51,8 +51,6 @@ void AFEDisableMicPathPP(void);
 void AFEEnableMicPathPP(void);
 void AFEDisablePostMicPath(void);
 void AFEEnablePostMicPath(void);
-void AFEEnableMicSpkrPath(void);
-void AFEDisableMicSpkrPath(void);
 
 
 #endif /*AFE_H_*/

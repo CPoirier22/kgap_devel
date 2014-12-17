@@ -27,9 +27,9 @@
 #ifndef FPPP_COMMON_H_
 #define FPPP_COMMON_H_
 
-#define FW_REV_MAJOR	1
-#define FW_REV_MINOR	8
-#define FW_REV_STR 	"WT FW 1.8-AL *** removed 6dB from inbound POST-MIC volume *** "
+#define FW_REV_MAJOR	2
+#define FW_REV_MINOR	0
+#define FW_REV_STR 	"WT FW 2.0-AL *** support for dual bases; EXP & dual lane systems *** "
 // max length ==>   "___________________________________________________________________________________________________"
 
 //#define ENABLE_CHANNEL_MESSAGES
@@ -38,6 +38,9 @@
 
 extern UByte WENTWORTHTASK;
 extern UByte WENTWORTHTASKTIMER;
+
+// FIRST_ACTION byte in PP EEPROM
+#define EE_FIRST_ACTION			0x02E8	// used for toggling test mode of headset (0x22 = test mode, 0xFF = production)
 
 // this is located in the EE_FREE2 area of EEPROM (0x021D / 541 bytes available)
 #define EE_WTDATA				0x03E3	// beginning of WT data area
@@ -65,9 +68,9 @@ extern UByte WENTWORTHTASKTIMER;
 #define EE_WT_GRTR_MSGR_ENABLE	0x04BD	// 1
 #define EE_WT_GREET_AUTH_CODE	0x04BE	// 4
 #define EE_WT_POWER_ON_COUNT	0x04C2	// 2
-#define EE_WT_ALANGO_STATE		0x04C4	// 1
-#define EE_WT_PLAY_GREET_IN_PP	0x04C5	// 1
-#define EE_WT_DUAL_BASE			0x04C6	// 1	(0 = no dual base; 1 = MASTER; 2 = SLAVE)
+#define EE_WT_ALANGO_STATE		0x04C4	// 1	(0 = MA-11/profile 0, 1 = MA-10/profile 1)
+#define EE_WT_MENU_CONFIG		0x04C5	// 1	(0 = single menu ONLY; 1 = single menu EXP; 2 = parallel menus 1OT; 3 = tandem menus 1OT; 4 = parallel menus 2OT, 5 = tandem menus 2OT)
+#define EE_WT_DUAL_BASE			0x04C6	// 1	(0 = no dual base; 1 = MENU A; 2 = MENU B)
 										//====> 29 + 63 + 126 + 10 = 228 bytes
 
 #define EE_WT_NUM_BYTES			0x00E4	// 228 bytes
@@ -94,7 +97,9 @@ extern UByte WENTWORTHTASKTIMER;
 #define CHECK_CHANNEL			0x85
 #endif
 #define CHECK_TEOM				0x86
+#define	SETUP_SECOND_BASE		0x87
 #define DISPLAY_WT_DEBUG_INFO	0x88
+#define READ_COUNTRY_EEPROM		0x89
 #define HM_TIMER_TESTING		0x2A
 
 #define WT_HEAP_CHECK			0x2C
@@ -110,22 +115,22 @@ extern UByte WENTWORTHTASKTIMER;
 
 typedef struct
 {
-  WORD MicMute; 		// 0 is unmute, 1 is mute
+  WORD MicMute; 		// 0 is open to menu A, 1 is mute menu A, 2 is become OT menu A, 3 is open to menu B, 4 is mute menu B, 5 is become OT menu B
 } SetMicMuteStruct;
 
 typedef struct
 {
-  WORD CarWaiting; 		// 0 is no car, 10 is car on lane 1 + no beep, 11 is car on lane 1 + beep, 20 is car on lane 2 + no beep, 21 is car on lane 2 + beep
+  WORD CarWaiting; 		// 0 is no car on menu A, 10 is car on menu A + no beep, 11 is car on menu A + beep, 1 is no car on menu B, 20 is car on menu B + no beep, 21 is car on menu B + beep
 } SetCarWaitingStruct;
 
 typedef struct
 {
-  WORD LEDColor; 		// 0 is off, 1 is RED, 2 is YELLOW, 3 is GREEN
+  WORD LEDColor; 		// 0 is menu A off, 1 is menu A RED, 2 is menu A YELLOW, 3 is menu A GREEN, 4 is menu B off, 5 is menu B RED, 6 is menu B YELLOW, 7 is menu B GREEN
 } SetLEDStruct;
 
 typedef struct
 {
-  WORD SystemMode;
+  WORD SystemMode;		// aabbccdd - aa: 0x80 is BC5 off bit; bb is menu config; cc is base inbound volume; dd is base system mode
 } SetSystemModeStruct;
 
 typedef struct

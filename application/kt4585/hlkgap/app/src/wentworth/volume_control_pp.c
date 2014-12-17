@@ -5,7 +5,7 @@
  *		Saco, Maine, USA 04072													*
  *		+1 207-571-9744															*
  *		www.wentworthtechnology.com												*
- *		copyright 2011															*
+ *		copyright 2014															*
  *																				*
  ********************************************************************************
  * $History:: volume_control_pp.c											  $	*
@@ -50,54 +50,54 @@ void CheckVolumeControlPP(UByte key_pressed)
 
 	switch(key_pressed)
 	{
-	case 0x00:
-	    PrintStatus(0, " ---- ");
-	    break;
-	case 0x02:
-	    PrintStatus(0, " V1 ");
-	    break;
-	case 0x04:
-	    PrintStatus(0, " V2 ");
-	    break;
-	case 0x06:
-	    PrintStatus(0, " V1 V2 ");
-	    break;
-	case 0x08:
-	    PrintStatus(0, " V3 ");
-	    break;
-	case 0x0A:
-	    PrintStatus(0, " V1 V3 ");
-	    break;
-	case 0x0C:
-	    PrintStatus(0, " V2 V3 ");
-	    break;
-	case 0x0E:
-	    PrintStatus(0, " V1 V2 V3 ");
-	    break;
-	case 0x10:
-	    PrintStatus(0, " V4 ");
-	    break;
-	case 0x12:
-	    PrintStatus(0, " V1 V4 ");
-	    break;
-	case 0x14:
-	    PrintStatus(0, " V2 V4 ");
-	    break;
-	case 0x16:
-	    PrintStatus(0, " V1 V2 V4 ");
-	    break;
-	case 0x18:
-	    PrintStatus(0, " V3 V4 ");
-	    break;
-	case 0x1A:
-	    PrintStatus(0, " V1 V3 V4 ");
-	    break;
-	case 0x1C:
-	    PrintStatus(0, " V2 V3 V4 ");
-	    break;
-	case 0x1E:
-	    PrintStatus(0, " V1 V2 V3 V4 ");
-	    break;
+		case 0x00:
+			PrintStatus(0, " ---- ");
+			break;
+		case 0x02:
+			PrintStatus(0, " V1 ");
+			break;
+		case 0x04:
+			PrintStatus(0, " V2 ");
+			break;
+		case 0x06:
+			PrintStatus(0, " V1 V2 ");
+			break;
+		case 0x08:
+			PrintStatus(0, " V3 ");
+			break;
+		case 0x0A:
+			PrintStatus(0, " V1 V3 ");
+			break;
+		case 0x0C:
+			PrintStatus(0, " V2 V3 ");
+			break;
+		case 0x0E:
+			PrintStatus(0, " V1 V2 V3 ");
+			break;
+		case 0x10:
+			PrintStatus(0, " V4 ");
+			break;
+		case 0x12:
+			PrintStatus(0, " V1 V4 ");
+			break;
+		case 0x14:
+			PrintStatus(0, " V2 V4 ");
+			break;
+		case 0x16:
+			PrintStatus(0, " V1 V2 V4 ");
+			break;
+		case 0x18:
+			PrintStatus(0, " V3 V4 ");
+			break;
+		case 0x1A:
+			PrintStatus(0, " V1 V3 V4 ");
+			break;
+		case 0x1C:
+			PrintStatus(0, " V2 V3 V4 ");
+			break;
+		case 0x1E:
+			PrintStatus(0, " V1 V2 V3 V4 ");
+			break;
 	}
 
 	// always select the LSb button as a reference

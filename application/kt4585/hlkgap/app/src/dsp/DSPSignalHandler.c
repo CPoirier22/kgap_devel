@@ -77,6 +77,8 @@ void MuteBy()
 {
   // this function can be optimized with a for-loop or similar
   // however for clarity this is exposed for each PP
+
+  // channel 0
   if (muteController & (1 << 1))
   {
     //p_dynmixer0->weights[0] = 0x0000;
@@ -87,21 +89,23 @@ void MuteBy()
     p_dynmixer5->weights[0] = 0x0000;
     p_dynmixer6->weights[0] = 0x0000;
     p_dynmixer7->weights[0] = 0x0000;
+    p_dynmixer8->weights[0] = 0x0000;
+    p_dynmixer9->weights[0] = 0x0000;
   }
   else
   {
-	//p_dynmixer0->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer1->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer2->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer3->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer4->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer5->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-	if ((base_station).PageMode[0])
-	    p_dynmixer6->weights[0] = 0x0000;
-	else
-		p_dynmixer6->weights[0] = MIXER6_ATTEN;
-    p_dynmixer7->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
+	//p_dynmixer0->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer1->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer2->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer3->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer4->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer5->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer6->weights[0] = (((base_station).LaneForChannel[0] != (base_station).DualBase) || (base_station).PageMode[0] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer7->weights[0] =  ((base_station).LaneForChannel[0] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer8->weights[0] = (((base_station).LaneForChannel[0] == (base_station).DualBase) || (base_station).PageMode[0] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer9->weights[0] =  ((base_station).LaneForChannel[0] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
   }
+  // channel 1
   if (muteController & (1 << 3))
   {
     p_dynmixer0->weights[0] = 0x0000;
@@ -112,21 +116,23 @@ void MuteBy()
     p_dynmixer5->weights[1] = 0x0000;
     p_dynmixer6->weights[1] = 0x0000;
     p_dynmixer7->weights[1] = 0x0000;
+    p_dynmixer8->weights[1] = 0x0000;
+    p_dynmixer9->weights[1] = 0x0000;
   }
   else
   {
-    p_dynmixer0->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-    //p_dynmixer1->weights[0] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer2->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer3->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer4->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer5->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
-	if ((base_station).PageMode[1])
-	    p_dynmixer6->weights[1] = 0x0000;
-	else
-		p_dynmixer6->weights[1] = MIXER6_ATTEN;
-	p_dynmixer7->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
+    p_dynmixer0->weights[0] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    //p_dynmixer1->weights[0] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer2->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer3->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer4->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer5->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer6->weights[1] = (((base_station).LaneForChannel[1] != (base_station).DualBase) || (base_station).PageMode[1] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer7->weights[1] =  ((base_station).LaneForChannel[1] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer8->weights[1] = (((base_station).LaneForChannel[1] == (base_station).DualBase) || (base_station).PageMode[1] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer9->weights[1] =  ((base_station).LaneForChannel[1] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
   }
+  // channel 2
   if (muteController & (1 << 5))
   {
     p_dynmixer0->weights[1] = 0x0000;
@@ -137,21 +143,23 @@ void MuteBy()
     p_dynmixer5->weights[2] = 0x0000;
     p_dynmixer6->weights[2] = 0x0000;
     p_dynmixer7->weights[2] = 0x0000;
+    p_dynmixer8->weights[2] = 0x0000;
+    p_dynmixer9->weights[2] = 0x0000;
   }
   else
   {
-    p_dynmixer0->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer1->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
-    //p_dynmixer2->weights[1] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer3->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer4->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer5->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
-	if ((base_station).PageMode[2])
-	    p_dynmixer6->weights[2] = 0x0000;
-	else
-		p_dynmixer6->weights[2] = MIXER6_ATTEN;
-    p_dynmixer7->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
+    p_dynmixer0->weights[1] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer1->weights[1] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    //p_dynmixer2->weights[1] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer3->weights[2] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer4->weights[2] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer5->weights[2] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer6->weights[2] = (((base_station).LaneForChannel[2] != (base_station).DualBase) || (base_station).PageMode[2] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer7->weights[2] =  ((base_station).LaneForChannel[2] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer8->weights[2] = (((base_station).LaneForChannel[2] == (base_station).DualBase) || (base_station).PageMode[2] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer9->weights[2] =  ((base_station).LaneForChannel[2] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
   }
+  // channel 3
   if (muteController & (1 << 7))
   {
     p_dynmixer0->weights[2] = 0x0000;
@@ -162,21 +170,23 @@ void MuteBy()
     p_dynmixer5->weights[3] = 0x0000;
     p_dynmixer6->weights[3] = 0x0000;
     p_dynmixer7->weights[3] = 0x0000;
+    p_dynmixer8->weights[3] = 0x0000;
+    p_dynmixer9->weights[3] = 0x0000;
   }
   else
   {
-    p_dynmixer0->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer1->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer2->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
-    //p_dynmixer3->weights[2] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer4->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer5->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
-	if ((base_station).PageMode[3])
-	    p_dynmixer6->weights[3] = 0x0000;
-	else
-		p_dynmixer6->weights[3] = MIXER6_ATTEN;
-    p_dynmixer7->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
+    p_dynmixer0->weights[2] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer1->weights[2] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer2->weights[2] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    //p_dynmixer3->weights[2] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer4->weights[3] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer5->weights[3] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer6->weights[3] = (((base_station).LaneForChannel[3] != (base_station).DualBase) || (base_station).PageMode[3] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer7->weights[3] =  ((base_station).LaneForChannel[3] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer8->weights[3] = (((base_station).LaneForChannel[3] == (base_station).DualBase) || (base_station).PageMode[3] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer9->weights[3] =  ((base_station).LaneForChannel[3] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
   }
+  // channel 4
   if (muteController & (1 << 9))
   {
     p_dynmixer0->weights[3] = 0x0000;
@@ -187,21 +197,23 @@ void MuteBy()
     p_dynmixer5->weights[4] = 0x0000;
     p_dynmixer6->weights[4] = 0x0000;
     p_dynmixer7->weights[4] = 0x0000;
+    p_dynmixer8->weights[4] = 0x0000;
+    p_dynmixer9->weights[4] = 0x0000;
   }
   else
   {
-    p_dynmixer0->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer1->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer2->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer3->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
-    //p_dynmixer4->weights[3] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer5->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
-	if ((base_station).PageMode[4])
-	    p_dynmixer6->weights[4] = 0x0000;
-	else
-		p_dynmixer6->weights[4] = MIXER6_ATTEN;
-    p_dynmixer7->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
+    p_dynmixer0->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer1->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer2->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer3->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    //p_dynmixer4->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer5->weights[4] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer6->weights[4] = (((base_station).LaneForChannel[4] != (base_station).DualBase) || (base_station).PageMode[4] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer7->weights[4] =  ((base_station).LaneForChannel[4] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer8->weights[4] = (((base_station).LaneForChannel[4] == (base_station).DualBase) || (base_station).PageMode[4] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer9->weights[4] =  ((base_station).LaneForChannel[4] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
   }
+  // channel 5
   if (muteController & (1 << 11))
   {
     p_dynmixer0->weights[4] = 0x0000;
@@ -212,20 +224,21 @@ void MuteBy()
     //p_dynmixer5->weights[4] = 0x0000;
     p_dynmixer6->weights[5] = 0x0000;
     p_dynmixer7->weights[5] = 0x0000;
+    p_dynmixer8->weights[5] = 0x0000;
+    p_dynmixer9->weights[5] = 0x0000;
   }
   else
   {
-    p_dynmixer0->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer1->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer2->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer3->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
-    p_dynmixer4->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
-    //p_dynmixer5->weights[4] = (base_station).CurrentInboundVolumeMixerAtten;
-	if ((base_station).PageMode[5])
-	    p_dynmixer6->weights[5] = 0x0000;
-	else
-		p_dynmixer6->weights[5] = MIXER6_ATTEN;
-    p_dynmixer7->weights[5] = (base_station).CurrentInboundVolumeMixerAtten;
+    p_dynmixer0->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer1->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer2->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer3->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    p_dynmixer4->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+    //p_dynmixer5->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer6->weights[5] = (((base_station).LaneForChannel[5] != (base_station).DualBase) || (base_station).PageMode[5] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer7->weights[5] =  ((base_station).LaneForChannel[5] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer8->weights[5] = (((base_station).LaneForChannel[5] == (base_station).DualBase) || (base_station).PageMode[5] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer9->weights[5] =  ((base_station).LaneForChannel[5] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
   }
 
   muteController = 0xAAAA; // make MAC layer unmute if speechbuffer CRC is ok, else always mute e.g. reverse burden of audio ok proof
@@ -592,6 +605,59 @@ void ToneDetectInt(WORD intvec)
   CLEAR_PENDING_DSP_INTERRUPT;
 }
 
+/*
+ * Continuously checks PCM[3] for a change.  Changes are noted and sent out to be handled.
+ *
+ * Idea is that the normal state of the bus is 0x0000.
+ * The initiator sends a command for about 4ms.
+ * Currently there is no handshaking/acknowledgment.
+ *
+ */
+void PCMBusCmdInt(WORD intvec)
+{
+  // snoop incoming FP to FP commands on PCM[3]
+  if ((p_pcm_buffer->taps[17] == 0x0000) && ((base_station).LastPCMCmdRx == 0x0000))
+  {
+  }
+  else if (p_pcm_buffer->taps[17] && (p_pcm_buffer->taps[17] != 0xFFFF) && (p_pcm_buffer->taps[17] != (base_station).LastPCMCmdRx))
+  {
+	(base_station).LastPCMCmdRx = p_pcm_buffer->taps[17];
+	// send mail to handle received command here ...
+	PutInterruptMail(PCM_ind);
+	PutInterruptMail((base_station).LastPCMCmdRx >> 8);
+	PutInterruptMail((base_station).LastPCMCmdRx & 0x00FF);
+	DeliverInterruptMail(WENTWORTHTASK);
+//char *ptr;
+//ptr = StringPrint(StatusString, "pcm:=");
+//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[0]);
+//ptr = StringPrint(ptr, " ");
+//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[8]);
+//ptr = StringPrint(ptr, " ");
+//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[16]);
+//ptr = StringPrint(ptr, " ");
+//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[17]);
+//ptr = StringPrint(ptr, " ");
+//ptr = StrPrintHexWord(ptr, p_pcm_buffer->taps[18]);
+//ptr = StringPrint(ptr, " ");
+////ptr = StrPrintHexWord(ptr, p_pcm_buffer->read_idx);
+////ptr = StringPrint(ptr, ", write=");
+////ptr = StrPrintHexWord(ptr, p_pcm_buffer->write_idx);
+////ptr = StringPrint(ptr, ", buffer_ptr=");
+////ptr = StrPrintHexWord(ptr, p_pcm_buffer->buffer_ptr);
+////ptr = StringPrint(ptr, ", buffer_irq_size=");
+////ptr = StrPrintHexWord(ptr, p_pcm_buffer->buffer_irq_size);
+////ptr = StringPrint(ptr, ", irq=");
+////ptr = StrPrintHexWord(ptr, p_pcm_buffer->irq);
+////ptr = StringPrint(ptr, " ");
+//PrintStatus(0, StatusString);
+  }
+  else if ((p_pcm_buffer->taps[17] == 0x0000) && ((base_station).LastPCMCmdRx != 0x0000))
+  {
+	(base_station).LastPCMCmdRx = 0x0000;
+  }
+  CLEAR_PENDING_DSP_INTERRUPT;
+}
+
 void StartDSP(void)
 {
   WORD i;
@@ -623,6 +689,7 @@ void StartDSP(void)
   else
   {
     GdspHookVector(DURATIONCOUNTER_INT, CopySpeechBufferInterrupt, DSP1); // hook up playback interrupt handler
+    GdspHookVector(PCM_BUFFER_INT, PCMBusCmdInt, DSP1); // hook up PCM[3] command interrupt handler
   }
   DSP_INT_MASK_REG = 0; // GetHookVector enables the mask, but if we do that, the duration interrupt crashes
 
@@ -641,6 +708,7 @@ void StartDSP(void)
   else
   {
     DSP_INT_REG |= (DURATIONCOUNTER_INT);
+    DSP_INT_REG |= (PCM_BUFFER_INT);
   }
   CLEAR_PENDING_DSP_INTERRUPT;
 
@@ -651,7 +719,10 @@ void EnableSpeechbufferInterrupt(void)
 {
 //  PrintStatus(0,"EnableSpeechbufferInterrupt");
   DSP_INT_REG |= (DURATIONCOUNTER_INT | PLAYBACKBUFFER_INT);
+  DSP_INT_REG |= PCM_BUFFER_INT;
   DSP_INT_MASK_REG |= (DURATIONCOUNTER_INT); // For some reason this need to be enabled a little bit later otherwise it crashes
+  DSP_INT_MASK_REG |= PCM_BUFFER_INT;
+  p_pcm_buffer->mode = 0x0001;
 //  P2_MODE_REG |= (1 << 13); // EnAble DSP WTF output
 //  PrintStatus(0,"leaving EnableSpeechbufferInterrupt ... ");
 }
@@ -876,7 +947,6 @@ void DSPSignalHandlerFP(SignalType *signal)
       AFESetCodecMicGain(0);													// 0dB to +30dB range in 2dB steps (0x00 = 0 x 2 = 0dB)
       AFEDisablePostMicPath();													// post MIC comes up muted by disabling DECT MIC input
    	  GRILL_SPEAKER_OFF;														// grill speaker comes up muted
-   	  (base_station).GrillShouldBeOn = FALSE;
    	  MENU_SPKR_AMP_OFF;														// post speaker comes up muted (enables GREET audio path in to DECT MICP/N)
       CODEC_LSR_REG = (1 << 6) | (2 << 3) | (2 << 0);							// +2dB to -12dB range in 2dB steps (1 = +2 - (1 x 2) = 0dB); LSRN LSRP differential
 

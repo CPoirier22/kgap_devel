@@ -61,48 +61,48 @@ static void SetPGain(gdsp_gain *p_g,int vol_set)
 	// 0 is mute , 7 is 100%
 	switch (vol_set)
 	{
-    case -60: p_g->pre_attn=0x0021; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -60dB
-    case -40: p_g->pre_attn=0x0148; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -40dB
-    case -20: p_g->pre_attn=0x0CCD; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -20dB
-    case -19: p_g->pre_attn=0x0E5C; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -19dB
-    case -18: p_g->pre_attn=0x101D; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -18dB
-    case -17: p_g->pre_attn=0x1214; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -17dB
-    case -16: p_g->pre_attn=0x1449; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -16dB
-    case -15: p_g->pre_attn=0x16C2; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -15dB
-    case -14: p_g->pre_attn=0x1989; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -14dB
-    case -13: p_g->pre_attn=0x1CA7; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -13dB
-    case -12: p_g->pre_attn=0x2026; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -12dB
-    case -11: p_g->pre_attn=0x2412; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -11dB
-    case -10: p_g->pre_attn=0x287A; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -10dB
-    case -9: p_g->pre_attn=0x4C3E; p_g->shift=0x0000; p_g->post_attn=0x4C3E; break;		// -9dB
-    case -8: p_g->pre_attn=0x50C2; p_g->shift=0x0000; p_g->post_attn=0x50C2; break;		// -8dB
-    case -7: p_g->pre_attn=0x558B; p_g->shift=0x0000; p_g->post_attn=0x558B; break;		// -7dB
-    case -6: p_g->pre_attn=0x5A9D; p_g->shift=0x0000; p_g->post_attn=0x5A9D; break;		// -6dB
-    case -5: p_g->pre_attn=0x5FFB; p_g->shift=0x0000; p_g->post_attn=0x5FFB; break;		// -5dB
-    case -4: p_g->pre_attn=0x65AB; p_g->shift=0x0000; p_g->post_attn=0x65AB; break;		// -4dB
-    case -3: p_g->pre_attn=0x6BB1; p_g->shift=0x0000; p_g->post_attn=0x6BB1; break;		// -3dB
-    case -2: p_g->pre_attn=0x7213; p_g->shift=0x0000; p_g->post_attn=0x7213; break;		// -2dB
-    case -1: p_g->pre_attn=0x78D7; p_g->shift=0x0000; p_g->post_attn=0x78D7; break;		// -1dB
-    case 0: p_g->pre_attn=0x8000; p_g->shift=0x0000; p_g->post_attn=0x8000; break;		// 0 dB
-    case 1: p_g->pre_attn=0x5FDF; p_g->shift=0x0001; p_g->post_attn=0x5FDF; break;		// 1 dB
-    case 2: p_g->pre_attn=0x658E; p_g->shift=0x0001; p_g->post_attn=0x658E; break;		// 2 dB
-    case 3: p_g->pre_attn=0x6B92; p_g->shift=0x0001; p_g->post_attn=0x6B92; break;		// 3 dB
-    case 4: p_g->pre_attn=0x71F2; p_g->shift=0x0001; p_g->post_attn=0x71F2; break;		// 4 dB
-    case 5: p_g->pre_attn=0x78B2; p_g->shift=0x0001; p_g->post_attn=0x78B2; break;		// 5 dB
-    case 6: p_g->pre_attn=0x7FB2; p_g->shift=0x0001; p_g->post_attn=0x7FB2; break;		// 6 dB
-    case 7: p_g->pre_attn=0x5FC2; p_g->shift=0x0002; p_g->post_attn=0x5FC2; break;		// 7 dB
-    case 8: p_g->pre_attn=0x656F; p_g->shift=0x0002; p_g->post_attn=0x656F; break;		// 8 dB
-    case 9: p_g->pre_attn=0x6B72; p_g->shift=0x0002; p_g->post_attn=0x6B72; break;		// 9 dB
-    case 10: p_g->pre_attn=0x71CF; p_g->shift=0x0002; p_g->post_attn=0x71CF; break; 	// 10 dB
-    case 11: p_g->pre_attn=0x788E; p_g->shift=0x0002; p_g->post_attn=0x788E; break;		// 11 dB
-    case 12: p_g->pre_attn=0x7FB2; p_g->shift=0x0002; p_g->post_attn=0x7FB2; break;		// 12 dB
-    case 13: p_g->pre_attn=0x5FA5; p_g->shift=0x0003; p_g->post_attn=0x5FA5; break;		// 13 dB
-    case 14: p_g->pre_attn=0x6550; p_g->shift=0x0003; p_g->post_attn=0x6550; break;		// 14 dB
-    case 15: p_g->pre_attn=0x6B51; p_g->shift=0x0003; p_g->post_attn=0x6B51; break;		// 15 dB
-    case 16: p_g->pre_attn=0x71AD; p_g->shift=0x0003; p_g->post_attn=0x71AD; break;		// 16 dB
-    case 17: p_g->pre_attn=0x7869; p_g->shift=0x0003; p_g->post_attn=0x7869; break;		// 17 dB
-    case 18: p_g->pre_attn=0x7F8C; p_g->shift=0x0003; p_g->post_attn=0x7F8C; break;		// 18 dB
-    default: PrintStatus(0, "SetPGain() request not supported"); break;
+		case -60: p_g->pre_attn=0x0021; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -60dB
+		case -40: p_g->pre_attn=0x0148; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -40dB
+		case -20: p_g->pre_attn=0x0CCD; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -20dB
+		case -19: p_g->pre_attn=0x0E5C; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -19dB
+		case -18: p_g->pre_attn=0x101D; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -18dB
+		case -17: p_g->pre_attn=0x1214; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -17dB
+		case -16: p_g->pre_attn=0x1449; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -16dB
+		case -15: p_g->pre_attn=0x16C2; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -15dB
+		case -14: p_g->pre_attn=0x1989; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -14dB
+		case -13: p_g->pre_attn=0x1CA7; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -13dB
+		case -12: p_g->pre_attn=0x2026; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -12dB
+		case -11: p_g->pre_attn=0x2412; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -11dB
+		case -10: p_g->pre_attn=0x287A; p_g->shift=0x0000; p_g->post_attn=0x7FFF; break;	// -10dB
+		case -9: p_g->pre_attn=0x4C3E; p_g->shift=0x0000; p_g->post_attn=0x4C3E; break;		// -9dB
+		case -8: p_g->pre_attn=0x50C2; p_g->shift=0x0000; p_g->post_attn=0x50C2; break;		// -8dB
+		case -7: p_g->pre_attn=0x558B; p_g->shift=0x0000; p_g->post_attn=0x558B; break;		// -7dB
+		case -6: p_g->pre_attn=0x5A9D; p_g->shift=0x0000; p_g->post_attn=0x5A9D; break;		// -6dB
+		case -5: p_g->pre_attn=0x5FFB; p_g->shift=0x0000; p_g->post_attn=0x5FFB; break;		// -5dB
+		case -4: p_g->pre_attn=0x65AB; p_g->shift=0x0000; p_g->post_attn=0x65AB; break;		// -4dB
+		case -3: p_g->pre_attn=0x6BB1; p_g->shift=0x0000; p_g->post_attn=0x6BB1; break;		// -3dB
+		case -2: p_g->pre_attn=0x7213; p_g->shift=0x0000; p_g->post_attn=0x7213; break;		// -2dB
+		case -1: p_g->pre_attn=0x78D7; p_g->shift=0x0000; p_g->post_attn=0x78D7; break;		// -1dB
+		case 0: p_g->pre_attn=0x8000; p_g->shift=0x0000; p_g->post_attn=0x8000; break;		// 0 dB
+		case 1: p_g->pre_attn=0x5FDF; p_g->shift=0x0001; p_g->post_attn=0x5FDF; break;		// 1 dB
+		case 2: p_g->pre_attn=0x658E; p_g->shift=0x0001; p_g->post_attn=0x658E; break;		// 2 dB
+		case 3: p_g->pre_attn=0x6B92; p_g->shift=0x0001; p_g->post_attn=0x6B92; break;		// 3 dB
+		case 4: p_g->pre_attn=0x71F2; p_g->shift=0x0001; p_g->post_attn=0x71F2; break;		// 4 dB
+		case 5: p_g->pre_attn=0x78B2; p_g->shift=0x0001; p_g->post_attn=0x78B2; break;		// 5 dB
+		case 6: p_g->pre_attn=0x7FB2; p_g->shift=0x0001; p_g->post_attn=0x7FB2; break;		// 6 dB
+		case 7: p_g->pre_attn=0x5FC2; p_g->shift=0x0002; p_g->post_attn=0x5FC2; break;		// 7 dB
+		case 8: p_g->pre_attn=0x656F; p_g->shift=0x0002; p_g->post_attn=0x656F; break;		// 8 dB
+		case 9: p_g->pre_attn=0x6B72; p_g->shift=0x0002; p_g->post_attn=0x6B72; break;		// 9 dB
+		case 10: p_g->pre_attn=0x71CF; p_g->shift=0x0002; p_g->post_attn=0x71CF; break; 	// 10 dB
+		case 11: p_g->pre_attn=0x788E; p_g->shift=0x0002; p_g->post_attn=0x788E; break;		// 11 dB
+		case 12: p_g->pre_attn=0x7FB2; p_g->shift=0x0002; p_g->post_attn=0x7FB2; break;		// 12 dB
+		case 13: p_g->pre_attn=0x5FA5; p_g->shift=0x0003; p_g->post_attn=0x5FA5; break;		// 13 dB
+		case 14: p_g->pre_attn=0x6550; p_g->shift=0x0003; p_g->post_attn=0x6550; break;		// 14 dB
+		case 15: p_g->pre_attn=0x6B51; p_g->shift=0x0003; p_g->post_attn=0x6B51; break;		// 15 dB
+		case 16: p_g->pre_attn=0x71AD; p_g->shift=0x0003; p_g->post_attn=0x71AD; break;		// 16 dB
+		case 17: p_g->pre_attn=0x7869; p_g->shift=0x0003; p_g->post_attn=0x7869; break;		// 17 dB
+		case 18: p_g->pre_attn=0x7F8C; p_g->shift=0x0003; p_g->post_attn=0x7F8C; break;		// 18 dB
+		default: PrintStatus(0, "SetPGain() request not supported"); break;
 	}
 }
 
@@ -157,16 +157,16 @@ void AFESetGainPP2PPMixer(int vol_set)
 
 	switch (vol_set)
 	{																		// MIXER ATTEN dB = (InboundVol x -2) - 2.5
-	case 0: (base_station).CurrentInboundVolumeMixerAtten = 0x5FFB; break;	//  -2.5dB
-	case 1: (base_station).CurrentInboundVolumeMixerAtten = 0x4C3E; break;	//  -4.5dB
-	case 2: (base_station).CurrentInboundVolumeMixerAtten = 0x3C8F; break;	//  -6.5dB
-	case 3: (base_station).CurrentInboundVolumeMixerAtten = 0x301B; break;	//  -8.5dB
-	case 4: (base_station).CurrentInboundVolumeMixerAtten = 0x2636; break;	// -10.5dB
-	case 5: (base_station).CurrentInboundVolumeMixerAtten = 0x1E5A; break;	// -12.5dB
-	case 6: (base_station).CurrentInboundVolumeMixerAtten = 0x181C; break;	// -14.5dB
-	case 7: (base_station).CurrentInboundVolumeMixerAtten = 0x1326; break;	// -16.5dB
-	case 8: (base_station).CurrentInboundVolumeMixerAtten = 0x0F36; break;	// -18.5dB
-	case 9: (base_station).CurrentInboundVolumeMixerAtten = 0x0C15; break;	// -20.5dB
+		case 0: (base_station).CurrentInboundVolumeMixerAtten = 0x5FFB; break;	//  -2.5dB
+		case 1: (base_station).CurrentInboundVolumeMixerAtten = 0x4C3E; break;	//  -4.5dB
+		case 2: (base_station).CurrentInboundVolumeMixerAtten = 0x3C8F; break;	//  -6.5dB
+		case 3: (base_station).CurrentInboundVolumeMixerAtten = 0x301B; break;	//  -8.5dB
+		case 4: (base_station).CurrentInboundVolumeMixerAtten = 0x2636; break;	// -10.5dB
+		case 5: (base_station).CurrentInboundVolumeMixerAtten = 0x1E5A; break;	// -12.5dB
+		case 6: (base_station).CurrentInboundVolumeMixerAtten = 0x181C; break;	// -14.5dB
+		case 7: (base_station).CurrentInboundVolumeMixerAtten = 0x1326; break;	// -16.5dB
+		case 8: (base_station).CurrentInboundVolumeMixerAtten = 0x0F36; break;	// -18.5dB
+		case 9: (base_station).CurrentInboundVolumeMixerAtten = 0x0C15; break;	// -20.5dB
 	}
 
 	int i = 0;
@@ -276,14 +276,4 @@ void AFEDisablePostMicPath(void) 	// remove post mic audio path
 void AFEEnablePostMicPath(void)		// Re-enable post mic audio path
 {
 	GdspConnect(&(p_gain_inbound->in_ptr), &(p_gendspcodecsource->codecdatainsrc));
-}
-
-void AFEEnableMicSpkrPath(void)		// to play messages to LO headsets in expanded system
-{
-	GdspConnect(&(p_gain_spkr_fp->in_ptr), &(p_gain_inbound->out));		// gain_inbound output which carries message audio
-}
-
-void AFEDisableMicSpkrPath(void)	// to stop playing messages to LO headsets in expanded system
-{
-	GdspConnect(&(p_gain_spkr_fp->in_ptr), &(p_dynmixer6->out));		// normal audio out to post gain block
 }

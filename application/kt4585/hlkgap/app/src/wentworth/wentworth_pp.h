@@ -27,13 +27,17 @@
 #ifndef WENTWORTH_PP_H_
 #define WENTWORTH_PP_H_
 
-#define TOGGLE_LED		0xA4	// toggle LED won low battery
-#define CHECK_OFFSET	0xA5	// check EEPROM[0x03E3-0x03E6] for headset.GainVolume & headset.SpkrVolOffset offsets
+#define TOGGLE_LED			0xA4	// toggle steady RED/GREEN LED on low battery
+#define CHECK_OFFSET		0xA5	// check EEPROM[0x03E3-0x03E6] for headset.GainVolume & headset.SpkrVolOffset offsets
+#define TOGGLE_TB_FAIL_LED	0xA6	// toggle slow RED/GREEN LED on touchboard fail
 
-#define HM_Filler_D2 	0xD2	// hopefully a filler
+#define HM_Filler_D2 		0xD2	// hopefully a filler
 
-#define MIN_LSR_VOLUME	0x00	//  0 = -8dB  (normalized to 8 = 0dB)
-#define MAX_LSR_VOLUME	0x0E	// 14 = +6dB  (normalized to 8 = 0dB)
+#define MIN_LSR_VOLUME		0x00	//  0 = -8dB  (normalized to 8 = 0dB)
+#define MAX_LSR_VOLUME		0x0E	// 14 = +6dB  (normalized to 8 = 0dB)
+
+#define MENU_A				1
+#define MENU_B				2
 
 /**************************
 // headset touch buttons
@@ -69,11 +73,12 @@ typedef struct
 	UByte DoublePressWindow, OTDoublePressWindow;	// time to recognize 2nd CB press as double press (in 1/100's of a second)
 	UByte PowerOnStatus;
 	UByte LastButtonPressed;
-	UByte PreviousHeadsetButtonStates;		// < 0000 0000 00C4 321P > are the bit positions
-	UByte CurrentHeadsetButtonStates;		// < 0000 0000 00C4 321P > are the bit positions
-	BOOLEAN OrderTaker, TakingOrder, Pager, SwitchOT;
-	BOOLEAN VehicleAlert1, VehicleAlert2;
-	BOOLEAN CarWaiting;
+	UByte PreviousHeadsetButtonStates;			// < 0000 0000 00C4 321P > are the bit positions
+	UByte CurrentHeadsetButtonStates;			// < 0000 0000 00C4 321P > are the bit positions
+	BOOLEAN OrderTaker, TakingOrder, Pager;
+	BOOLEAN VehicleAlert;
+	BOOLEAN CarAtOrderPost;
+	UByte OtherLaneWaiting;
 	UByte AlertCount;
 	UByte BatteryLowCounter;
 	int GainVolume, SpkrVolOffset;
@@ -85,14 +90,14 @@ typedef struct
 	BOOLEAN GreenLEDisOn, GreenLEDisBlinking;
 	BOOLEAN RedLEDisOn, RedLEDisBlinking;
 	BOOLEAN YellowLEDisOn, YellowLEDisBlinking;
-	UByte CurrentLEDState;
-	BOOLEAN CBtimer, PBtimer, OTtimer;
-	BOOLEAN DualLane;
+	UByte CurrentLEDState;						// 0 is menu A off, 1 is menu A RED, 2 is menu A YELLOW, 3 is menu A GREEN, 4 is menu B off, 5 is menu B RED, 6 is menu B YELLOW, 7 is menu B GREEN
+	BOOLEAN OTtimer;
+	BOOLEAN DualMenu, MenuA, SingleOT;
 	UByte PP_IPEI[5];
 	char SerialNumber[17];
 	UByte SystemMode;
-	UByte TouchBoardStatus;
-	BOOLEAN ProductionTest;
+	UByte TouchBoardStatus, TouchBoardFail, TouchBoardCode;
+	BOOLEAN IsInTestMode;
 #ifdef ENABLE_CHANNEL_MESSAGES
 	UByte ChannelInfo, LEDCount;
 #endif
@@ -104,9 +109,7 @@ extern wt_headset headset;
 // Red LED is tied to DECT P2[0]
 // Green LED is tied to DECT P2[1]
 #define TurnOnRedLED				P2_SET_DATA_REG = Px_0_SET
-#define TurnOffRedLED				P2_RESET_DATA_REG = Px_0_RESET
 #define TurnOnGreenLED				P2_SET_DATA_REG = Px_1_SET
-#define TurnOffGreenLED				P2_RESET_DATA_REG = Px_1_RESET
 #define TurnOnYellowLED				P2_SET_DATA_REG = (Px_0_SET | Px_1_SET)
 #define TurnOffYellowLED			P2_RESET_DATA_REG = (Px_0_RESET | Px_1_RESET)
 

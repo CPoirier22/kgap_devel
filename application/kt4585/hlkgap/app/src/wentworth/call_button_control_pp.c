@@ -5,7 +5,7 @@
  *		Saco, Maine, USA 04072													*
  *		+1 207-571-9744															*
  *		www.wentworthtechnology.com												*
- *		copyright 2011															*
+ *		copyright 2014															*
  *																				*
  ********************************************************************************
  * $History:: call_button_control_pp.c										  $	*
@@ -36,73 +36,111 @@
 #include "wentworth_pp.h"
 #include "fppp_common.h"
 
-extern UByte CBTIMERSEQTASK1TIMER;
+extern UByte OTTIMERSEQTASK1TIMER;
 
 extern wt_headset headset;
 
 extern void PlaySoundPP(unsigned char index);
+extern void SendPageCmd(unsigned char value);
 extern void SendMicMuteCmd(unsigned char value);
 
 void CheckCallControlPP(UByte key_pressed)
 {
+	if (headset.DualMenu && headset.Pager && (headset.SystemMode == LISTEN_ONLY_MODE))
+	{
+		PrintStatus(0, "In Page Mode & LO Mode ... CB press/release ignored");
+		return;
+	}
+
+	if (headset.DualMenu && headset.Pager && !headset.TakingOrder)
+	{
+		// CB pressed after PB press == assign headset to menu B
+		SendPageCmd(0);
+		headset.MenuA = FALSE;
+		PrintStatus(0, "menu 2 active / Green LED on");
+		headset.Pager = FALSE;
+		TurnOffYellowLED;
+		headset.RedLEDisOn = FALSE;
+		headset.YellowLEDisOn = FALSE;
+		headset.GreenLEDisOn = FALSE;
+		SendMicMuteCmd(3);									// tell base we've turned on our MIC to menu B
+		headset.TakingOrder = TRUE;
+		headset.VehicleAlert = FALSE;
+		PlaySoundPP(sound_double_beep);
+		TurnOnGreenLED;
+		headset.GreenLEDisOn = TRUE;
+		if (headset.CurrentLEDState != 7)
+			headset.CurrentLEDState = 4;					// update LED state in case PAGE is used
+		if (headset.OtherLaneWaiting == MENU_B)
+			headset.OtherLaneWaiting = 0;
+		return;
+	}
+
 	if (headset.Pager)
 	{
-		PrintStatus(0, "In Page Mode ... skipped");
+		if ((key_pressed & CALL_BUTTON) && ((headset.SystemMode == AUTO_HANDS_FREE) || headset.IsInTestMode))
+		{
+			// allow for re-assignment of Order Taker or to clear test mode
+			PrintStatus(0, "In Page Mode ... CB press started OT timer");
+			headset.OTtimer = TRUE;
+			OSStartTimer(OTTIMERSEQTASK1TIMER, headset.OTDoublePressWindow);
+		}
+		else if (headset.OTtimer)
+		{
+			PrintStatus(0, "In Page Mode ... CB release stopped OT Timer");
+			headset.OTtimer = FALSE;
+			StopTimer(OTTIMERSEQTASK1TIMER);
+		}
+		else
+			PrintStatus(0, "In Page Mode ... CB press/release ignored");
 		return;
 	}
 
 	if ((key_pressed & CALL_BUTTON) && (headset.SystemMode == LISTEN_ONLY_MODE))
 	{
+		PrintStatus(0, "In LO Mode ... CB press ignored");
 		PlaySoundPP(sound_z_listen_only);
 		return;
 	}
-	else if (key_pressed & CALL_BUTTON)
+
+	if (key_pressed & CALL_BUTTON)
 	{
-		if (headset.CBtimer)
+		if (!(headset.TakingOrder))
 		{
-			// CB pressed < "DoublePressWindow" after previous CB press == double press: Lane B
-			StopTimer(CBTIMERSEQTASK1TIMER);
-			PlaySoundPP(sound_beep);
-			PrintStatus(0, "Lane B active / Green LED on");
-			headset.CBtimer = FALSE;
+			// CB first press == menu A
+			headset.MenuA = TRUE;
+			PrintStatus(0, "menu A active / Red LED on");
+			AFEEnableMicPathPP();
+			SendMicMuteCmd(0);								// tell base we've turned on our MIC to menu A
 			headset.TakingOrder = TRUE;
-			TurnOffRedLED;										// HI = Red LED off
+			headset.VehicleAlert = FALSE;
+			PlaySoundPP(sound_beep);
+			TurnOffYellowLED;								// LO = Red and Green LEDs off
+			headset.RedLEDisOn = FALSE;
+			headset.YellowLEDisOn = FALSE;
+			headset.GreenLEDisOn = FALSE;
+			TurnOnRedLED;									// LO = Red LED on
 			headset.RedLEDisOn = TRUE;
-			TurnOnGreenLED;										// LO = Green LED on
-			headset.GreenLEDisOn = TRUE;
+			if (headset.CurrentLEDState != 3)
+				headset.CurrentLEDState = 0;				// update LED state in case PAGE is used
+			if (headset.OtherLaneWaiting == MENU_A)
+				headset.OtherLaneWaiting = 0;
 		}
 		else
 		{
-			if (!(headset.TakingOrder))
-			{
-				// CB first press == Lane A
-				PrintStatus(0, "Lane A active / Red LED on");
-				AFEEnableMicPathPP();
-				SendMicMuteCmd(0);						// tell base we've turned on our MIC
-				headset.TakingOrder = TRUE;
-				headset.RedLEDisOn = TRUE;
-				headset.VehicleAlert1 = FALSE;
-				PlaySoundPP(sound_beep);
-				TurnOnRedLED;								// LO = Red LED on
-
-				if (headset.DualLane)
-				{
-					headset.CBtimer = TRUE;
-					OSStartTimer(CBTIMERSEQTASK1TIMER, headset.DoublePressWindow);
-				}
-			}
+			// CB pressed after previous CB press == MIC off
+			PlaySoundPP(sound_double_beep);
+			AFEDisableMicPathPP();
+			PrintStatus(0, "CB OFF / LED off");
+			headset.TakingOrder = FALSE;
+			TurnOffYellowLED;								// turn off LED completely
+			headset.RedLEDisOn = FALSE;
+			headset.YellowLEDisOn = FALSE;
+			headset.GreenLEDisOn = FALSE;
+			if (headset.MenuA)
+				SendMicMuteCmd(1);							// tell base we've turned off our MIC to menu A
 			else
-			{
-				// CB pressed > "DoublePressWindow" after previous CB press == MIC off
-				PlaySoundPP(sound_double_beep);
-				AFEDisableMicPathPP();
-				PrintStatus(0, "CB OFF / LED off");
-				headset.TakingOrder = FALSE;
-				TurnOffYellowLED;							// turn off LED completely
-				headset.GreenLEDisOn = FALSE;
-				headset.RedLEDisOn = FALSE;
-				SendMicMuteCmd(1);						// tell base we've turned off our MIC
-			}
+				SendMicMuteCmd(4);							// tell base we've turned off our MIC to menu B
 		}
 	}
 	else if (headset.SystemMode == PUSH_TO_TALK)
@@ -112,10 +150,14 @@ void CheckCallControlPP(UByte key_pressed)
 		AFEDisableMicPathPP();
 		PrintStatus(0, "CB OFF / LED off");
 		headset.TakingOrder = FALSE;
-		TurnOffYellowLED;							// turn off LED completely
-		headset.GreenLEDisOn = FALSE;
+		TurnOffYellowLED;									// turn off LED completely
 		headset.RedLEDisOn = FALSE;
-		SendMicMuteCmd(1);						// tell base we've turned off our MIC
+		headset.YellowLEDisOn = FALSE;
+		headset.GreenLEDisOn = FALSE;
+		if (headset.MenuA)
+			SendMicMuteCmd(1);								// tell base we've turned off our MIC to menu A
+		else
+			SendMicMuteCmd(4);								// tell base we've turned off our MIC to menu B
 	}
 
 	headset.LastButtonPressed = CALL_BUTTON;

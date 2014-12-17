@@ -32,6 +32,8 @@ void SendConfiguration(PPIDType user);
 extern UByte getSpeechBufferIndex(BYTE Pmid[3]);
 extern void CheckNightVolumeTime(void);
 extern void RunGreetClock(UByte greet_cmd, UByte greet_selection);
+extern void ConnectPCM(void);
+extern void SendPCMCommand(WORD cmd);
 extern void WTInfoDebugScreen();
 
 #ifdef ENABLE_TONEGEN
@@ -88,8 +90,6 @@ extern void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length);
 
 void voice_callDisconnected(PPIDType disconnectedUser, PPIDType wasConnectedTo,UByte reason)
 {
-//	CopyToUartTxBuffer((UByte *)"t \"headset deleted\" 10 50\r", 26);
-//	PrintStatus(0, "** call disconnected - gray button ");
 	_sprintf_(StatusString,"wasconnectedto: %x",wasConnectedTo);
 	PrintStatus(0,StatusString);
 	/*voice_updateDisplay(wasConnectedTo,"DisconnectedNormal");*/
@@ -133,15 +133,14 @@ void voice_callDisconnected(PPIDType disconnectedUser, PPIDType wasConnectedTo,U
 		count += 2;
 		CopyToUartTxBuffer(&buffer[0], count);
     }
-    if (disconnectedUser == (base_station).OrderTakerID)
-    {
-    	(base_station).OrderTakerID = 0xFF;
-    }
+	if (disconnectedUser == (base_station).OrderTakerID)
+		(base_station).OrderTakerID = 0xFF;
+    if ((base_station).DualBase)
+   		SendPCMCommand(PP_ON_ind + (disconnectedUser << 4) + 0);
 }
 
 void msf_releaseIndReceived(PPIDType user, UByte releaseReason)
 {
-
     char *ptr;
     ptr = StringPrint(StatusString, "Msf released user: ");
     ptr = StrPrintHexByte(ptr, user);
@@ -166,17 +165,6 @@ void msf_infoIndReceived(PPIDType user, char keyPressed)
 
 void fp_module2module_ack_received(PPIDType user, module2moduleData optionalDataSrc)
 {
-    /*char * tmpPtr;
-    tmpPtr = StringPrint(StatusString,"fp_module2module_ack_received: ");
-    tmpPtr = StrPrintHexByte(tmpPtr,optionalDataSrc[0]);
-    tmpPtr = StringPrint(tmpPtr," ");
-    tmpPtr = StrPrintHexByte(tmpPtr,optionalDataSrc[1]);
-    tmpPtr = StringPrint(tmpPtr," ");
-    tmpPtr = StrPrintHexByte(tmpPtr,optionalDataSrc[2]);
-    tmpPtr = StringPrint(tmpPtr," ");
-
-    PrintStatus(0,StatusString);*/
-
     if (jsjcounter == 1)
     {
         char * tmpPtr;
@@ -251,10 +239,12 @@ void msf_outgMessageIndReceived(PPIDType user, UByte setupSpec2, UByte setupSpec
 void BroadcastBlinkLED(unsigned char value);
 void BroadcastSystemModeState(PPIDType user);
 void BroadcastOrderTaker(PPIDType user, unsigned char value);
+void UpdateDualMenuMixers();
 void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
 {
   int i;
   BOOLEAN OkToTurnMicOff = TRUE;
+  WORD req;
   PMIDType pmid;
 
   WWMSF *WWMSFptr = (WWMSF *) data; // typecast to known structure
@@ -264,56 +254,58 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
       SendConfiguration(user);
       break;
     case MIC_MUTE_CMD:
-//    {
-//      extern int getAllocatedMemory();
-//      int mem = getAllocatedMemory();
-//      if (mem > 0x1500)
-////      if (mem > 0)
-//      {
-//    	char *ptr;
-//        ptr = StringPrint(StatusString, "GetAllocatedMemory [0x");
-//        ptr = StrPrintHexWord(ptr, mem);
-//        ptr = StringPrint(ptr, "] ");
-//        PrintStatus(0, StatusString);
-//      }
-//    }
-   	  if ((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 1)
+      PPID2PMID((PMIDType *) pmid, user);
+
+	  // save the request
+      req = WWMSFptr->Sub.SetMicMute.MicMute & 0x000F;
+
+      // if running a dual base system and if this headset is registered to this base, update the mixers
+  	  // 0 is open to menu A, 1 is mute menu A, 2 is become OT menu A, 3 is open to menu B, 4 is mute menu B, 5 is become OT menu B
+	  if ((base_station).DualBase && (user < MAX_Allowed_Users_Dual))
+	  {
+		if ((req == 0) || (req == 1) || (req == 2))
+		  (base_station).LaneForChannel[getSpeechBufferIndex(pmid) >> 1] = DUAL_BASE_MENU_A;
+		else
+		  (base_station).LaneForChannel[getSpeechBufferIndex(pmid) >> 1] = DUAL_BASE_MENU_B;
+
+		if ((req == 0) || (req == 2) || (req == 3) || (req == 5))
+		  UpdateDualMenuMixers();
+
+		// if it's on this base but it's NOT at this menu, notify other base and do nothing else
+		if ((!FIRST_BASE && (((req & 0x000F) == 0) || ((req & 0x000F) == 1) || ((req & 0x000F) == 2)))
+		  || (FIRST_BASE && (((req & 0x000F) == 3) || ((req & 0x000F) == 4) || ((req & 0x000F) == 5))))
+		{
+		  SendPCMCommand(PP_MIC_ind + (user << 4) + req);
+		  break;
+		}
+	  }
+	  // if not on this base and it's NOT at this menu, ignore the request the request
+	  else if ((!FIRST_BASE && (((req & 0x000F) == 0) || ((req & 0x000F) == 1) || ((req & 0x000F) == 2)))
+ 	         || (FIRST_BASE && (((req & 0x000F) == 3) || ((req & 0x000F) == 4) || ((req & 0x000F) == 5))))
+ 	  {
+		// not at this menu and not on this base; do nothing (should not get here)
+		break;
+	  }
+
+      // 0 is open to menu A, 1 is mute menu A, 2 is become OT menu A, 3 is open to menu B, 4 is mute menu B, 5 is become OT menu B
+	  if (((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 1) || ((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 4))
       {
-//PrintStatus(0, "MicMute == 1");
+		// closing a headset mic here !!!
     	(base_station).MicIsOn[user] = FALSE;
     	// check to see if any other headset MICs are on
-//char *ptr;
-//ptr = StringPrint(StatusString, "1 - OkToTurnMicOff:(");
-//ptr = StrPrintDecByte(ptr, OkToTurnMicOff);
-//ptr = StringPrint(ptr, ") VDIsActive:(");
-//ptr = StrPrintDecByte(ptr, (base_station).VehicleDetectIsActive);
-//ptr = StringPrint(ptr, ") ");
-//PrintStatus(0, StatusString);
-		for (i = 0; i < MAX_Allowed_Users; i++)
+    	for (i = 0; i < MAX_Allowed_Users; i++)
 		{
-		  if (((base_station).HeadsetIsOn[i]) && ((base_station).MicIsOn[i]))
+		  if ((base_station).HeadsetIsOn[i] && (base_station).MicIsOn[i])
 		  {
-//ptr = StringPrint(StatusString, "Headset[");
-//ptr = StrPrintDecByte(ptr, i);
-//ptr = StringPrint(ptr, "] is on ");
-//PrintStatus(0, StatusString);
 		    OkToTurnMicOff = FALSE;
 		    i = MAX_Allowed_Users;
 		  }
 		}
-//char *ptr;
-//ptr = StringPrint(StatusString, "2 - OkToTurnMicOff:(");
-//ptr = StrPrintDecByte(ptr, OkToTurnMicOff);
-//ptr = StringPrint(ptr, ") VDIsActive:(");
-//ptr = StrPrintDecByte(ptr, (base_station).VehicleDetectIsActive);
-//ptr = StringPrint(ptr, ") ");
-//PrintStatus(0, StatusString);
 		// if no other headset MICs are on and no vehicle is detected, turn off menu board MIC
 		if (OkToTurnMicOff && !(base_station).VehicleDetectIsActive)
 		{
 		  AFEDisablePostMicPath();								// disable DECT MIC input
 		  GRILL_SPEAKER_OFF;									// mute the grill speaker
-		  (base_station).GrillShouldBeOn = FALSE;
 		  MENU_SPKR_AMP_OFF;									// mute post speaker (enables GREET audio path in to DECT MICP/N)
 		  if (((base_station).DisplayScreen == GREETER_SETUP) ||
 			  ((base_station).DisplayScreen == MESSAGE_SETUP1) ||
@@ -325,57 +317,55 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
 		  if ((base_station).SystemMode == SPEED_TEAM)
 			PlayQueuedMessage();								// play any waiting alert or reminder
 		}
-		// if no other headset MICs are on, but a vehicle is detected, turn on blinking LEDs again
+		// if no other headset MICs are on and a vehicle is present, turn on blinking LEDs again
 		else if (OkToTurnMicOff && (base_station).VehicleDetectIsActive)
 		{
-		  BroadcastBlinkLED(1);									// 1 = RED LED
+		  if (!FIRST_BASE)
+			BroadcastBlinkLED(7);								// 7 = menu B LED on
+		  else
+		    BroadcastBlinkLED(1);								// 1 = menu A LED on
 		}
-//char *ptr;
-//ptr = StringPrint(StatusString, "3 - OkToTurnMicOff:(");
-//ptr = StrPrintDecByte(ptr, OkToTurnMicOff);
-//ptr = StringPrint(ptr, ") VDIsActive:(");
-//ptr = StrPrintDecByte(ptr, (base_station).VehicleDetectIsActive);
-//ptr = StringPrint(ptr, ") ");
-//PrintStatus(0, StatusString);
       }
       else
       {
-//PrintStatus(0, "MicMute != 1");
+  		// opening a headset mic here !!!
       	(base_station).MicIsOn[user] = TRUE;
-//char *ptr;
-//ptr = StringPrint(StatusString, "1 - OrderTakerID:(0x");
-//ptr = StrPrintHexByte(ptr, (base_station).OrderTakerID);
-//ptr = StringPrint(ptr, ") ");
-//PrintStatus(0, StatusString);
-      	// if PP sends "2", then it is requesting to be the new OT
-    	if ((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 2)
+
+		// 0 is open to menu A, 1 is mute menu A, 2 is become OT menu A, 3 is open to menu B, 4 is mute menu B, 5 is become OT menu B
+		// if PP sends "2" (OT menu A) or "5" (OT menu B), then it is requesting to be the new OT
+    	if (((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 2) || ((WWMSFptr->Sub.SetMicMute.MicMute & 0x000F) == 5))
     	{
     	  if (((base_station).OrderTakerID != 0xFF) && ((base_station).OrderTakerID != user))
     	  {
-    		PrintStatus(0, "canceling existing OT");
-    		// cancel the existing OT
-          	BroadcastOrderTaker((base_station).OrderTakerID, 0);
+    		// cancel existing menu OT if one exists
+    		if ((base_station).DualBase && ((base_station).OrderTakerID >= MAX_Allowed_Users_Dual))
+      		  SendPCMCommand(ORDER_TAKER_ind + (base_station).OrderTakerID);		// cancel current menu OT on other base
+    		else
+      		  BroadcastOrderTaker((base_station).OrderTakerID, 0);					// cancel current menu OT on this base
     	  }
-		  PrintStatus(0, "assigning new OT");
-    	  (base_station).OrderTakerID = user;
+		  (base_station).OrderTakerID = user;
     	}
 
       	if ((((base_station).SystemMode & 0x0F) == AUTO_HANDS_FREE) && ((base_station).OrderTakerID == 0xFF))
       	{
-      	  // when in Auto Hands Free mode, assign new order taker if current order taker doesn't exist
+      	  // when in Auto Hands Free mode, assign new order taker for this menu if current order taker doesn't exist
       	  (base_station).OrderTakerID = user;
-      	  BroadcastOrderTaker((base_station).OrderTakerID, 1);
+      	  if ((base_station).DualBase && (user >= MAX_Allowed_Users_Dual))
+      		SendPCMCommand(ORDER_TAKER_ind + 0x10 + (base_station).OrderTakerID);
+      	  else
+      		BroadcastOrderTaker((base_station).OrderTakerID, 1);
       	}
-//char *ptr;
-//ptr = StringPrint(StatusString, "2 - OrderTakerID:(0x");
-//ptr = StrPrintHexByte(ptr, (base_station).OrderTakerID);
-//ptr = StringPrint(ptr, ") ");
-//PrintStatus(0, StatusString);
+
       	if ((base_station).VehicleDetectIsActive)
       	{
           // order is being taken, shut off all other LEDs if they were on
-    	  BroadcastBlinkLED(0);									// 0 = no LED
+      	  if (!FIRST_BASE)
+      		BroadcastBlinkLED(4);								// 4 = menu B LED off
+      	  else
+      		BroadcastBlinkLED(0);								// 0 = menu A LED off
       	}
+
+		// 0 is open to menu A, 1 is mute menu A, 2 is become OT menu A, 3 is open to menu B, 4 is mute menu B, 5 is become OT menu B
     	if ((((base_station).SystemMode & 0x0F) != SPEED_TEAM) &&
     		 ((base_station).DisplayScreen != GREETER_SETUP) &&
     	     ((base_station).DisplayScreen != MESSAGE_SETUP1) &&
@@ -383,47 +373,22 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
     	{
 		  AFESetGainInboundVolumeFP(NORMAL_INBOUND);
 		  RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
-    	  if ((base_station).P33UsedForGreetMux)
-    		GREET_IN_PP_OFF;									// enable BC5 audio path only (no GREET) in to DECT MICP/N
     	  MENU_SPKR_AMP_ON;										// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
-    	  if ((base_station).GrillSpeakerNeedsToBeRestored)
-    	  {
-			// restore GRILL volume
-			(base_station).GrillSpeakerNeedsToBeRestored = FALSE;
-			while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
-			{
-			  // increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
-			  UPDOWN_GRILL_UP;									// set up for increment mode
-			  usec_pause(1);
-			  VOL_CS_HI;										// lock in increment mode
-			  UPDOWN_GRILL_LO;
-			  UPDOWN_GRILL_HI;
-			  usec_pause(1);
-			  UPDOWN_GRILL_LO;
-			  VOL_CS_LO;										// freeze tap
-			  (base_station).GrillSpeakerVolume++;
-			}
-    	  }
-    	  if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
+    	  if ((base_station).GrillSpeakerVolume)
     		GRILL_SPEAKER_ON;									// turn on grill speaker
-    	  (base_station).GrillShouldBeOn = TRUE;
-		  if ((base_station).DualBase == DUAL_BASE_MASTER)
-			AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
-    	  // TODO: CRP - convert usec_pause to use timer
-    	  usec_pause(65535);
-		  usec_pause(65535);
+    	  if (!(base_station).VehicleDetectIsActive)
+    		usec_pause(35000);									// to avoid pop when opening post mic
 		  AFEEnablePostMicPath();								// enable DECT MIC input since a headset MIC is on
     	}
     	PPID2PMID((PMIDType *) pmid, user);
   		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = MIXER6_ATTEN;	// make sure channel to menu board speaker is on
   	   	if ((base_station).CarIsWaiting && (((base_station).SystemMode & 0x0F) != SPEED_TEAM))
     	{
-    	  PrintStatus(0, "*** CB is HI, GREET_N is HI *** ");
     	  SET_CB_HI;											// drive CB high
     	  GREET_N_HI;											// drive GREET_N high connects DECT SPKR+/- audio path out to BC5
-    	  if ((base_station).MessageIsPlaying > 0)
+    	  if ((base_station).MessageIsPlaying)
     		RunGreetClock(MESSAGE_PLAY_STOP, (base_station).MessageIsPlaying);
-    	  else if ((base_station).MessageIsRecording > 0)
+    	  else if ((base_station).MessageIsRecording)
     		RunGreetClock(MESSAGE_RECORD_STOP, (base_station).MessageIsRecording);
     	}
   	   	(base_station).CarIsWaiting = FALSE;
@@ -446,16 +411,16 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
     }
     case PAGE_CMD:
       PPID2PMID((PMIDType *) pmid, user);
-      if (WWMSFptr->Sub.SetPage.Page == 1)
-      {
-		(base_station).PageMode[(getSpeechBufferIndex(pmid) >> 1)] = TRUE;
-  		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = 0x0000;
-      }
-      else
-      {
-		(base_station).PageMode[(getSpeechBufferIndex(pmid) >> 1)] = FALSE;
-  		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = MIXER6_ATTEN;
-      }
+      req = WWMSFptr->Sub.SetPage.Page & 0x000F;
+      (base_station).PageMode[(getSpeechBufferIndex(pmid) >> 1)] = req;
+
+      // if running a dual base system and this headset is registered to this base, update the mixer
+	  if ((base_station).DualBase)
+		// process dual base page request
+		UpdateDualMenuMixers();
+	  else
+	  	// 1 is open to page, 0 is mute
+		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = req ? 0x0000 : MIXER6_ATTEN;
       break;
     default:
       break;
@@ -464,20 +429,6 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
 
 UByte msf_ppstatus_ind_received(PPIDType user, UByte statusType, UByte * data, UByte data_length)
 {
-	int i;
-	char * tmpPtr;
-	tmpPtr = StringPrint(StatusString, "ppstatus_ind_received. Status: 0x");
-	tmpPtr = StrPrintHexByte(tmpPtr, statusType);
-	tmpPtr = StringPrint(tmpPtr, " Length: 0x");
-	tmpPtr = StrPrintHexByte(tmpPtr, data_length);
-	tmpPtr = StringPrint(tmpPtr, " Data:");
-
-	for (i = 0; i < data_length; i++) {
-		tmpPtr = StringPrint(tmpPtr, "0x");
-		tmpPtr = StrPrintHexByte(tmpPtr, data[i]);
-		tmpPtr = StringPrint(tmpPtr, ",");
-	}
-	PrintStatus(0, StatusString);
 	if (statusType == WENTWORTH_PACKET_ID) // to avoid non approved messages
 	{
 		HandlePacketFromPP(user, data, data_length);
@@ -490,28 +441,31 @@ WWMSF WWMSFVal; // Could be allocated on stack in function instead, but could al
 // .Debug1 value is sent from FP and can be used by PP for anything we want ...
 void SendConfiguration(PPIDType user)
 {
-  char *tmp;
-  tmp = StringPrint(StatusString, "SendConfiguration[");
-  tmp = StrPrintHexByte(tmp, user);
-  tmp = StringPrint(tmp, "]");
-  PrintStatus(0, StatusString);
-  WWMSFVal.SubStatusType = CONF_FROM_BS;
-  WWMSFVal.Sub.SetConf.Debug1 = 0;              // 0 is normal, 1 is bypass BC5 speaker path; see gdsp_BC5SpeakerPath()
-  general_startTimer(user, READ_CONF, (UByte *)&WWMSFVal, sizeof(WWMSFVal), 200);
+	WWMSFVal.SubStatusType = CONF_FROM_BS;
+	WWMSFVal.Sub.SetConf.Debug1 = 0;              				// 0 is normal, 1 is bypass BC5 speaker path; see gdsp_BC5SpeakerPath()
+	general_startTimer(user, READ_CONF, (UByte *)&WWMSFVal, sizeof(WWMSFVal), 200);
 }
 
+// 0 is no car on menu A, 10 is car on menu A + no beep, 11 is car on menu A + beep, 1 is no car on menu B, 20 is car on menu B + no beep, 21 is car on menu B + beep
 void BroadcastCarWaiting(unsigned char value)
 {
 	WWMSFVal.SubStatusType = CAR_WAITING_CMD;
 	WWMSFVal.Sub.SetCarWaiting.CarWaiting = value;
 	msf_send_broadcast((UByte *)&WWMSFVal, sizeof(WWMSFVal), 0);
+	if ((((base_station).DualBase == DUAL_BASE_MENU_A) && ((value == 0) || (value == 10) || (value == 11)))
+	 || (((base_station).DualBase == DUAL_BASE_MENU_B) && ((value == 1) || (value == 20) || (value == 21))))
+		SendPCMCommand(CAR_WAITING_ind + value);				// send "car waiting at menu x" command to other base
 }
 
+// 0 is menu A off, 1 is menu A RED, 2 is menu A YELLOW, 3 is menu A GREEN, 4 is menu B off, 5 is menu B RED, 6 is menu B YELLOW, 7 is menu B GREEN
 void BroadcastBlinkLED(unsigned char value)
 {
 	WWMSFVal.SubStatusType = BLINK_LED_CMD;
 	WWMSFVal.Sub.SetLEDColor.LEDColor = value;
 	msf_send_broadcast((UByte *)&WWMSFVal, sizeof(WWMSFVal), 0);
+	if ((((base_station).DualBase == DUAL_BASE_MENU_A) && ((value == 0) || (value == 1) || (value == 2) || (value == 3)))
+	 || (((base_station).DualBase == DUAL_BASE_MENU_B) && ((value == 4) || (value == 5) || (value == 6) || (value == 7))))
+		SendPCMCommand(BLINK_LED_ind + value);					// send "headset blink LED" command to other base
 }
 
 PPIDType start_BroadcastSystemModeState_ppid = 0;
@@ -519,6 +473,8 @@ void BroadcastSystemModeState(PPIDType user)
 {
     start_BroadcastSystemModeState_ppid = 0;
 	general_startTimer(user, SYSTEM_MODE_CMD, NULL, 0, 20);    	// wait for 200ms
+	if (((base_station).DualBase == DUAL_BASE_MENU_A) && (user == (PPIDType) -1))
+		SendPCMCommand(SYSTEM_MODE_ind + ((base_station).BC5Bypassed << 4) + (base_station).SystemMode);
 }
 
 void BroadcastOrderTaker(PPIDType user, unsigned char value)
@@ -535,6 +491,102 @@ void BroadcastCalOffset(PPIDType user, unsigned char offset)
 	general_startTimer(user, CAL_PP_CMD, (UByte *)&WWMSFVal, sizeof(WWMSFVal), 50);
 }
 
+// manage mixers for dual menu systems
+void UpdateDualMenuMixers()
+{
+	// update mixer0 (PP[0]): enable input channel only if it is open to this output channel's menu
+	p_dynmixer0->weights[0] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer0->weights[1] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer0->weights[2] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer0->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer0->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[0] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer0->weights[5] = ((base_station).LaneForChannel[0] == (base_station).DualBase ? 0x7FFF : 0x0000);
+	p_dynmixer0->weights[6] = ((base_station).LaneForChannel[0] == (base_station).DualBase ? MIC_A_ATTEN : 0x0000);
+	p_dynmixer0->weights[7] = ((base_station).LaneForChannel[0] == (base_station).DualBase ? 0x0000 : 0x7FFF);
+
+	// update mixer1 (PP[1]): enable input channel only if it is open to this output channel's menu
+	p_dynmixer1->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer1->weights[1] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer1->weights[2] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer1->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer1->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[1] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer1->weights[5] = ((base_station).LaneForChannel[1] == (base_station).DualBase ? 0x7FFF : 0x0000);
+	p_dynmixer1->weights[6] = ((base_station).LaneForChannel[1] == (base_station).DualBase ? MIC_A_ATTEN : 0x0000);
+	p_dynmixer1->weights[7] = ((base_station).LaneForChannel[1] == (base_station).DualBase ? 0x0000 : 0x7FFF);
+
+	// update mixer2 (PP[2]): enable input channel only if it is open to this output channel's menu
+	p_dynmixer2->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer2->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer2->weights[2] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer2->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer2->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[2] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer2->weights[5] = ((base_station).LaneForChannel[2] == (base_station).DualBase ? 0x7FFF : 0x0000);
+	p_dynmixer2->weights[6] = ((base_station).LaneForChannel[2] == (base_station).DualBase ? MIC_A_ATTEN : 0x0000);
+	p_dynmixer2->weights[7] = ((base_station).LaneForChannel[2] == (base_station).DualBase ? 0x0000 : 0x7FFF);
+
+	// update mixer3 (PP[3]): enable input channel only if it is open to this output channel's menu
+	p_dynmixer3->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer3->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer3->weights[2] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer3->weights[3] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer3->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[3] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer3->weights[5] = ((base_station).LaneForChannel[3] == (base_station).DualBase ? 0x7FFF : 0x0000);
+	p_dynmixer3->weights[6] = ((base_station).LaneForChannel[3] == (base_station).DualBase ? MIC_A_ATTEN : 0x0000);
+	p_dynmixer3->weights[7] = ((base_station).LaneForChannel[3] == (base_station).DualBase ? 0x0000 : 0x7FFF);
+
+	// update mixer4 (PP[4]): enable input channel only if it is open to this output channel's menu
+	p_dynmixer4->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer4->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer4->weights[2] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer4->weights[3] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer4->weights[4] = ((base_station).LaneForChannel[5] == (base_station).LaneForChannel[4] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer4->weights[5] = ((base_station).LaneForChannel[4] == (base_station).DualBase ? 0x7FFF : 0x0000);
+	p_dynmixer4->weights[6] = ((base_station).LaneForChannel[4] == (base_station).DualBase ? MIC_A_ATTEN : 0x0000);
+	p_dynmixer4->weights[7] = ((base_station).LaneForChannel[4] == (base_station).DualBase ? 0x0000 : 0x7FFF);
+
+	// update mixer5 (PP[5]): enable input channel only if it is open to this output channel's menu
+	p_dynmixer5->weights[0] = ((base_station).LaneForChannel[0] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer5->weights[1] = ((base_station).LaneForChannel[1] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer5->weights[2] = ((base_station).LaneForChannel[2] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer5->weights[3] = ((base_station).LaneForChannel[3] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer5->weights[4] = ((base_station).LaneForChannel[4] == (base_station).LaneForChannel[5] ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer5->weights[5] = ((base_station).LaneForChannel[5] == (base_station).DualBase ? 0x7FFF : 0x0000);
+	p_dynmixer5->weights[6] = ((base_station).LaneForChannel[5] == (base_station).DualBase ? MIC_A_ATTEN : 0x0000);
+	p_dynmixer5->weights[7] = ((base_station).LaneForChannel[5] == (base_station).DualBase ? 0x0000 : 0x7FFF);
+
+	// update mixer6 (this base SPKR): enable input channel only if it is open to this base's menu and not in PAGE mode
+	p_dynmixer6->weights[0] = (((base_station).LaneForChannel[0] != (base_station).DualBase) || (base_station).PageMode[0] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer6->weights[1] = (((base_station).LaneForChannel[1] != (base_station).DualBase) || (base_station).PageMode[1] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer6->weights[2] = (((base_station).LaneForChannel[2] != (base_station).DualBase) || (base_station).PageMode[2] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer6->weights[3] = (((base_station).LaneForChannel[3] != (base_station).DualBase) || (base_station).PageMode[3] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer6->weights[4] = (((base_station).LaneForChannel[4] != (base_station).DualBase) || (base_station).PageMode[4] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer6->weights[5] = (((base_station).LaneForChannel[5] != (base_station).DualBase) || (base_station).PageMode[5] ? 0x0000 : MIXER6_ATTEN);
+
+	// update mixer7 (to PCM[0], this menu to other base PPs): enable input channel only if it is open to this base's menu
+	p_dynmixer7->weights[0] = ((base_station).LaneForChannel[0] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer7->weights[1] = ((base_station).LaneForChannel[1] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer7->weights[2] = ((base_station).LaneForChannel[2] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer7->weights[3] = ((base_station).LaneForChannel[3] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer7->weights[4] = ((base_station).LaneForChannel[4] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+	p_dynmixer7->weights[5] = ((base_station).LaneForChannel[5] != (base_station).DualBase ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten);
+
+	// update mixer8 (to PCM[1], other menu to other base SPKR): enable input channel only if it is open to the other base's menu and not in PAGE mode
+	p_dynmixer8->weights[0] = (((base_station).LaneForChannel[0] == (base_station).DualBase) || (base_station).PageMode[0] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer8->weights[1] = (((base_station).LaneForChannel[1] == (base_station).DualBase) || (base_station).PageMode[1] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer8->weights[2] = (((base_station).LaneForChannel[2] == (base_station).DualBase) || (base_station).PageMode[2] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer8->weights[3] = (((base_station).LaneForChannel[3] == (base_station).DualBase) || (base_station).PageMode[3] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer8->weights[4] = (((base_station).LaneForChannel[4] == (base_station).DualBase) || (base_station).PageMode[4] ? 0x0000 : MIXER6_ATTEN);
+	p_dynmixer8->weights[5] = (((base_station).LaneForChannel[5] == (base_station).DualBase) || (base_station).PageMode[5] ? 0x0000 : MIXER6_ATTEN);
+
+	// update mixer9 (to PCM[2], other menu to other base PPs): enable input channel only if it is open to the other base's menu
+	p_dynmixer9->weights[0] = ((base_station).LaneForChannel[0] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer9->weights[1] = ((base_station).LaneForChannel[1] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer9->weights[2] = ((base_station).LaneForChannel[2] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer9->weights[3] = ((base_station).LaneForChannel[3] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer9->weights[4] = ((base_station).LaneForChannel[4] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+	p_dynmixer9->weights[5] = ((base_station).LaneForChannel[5] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
+}
+
 //static unsigned long m_z = 362436069, m_w = 521288629;
 UByte to_print_heap_cnt=0;// Test
 UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte dataLength)
@@ -548,12 +600,15 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 		  WWMSFVal.Sub.SetSystemMode.SystemMode = ((base_station).InboundVol << 4) + LISTEN_ONLY_MODE;
 		else
 		  WWMSFVal.Sub.SetSystemMode.SystemMode = ((base_station).InboundVol << 4) + (base_station).SystemMode;
+		if ((base_station).MenuConfig > 1)
+		  WWMSFVal.Sub.SetSystemMode.SystemMode |= (base_station).MenuConfig << 8;
 		if ((base_station).BC5Bypassed)
 		  WWMSFVal.Sub.SetSystemMode.SystemMode |= 0x8000;			// set BC5 "off" bit
         if ((base_station).HeadsetIsOn[start_BroadcastSystemModeState_ppid])
           msf_send_ppstatusReq(start_BroadcastSystemModeState_ppid, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
         start_BroadcastSystemModeState_ppid++;
-        if (start_BroadcastSystemModeState_ppid < MAX_Allowed_Users)
+        if ((!(base_station).DualBase && (start_BroadcastSystemModeState_ppid < MAX_Allowed_Users)) ||
+             ((base_station).DualBase && (start_BroadcastSystemModeState_ppid < MAX_Allowed_Users_Dual)))
           general_startTimer(-1, SYSTEM_MODE_CMD, NULL, 0, 100);    // wait for 1s
 	  }
 	  else
@@ -562,6 +617,8 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 		  WWMSFVal.Sub.SetSystemMode.SystemMode = ((base_station).InboundVol << 4) + LISTEN_ONLY_MODE;
 		else
 		  WWMSFVal.Sub.SetSystemMode.SystemMode = ((base_station).InboundVol << 4) + (base_station).SystemMode;
+		if ((base_station).MenuConfig > 1)
+		  WWMSFVal.Sub.SetSystemMode.SystemMode |= (base_station).MenuConfig << 8;
 		if ((base_station).BC5Bypassed)
 		  WWMSFVal.Sub.SetSystemMode.SystemMode |= 0x8000;			// set BC5 "off" bit
 		msf_send_ppstatusReq(user, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
@@ -569,33 +626,28 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	}
 	else if (subEvent == LISTEN_ONLY_MODE_CMD)
 	{
-//char *ptr;
-//ptr = StringPrint(StatusString, "LO_CMD for user:");
-//ptr = StrPrintDecByte(ptr, user);
-//ptr = StringPrint(ptr, " ");
-//PrintStatus(0, StatusString);
 	  WWMSFVal.SubStatusType = SYSTEM_MODE_CMD;
 	  if ((base_station).ListenOnly[user] == 0x01)
 		WWMSFVal.Sub.SetSystemMode.SystemMode = ((base_station).InboundVol << 4) + LISTEN_ONLY_MODE;
 	  else
 		WWMSFVal.Sub.SetSystemMode.SystemMode = ((base_station).InboundVol << 4) + (base_station).SystemMode;
+	  if ((base_station).MenuConfig > 1)
+		WWMSFVal.Sub.SetSystemMode.SystemMode |= (base_station).MenuConfig << 8;
+	  if ((base_station).BC5Bypassed)
+		WWMSFVal.Sub.SetSystemMode.SystemMode |= 0x8000;			// set BC5 "off" bit
 	  msf_send_ppstatusReq(user, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
+	  if (!FIRST_BASE)
+		general_startTimer(-1, WRITE_WTDATA_EEPROM, NULL, 0, 5);	// write current values to EEPROM
 	}
 	else if (subEvent == SET_OT_CMD)
 	{
-//PrintStatus(0, "sending SET_OT_CMD ....");
 	  WWMSF *WWMSFptr = (WWMSF *) dataPtr; // typecast to known structure
 	  WWMSFVal.SubStatusType = SET_OT_CMD;
 	  WWMSFVal.Sub.SetOrderTaker.OrderTaker = WWMSFptr->Sub.SetOrderTaker.OrderTaker;
 	  msf_send_ppstatusReq(user, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
-//	  if (msf_send_ppstatusReq(user, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal)))
-//		  PrintStatus(0, "send SET_OT_CMD error");
-//	  else
-//		  PrintStatus(0, "send SET_OT_CMD success");
 	}
 	else if (subEvent == CAL_PP_CMD)
 	{
-//PrintStatus(0, "sending CAL_PP_CMD ....");
 	  WWMSF *WWMSFptr = (WWMSF *) dataPtr; // typecast to known structure
 	  WWMSFVal.SubStatusType = CAL_PP_CMD;
 	  WWMSFVal.Sub.SetPPOffset.PPOffset = WWMSFptr->Sub.SetPPOffset.PPOffset;
@@ -604,6 +656,11 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	else if (subEvent == READ_EEPROM)
 	{
 	  general_eeprom_read_req(EE_CUSTOMER_AREA, 5, 0);
+	  general_startTimer(-1, READ_COUNTRY_EEPROM, NULL, 0, 5);
+	}
+	else if (subEvent == READ_COUNTRY_EEPROM)
+	{
+	  general_eeprom_read_req(EEP_NonGapExtFreqMode, 3, 3);
 	}
 	else if (subEvent == READ_EEPROM_HEX_ARI)
 	{
@@ -724,16 +781,16 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  test[a++] = (base_station).PowerOnCount >> 8;
 	  test[a++] = (base_station).PowerOnCount & 0x00FF;
 	  test[a++] = (base_station).AlangoProfile1;
-	  test[a++] = (base_station).PlayGreetInPP;
+	  test[a++] = (base_station).MenuConfig;
 	  test[a++] = (base_station).DualBase;
 
 	  result = general_eeprom_write_req(EE_WTDATA, test, a, 0);
-	  ptr = StringPrint(StatusString,"****** eeprom write req result: ");
+	  ptr = StringPrint(StatusString, "****** eeprom write req result: ");
 	  ptr = StrPrintDecByte(ptr, result);
-	  ptr = StringPrint(ptr," (for ");
+	  ptr = StringPrint(ptr, " (for ");
 	  ptr = StrPrintDecByte(ptr, a);
-	  ptr = StringPrint(ptr," bytes)");
-	  PrintStatus(0,StatusString);
+	  ptr = StringPrint(ptr, " bytes)");
+	  PrintStatus(0, StatusString);
 	}
 	else if (subEvent == WRITE_WT_DEBUG_EEPROM)
 	{
@@ -761,26 +818,26 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  PrintStatus(0,StatusString);
 #endif
 
-	  CopyByteToUartTxBuffer('\r');																// send 3 CRs to make sure display is ready
+	  CopyByteToUartTxBuffer('\r');																				// send 3 CRs to make sure display is ready
 	  CopyByteToUartTxBuffer('\r');
 	  CopyByteToUartTxBuffer('\r');
-	  CopyToUartTxBuffer((UByte *)"m startup1", 10);											// start display with parameters
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).DisplayIsLocked);				// e0 locked/unlocked state
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(((base_station).SystemMode & 0x0F) - 1);		// e1 mode
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).VehicleDetectIsActive ? 2 : 1);	// e2 Lane 1 - car present or not
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);											// e3 Lane 2
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).DayTime);						// e4 Volume mode
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);											// e5 detect current volume - not implemented
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).InboundVol);					// e6 inbound volume
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).GrillSpeakerVolume);			// e7 grill current volume
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).PostSpeakerVolumeDay);		// e8 day volume
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).PostSpeakerVolumeNight);		// e9 night volume
-	  CopyByteToUartTxBuffer('\r');																// complete command string
+	  CopyToUartTxBuffer((UByte *)"m startup1", 10);															// start display with parameters
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).DisplayIsLocked);								// e0 locked/unlocked state
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(((base_station).SystemMode & 0x0F) - 1);						// e1 mode
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).VehicleDetectIsActive ? 2 : 1);				// e2 menu A - car present or not
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).MenuConfig > 1 ? 1 : 0);						// e3 menu B - car present or not
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).DayTime);										// e4 Volume mode
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);															// e5 detect current volume - not implemented
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).InboundVol);									// e6 inbound volume
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).GrillSpeakerVolume);							// e7 grill current volume
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).PostSpeakerVolumeDay);						// e8 day volume
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).PostSpeakerVolumeNight);						// e9 night volume
+	  CopyByteToUartTxBuffer('\r');																				// complete command string
 
-	  CopyToUartTxBuffer((UByte *)"m startup2", 10);											// start display with parameters
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);											// eA volume lanes info
-	  CopyByteToUartTxBuffer(' ');	SendAsciiValue(0);											// eB multi-lane
-	  CopyByteToUartTxBuffer('\r');																// complete command string
+	  CopyToUartTxBuffer((UByte *)"m startup2", 10);															// start display with parameters
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).MenuConfig > 1 ? (base_station).DualBase : 0);// eA volume menus info
+	  CopyByteToUartTxBuffer(' ');	SendAsciiValue((base_station).MenuConfig);									// eB multi-menu
+	  CopyByteToUartTxBuffer('\r');																				// complete command string
 
 #ifdef FOR_TEST_BASE_ONLY
 	  // !! THIS IS ONLY FOR IN-HOUSE TEST RELEASE !!
@@ -795,34 +852,47 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	  CopyToUartTxBuffer((UByte *)"t \"        TAP TO CONTINUE\" 13 150 T\r", 37);
 #endif
 
-	  if (!(base_station).BaseRTC && !(base_station).GreetRTC)
+	  if (!(base_station).DualBase && !(base_station).BaseRTC && !(base_station).GreetRTC)
 	  {
-		PrintStatus(0, "Running as single base system with no PCM bus");
+		PrintStatus(0, "Not running PCM bus for Real Time Clock nor Dual Lane");
+		GdspUnhookVector(PCM_BUFFER_INT, DSP1); 				// unhook PCM[3] command interrupt handler
+		GdspStop((unsigned short*)p_pcm_buffer);				// shut down p_pcm_buffer DP resource
 	  }
 	  else
 	  {
-		PrintStatus(0, "Running PCM bus for Real Time Clock");
+		if ((base_station).DualBase)
+		  PrintStatus(0, "Running PCM bus for dual base system");
+		if ((base_station).BaseRTC || (base_station).GreetRTC)
+		  PrintStatus(0, "Running PCM bus for Real Time Clock");
 	  }
+	  if (((base_station).DualBase == DUAL_BASE_MENU_A) && !(base_station).ARI2_Received)
+		SendPCMCommand(REQ_FP_ARI_ind);
 	}
 	else if (subEvent == CHECK_TEOM)
 	{
 	  UByte P3_6 = (P3_DATA_REG & Px_6_DATA);					// P3[6] is TIMER_ALERT: input from external timer or WT greeter
 
 	  // check TEOM during playback
-	  if (((base_station).MessageIsPlaying > 0) && (P3_6 == 0x00))
+	  if ((base_station).MessageIsPlaying && (P3_6 == 0x00))
 	  {
-//		CopyToUartTxBuffer((UByte *)"t \"TEOM playback sensed LOW\" 25 225\r", 36);
 		// check if we need to send button up command
 		if ((base_station).MsgBeingEdited == (base_station).MessageIsPlaying)
 		{
-		  CopyToUartTxBuffer((UByte *)"ssb 43 0\r", 9);			// release play button
-		  CopyToUartTxBuffer((UByte *)"xe 43\r", 6);			// enable play button
-		  CopyToUartTxBuffer((UByte *)"xe 44\r", 6);			// enable record button
-		  CopyToUartTxBuffer((UByte *)"xd 45\r", 6);			// disable stop button
+		  if (!FIRST_BASE)
+			SendPCMCommand(GREETER_0x19_ind + 0x10);
+
+		  if (((base_station).DisplayScreen == GREETER_SETUP)
+		   || ((base_station).DisplayScreen == MESSAGE_SETUP1)
+		   || ((base_station).DisplayScreen == MESSAGE_SETUP2))
+		  {
+			CopyToUartTxBuffer((UByte *)"ssb 43 0\r", 9);		// release play button
+			CopyToUartTxBuffer((UByte *)"xe 43\r", 6);			// enable play button
+			CopyToUartTxBuffer((UByte *)"xe 44\r", 6);			// enable record button
+			CopyToUartTxBuffer((UByte *)"xd 45\r", 6);			// disable stop button
+		  }
 		  GREET_N_HI;											// drive GREET_N high connects DECT SPKR+/- audio path out to BC5
 		  MENU_SPKR_AMP_OFF;									// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
 		  GRILL_SPEAKER_OFF;									// mute grill speaker during playback
-		  (base_station).GrillShouldBeOn = FALSE;
 		  RefreshOutboundVolume(3);								// temporarily "normalize" for recording level
 		  AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);			// temporarily set inbound for playback comfort
 		}
@@ -832,93 +902,97 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 		  // greet played because of vehicle detect and has finished or reminder has finished, re-connect post mic and grill speaker
 		  PrintStatus(0, "*** CB is HI, GREET_N is HI *** ");
 		  if ((base_station).VehicleDetectIsActive)
-			BroadcastCarWaiting(11);							// send "car waiting in lane 1 + beep" command
+		  {
+			if (!FIRST_BASE)
+			  BroadcastCarWaiting(21);							// send "car waiting in menu B + beep" command
+			else
+			  BroadcastCarWaiting(11);							// send "car waiting in menu A + beep" command
+		  }
 		  SET_CB_HI;											// drive CB high
 		  GREET_N_HI;											// drive GREET_N high connects DECT SPKR+/- audio path out to BC5
 		  AFESetGainInboundVolumeFP(NORMAL_INBOUND);
 		  RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
-		  if ((base_station).P33UsedForGreetMux)
-			GREET_IN_PP_OFF;									// enable BC5 audio path only (no GREET) in to DECT MICP/N
-		  // TODO: CRP - convert usec_pause to use timer
-		  usec_pause(65535);
-		  usec_pause(65535);
+		  usec_pause(35000);									// to avoid pop when opening post mic
 		  if ((base_station).SystemMode == SPEED_TEAM)
 		  {
 			AFEDisablePostMicPath();							// disable DECT MIC input for SPEED TEAM mode
 			MENU_SPKR_AMP_OFF;									// mute the menu board speaker for SPEED TEAM mode (enables GREET audio path in to DECT MICP/N)
-			if ((base_station).DualBase == DUAL_BASE_MASTER)
-			{
-			  GRILL_SPEAKER_OFF;								// disable the LO headsets audio
-			  AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
-			}
 		  }
 		  else if ((base_station).VehicleDetectIsActive)
 		  {
-			if ((base_station).DualBase == DUAL_BASE_MASTER)
-			  AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
 			AFEEnablePostMicPath();								// enable DECT MIC input
 			MENU_SPKR_AMP_ON;									// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
-			if ((base_station).GrillSpeakerNeedsToBeRestored)
-			{
-			  // restore GRILL volume
-			  (base_station).GrillSpeakerNeedsToBeRestored = FALSE;
-			  while ((base_station).GrillSpeakerVolume < (base_station).GrillSpeakerPreviousVolume)
-			  {
-			    // increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
-			    UPDOWN_GRILL_UP;									// set up for increment mode
-			    usec_pause(1);
-			    VOL_CS_HI;										// lock in increment mode
-			    UPDOWN_GRILL_LO;
-			    UPDOWN_GRILL_HI;
-			    usec_pause(1);
-			    UPDOWN_GRILL_LO;
-			    VOL_CS_LO;										// freeze tap
-			    (base_station).GrillSpeakerVolume++;
-			  }
-			}
-			if (((base_station).GrillSpeakerVolume > 0) || ((base_station).DualBase == DUAL_BASE_MASTER))
+			if ((base_station).GrillSpeakerVolume)
 			  GRILL_SPEAKER_ON;									// turn on grill speaker
-			(base_station).GrillShouldBeOn = TRUE;
 		  }
 		  else
 		  {
 			AFEDisablePostMicPath();							// disable DECT MIC input
 			MENU_SPKR_AMP_OFF;									// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
-			if ((base_station).DualBase == DUAL_BASE_MASTER)
-			{
-			  GRILL_SPEAKER_OFF;								// disable the LO headsets audio
-			  AFEDisableMicSpkrPath();							// re-connect p_dynmixer6 -> gain_spkr_fp
-			}
 		  }
 	  	  OSStartTimer(VEHICLEDETECTTASKTIMER, 20); 			// 20 x 10ms = 200ms resume checking vehicle detector
 		}
 		(base_station).MessageIsPlaying = 0;
 	  }
-	  else if (((base_station).MessageIsPlaying > 0) && (P3_6 == 0x40))
+	  else if ((base_station).MessageIsPlaying && (P3_6 == 0x40))
 	  {
-//		CopyToUartTxBuffer((UByte *)"t \"checking playback TEOM again\" 25 200\r", 40);
 		general_startTimer(-1, CHECK_TEOM, NULL, 0, 1);			// check TEOM again in 10ms
 	  }
 	  // check TEOM during recording
-	  else if (((base_station).MessageIsRecording > 0) && (P3_6 == 0x40))
+	  else if ((base_station).MessageIsRecording && (P3_6 == 0x40))
 	  {
-//		CopyToUartTxBuffer((UByte *)"t \"TEOM recording sensed HI\" 25 225\r", 36);
-		CopyToUartTxBuffer((UByte *)"ssb 44 0\r", 9);			// release record button
-		CopyToUartTxBuffer((UByte *)"xe 43\r", 6);				// enable play button
-		CopyToUartTxBuffer((UByte *)"xe 44\r", 6);				// enable record button
-		CopyToUartTxBuffer((UByte *)"xd 45\r", 6);				// disable stop button
+	    if (!FIRST_BASE)
+		  SendPCMCommand(GREETER_0x19_ind + 0x20);
+
+	    if (((base_station).DisplayScreen == GREETER_SETUP)
+	     || ((base_station).DisplayScreen == MESSAGE_SETUP1)
+	     || ((base_station).DisplayScreen == MESSAGE_SETUP2))
+	    {
+		  CopyToUartTxBuffer((UByte *)"ssb 44 0\r", 9);			// release record button
+		  CopyToUartTxBuffer((UByte *)"xe 43\r", 6);			// enable play button
+		  CopyToUartTxBuffer((UByte *)"xe 44\r", 6);			// enable record button
+		  CopyToUartTxBuffer((UByte *)"xd 45\r", 6);			// disable stop button
+	    }
 		MENU_SPKR_AMP_OFF;										// mute post speaker during playback (enables GREET audio path in to DECT MICP/N)
 		GRILL_SPEAKER_OFF;										// mute grill speaker during playback
-		(base_station).GrillShouldBeOn = FALSE;
 		RefreshOutboundVolume(3);								// temporarily "normalize" for recording level
 		AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);			// temporarily set inbound for playback comfort
 		RunGreetClock(MESSAGE_RECORD_STOP, (base_station).MessageIsRecording);	// send stop command to configure pins
 	  }
-	  else if (((base_station).MessageIsRecording > 0) && (P3_6 == 0x00))
+	  else if ((base_station).MessageIsRecording && (P3_6 == 0x00))
 	  {
-//		CopyToUartTxBuffer((UByte *)"t \"checking recording TEOM again\" 25 200\r", 41);
 		general_startTimer(-1, CHECK_TEOM, NULL, 0, 1);			// check TEOM again in 10ms
 	  }
+	}
+	else if (subEvent == SETUP_SECOND_BASE)
+	{
+	  // tell first base that there is a second base and send FP_ARI[] data
+	  SendPCMCommand(SECOND_BOARD_ind + (0 << 8) + (base_station).FP_ARI[0]);
+	  SendPCMCommand(SECOND_BOARD_ind + (1 << 8) + (base_station).FP_ARI[1]);
+	  SendPCMCommand(SECOND_BOARD_ind + (2 << 8) + (base_station).FP_ARI[2]);
+	  SendPCMCommand(SECOND_BOARD_ind + (3 << 8) + (base_station).FP_ARI[3]);
+	  SendPCMCommand(SECOND_BOARD_ind + (4 << 8) + (base_station).FP_ARI[4]);
+
+	  // send volume settings to first base
+	  SendPCMCommand(VOLUME_SETTINGS_B_ind + 0xB0 + (base_station).InboundVol);
+	  SendPCMCommand(VOLUME_SETTINGS_B_ind + 0xC0 + (base_station).GrillSpeakerVolume);
+	  SendPCMCommand(VOLUME_SETTINGS_B_ind + 0xD0 + (base_station).PostSpeakerVolumeDay);
+	  SendPCMCommand(VOLUME_SETTINGS_B_ind + 0xE0 + (base_station).PostSpeakerVolumeNight);
+	  SendPCMCommand(VOLUME_SETTINGS_B_ind + 0xF0 + (base_station).AlangoProfile1B);
+
+	  // if greeter installed, send greeter data to first base
+	  if ((base_station).GreeterInstalled)
+	  {
+		SendPCMCommand(GREETER_DATA_START_ind);
+		SendPCMCommand(GREETER_DATA_STOP_ind);
+	  }
+
+	  // this is second base, we'll still use for debug purposes
+	  general_startTimer(-1, SETUP_DISPLAY, NULL, 0, 50);    // wait for 500ms
+	}
+	else if (subEvent == DISPLAY_WT_DEBUG_INFO)
+	{
+	  WTInfoDebugScreen();
 	}
 	else
 	{
@@ -976,7 +1050,38 @@ void fp_subscription_locationRegistration(PPIDType user, IPEIType ipei, UByte st
 
     PrintStatus(0, StatusString);
 
-    if (fp_subscription_getNumberOfSubscriptions() >= MAX_Allowed_Users)
+    if ((base_station).DualBase && (fp_subscription_getNumberOfSubscriptions() >= MAX_Allowed_Users_Dual))
+    {
+    	// if this is second base, release registration button if necessary
+    	if ((!FIRST_BASE) && (base_station).RegistrationButtonPressed)
+    	{
+	    	PrintStatus(0, "second base full - no more registrations allowed on second base");
+			CopyToUartTxBuffer((UByte *)"ssb 28 0\r", 9);
+    	}
+    	// if this is first base, check second base before releasing registration button
+    	else if (FIRST_BASE && (base_station).RegistrationButtonPressed)
+    	{
+    		int i;
+		    UByte base2 = 0;
+		    for(i = 0; i < MAX_Allowed_Users_Dual; i++)
+		    {
+		        if((base_station).QuickDataBoard2[i].EmptyMarker == 0)
+		        {
+		        	base2++;
+		        }
+		    }
+		    if (base2 >= MAX_Allowed_Users_Dual)
+		    {
+		    	PrintStatus(0, "both bases full - no more registrations allowed");
+		    	CopyToUartTxBuffer((UByte *)"ssb 28 0\r", 9);
+		    }
+		    else
+		    	PrintStatus(0, "first base full - only allowing registrations on second base");
+    	}
+    	// stop allowing registrations to this base
+    	(base_station).RegistrationAllowed = FALSE;
+    }
+    else if (!(base_station).DualBase && (fp_subscription_getNumberOfSubscriptions() >= MAX_Allowed_Users))
     {
     	PrintStatus(0, "base full - no more registrations allowed");
     	CopyToUartTxBuffer((UByte *)"ssb 28 0\r", 9);
@@ -1022,16 +1127,10 @@ void fp_common_gpio_inputport_state_changed(gpio_port port, gpio_state state)
 
 void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte length)
 {
-    char * ptr;
     int i, ii, a;
 	UByte test[2];
-//	PrintStatus(0, "fp_general_eeprom_read_res");
 	if (ppid == 0)
 	{
-//		ptr = StringPrint(StatusString,"****** (STEP 0: EE_CUSTOMER_AREA) First byte read from eeprom (action_after_logon): 0x");
-//		ptr = StrPrintHexByte(ptr, data[0]);
-//		ptr = StringPrint(ptr," ");
-//		PrintStatus(0,StatusString);
 #ifdef ENABLE_TONEGEN
 		if (data[0] == 0)
 			enable_tonegenerator_for_test=1;
@@ -1042,40 +1141,21 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 	}
 	else if (ppid == 1)
 	{
-		ptr = StringPrint(StatusString, "****** (STEP 1: EEP_Rfpi) FP ARI (hex): ");
 		for (i = 0; i < 5; i++)
-		{
 			(base_station).FP_ARI[i] = data[i];
-			ptr = StrPrintHexByte(ptr, data[i]);
-			ptr = StringPrint(ptr, " ");
-		}
-		PrintStatus(0, StatusString);
 		general_startTimer(-1, ENABLE_SPEECH_BUFFER, NULL, 0, 100);	// Next we enable the speech buffer
 	}
 	else if (ppid == 2)
 	{
-//		ptr = StringPrint(StatusString, "****** (STEP 2: EE_WTDATA) First two WTDATA bytes read from eeprom (FW Rev): ");
-//		ptr = StrPrintDecByte(ptr, data[0]);
-//		ptr = StringPrint(ptr, ".");
-//		ptr = StrPrintDecByte(ptr, data[1]);
-//		ptr = StringPrint(ptr, " and current rev is ");
-//		ptr = StrPrintDecByte(ptr, FW_REV_MAJOR);
-//		ptr = StringPrint(ptr, ".");
-//		ptr = StrPrintDecByte(ptr, FW_REV_MINOR);
-//		ptr = StringPrint(ptr, "-AL ");
-//		PrintStatus(0,StatusString);
-//		memset(test, 0xFF, 2);
 		test[0] = FW_REV_MAJOR;
 		test[1] = FW_REV_MINOR;
 		if (memcmp(data, test, 2))
 		{
 			// any values in EEPROM WTDATA area are for different version (or no version), save current version values now
-//			PrintStatus(0,"*** WTDATA is NOT present for current revision *** ");
 			general_startTimer(-1, WRITE_WTDATA_EEPROM, NULL, 0, 100);	// write current values to EEPROM
 		}
 		else
 		{
-//			PrintStatus(0,"*** some WTDATA IS present for current revision *** ");
 			// read out all the saved WTDATA values
 			// FW_REV_MAJOR = data[0]
 			// FW_REV_MINOR = data[1]
@@ -1099,9 +1179,7 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 			(base_station).NightVolumeTimeEnd.timeMinMSB = data[a++];
 			(base_station).NightVolumeTimeEnd.timeMinLSB = data[a++];
 			for (i = 0; i < MAX_Allowed_Users; i++)
-			{
 				(base_station).ListenOnly[i] = data[a++];
-			}
 			for (i = 0; i < NUM_OF_MESSAGES; i++)
 			{
 				(base_station).Message[i].MessageEnableName = data[a++];
@@ -1119,30 +1197,48 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 			(base_station).PowerOnCount = data[a++] << 8;
 			(base_station).PowerOnCount += data[a++] + 1;					// increment to count this power on cycle
 			(base_station).AlangoProfile1 = data[a++];
-			(base_station).PlayGreetInPP = data[a++];
+			(base_station).MenuConfig = data[a++];
 			(base_station).DualBase = data[a++];
+
+			if ((base_station).SystemMode > NOT_LOCKED)
+				(base_station).SystemMode = HANDS_FREE;						// in case EEPROM was corrupted during a crash
+
+			if ((base_station).DualBase)
+				for (i = 0; i < 6; i++)
+					(base_station).LaneForChannel[i] = DUAL_BASE_MENU_A;
+
+			AFESetGainPP2PPMixer((base_station).InboundVol);				// update mixer weights in case InboundVol has changed from default
 
 			general_startTimer(-1, WRITE_WT_DEBUG_EEPROM, NULL, 0, 1);		// update power on counter to EEPROM
 		}
 
 		ConvertHexSNtoAriSN((base_station).FP_ARI, (base_station).SerialNumber);
 
-		if ((base_station).DualBase == 0)
-			PrintStatus(0, "Production - single base");
-		else if ((base_station).DualBase == DUAL_BASE_MASTER)
-			PrintStatus(0, "Production - dual base - Master");
-		else if ((base_station).DualBase == DUAL_BASE_SLAVE)
+		if (!(base_station).DualBase)
 		{
-			PrintStatus(0, "Production - dual base - Slave");
-
-			P3_DIR_REG &= ~(Px_4_DIR);							// set P3[4] as output driven LO
-			P3_DIR_REG |= (0x0300);
-			SET_P34_INACTIVE;
-
-			P2_DIR_REG &= ~(Px_0_DIR);							// set P2[0] as input, no pull resistor
+			PrintStatus(0, "Production - single base");
+			(base_station).MenuConfig = 0;					// single menu ONLY
+			DSP_PCM_CTRL_REG &= ~PCM_EN;					// disable PCM bus since it is not needed
+		}
+		else if ((base_station).DualBase == DUAL_BASE_MENU_A)
+		{
+			PrintStatus(0, "Production - dual base - menu A");
+			if ((base_station).MenuConfig == 0)
+				(base_station).MenuConfig = 1;				// single Menu EXP
+		}
+		else if ((base_station).DualBase == DUAL_BASE_MENU_B)
+		{
+			PrintStatus(0, "Production - dual base - menu B");
+			if ((base_station).MenuConfig == 0)
+				(base_station).MenuConfig = 1;				// single Menu EXP
 		}
 		else
-			PrintStatus(0, "Warning - DualBase variable invalid !!!!");
+		{
+			PrintStatus(0, "Warning - DualBase variable invalid !!!!  changing to single base");
+			(base_station).DualBase = 0;					// assume it should be single base
+			(base_station).MenuConfig = 0;					// single menu ONLY
+			DSP_PCM_CTRL_REG &= ~PCM_EN;					// disable PCM bus since it is not needed
+		}
 
 		UByte code[4];
 		for (i = 0; i < 4; i++)
@@ -1161,16 +1257,14 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 		 */
 		if (memcmp(&code, &(base_station).GrtrMsgrAuthCode, 4) != 0)
 		{
-//			PrintStatus(0, "*** Greeter NOT authorized *** ");
 			(base_station).GreeterInstalled = FALSE;
 			(base_station).GreeterActive = FALSE;
 		}
 		else
 		{
-//			PrintStatus(0, "*** Greeter authorized *** ");
 			(base_station).GreeterInstalled = TRUE;
-			CheckForActiveGreet();								// check if a greet is active
-			CheckForActiveMessage();							// check if reminders or the alarm messages are active
+			CheckForActiveGreet();							// check if a greet is active
+			CheckForActiveMessage();						// check if reminders or the alarm messages are active
 		}
 
 		if (memcmp(&(base_station).NightVolumeTimeStart, &(base_station).NightVolumeTimeEnd, 4) != 0)
@@ -1185,12 +1279,12 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 		// adjust analog grill speaker circuit
 		// using P0[4] VOL_CS
 		// using P0[6] UPDOWN_GRILL
-		if ((base_station).GrillSpeakerVolume > 0)
+		if ((base_station).GrillSpeakerVolume)
 		{
 			// increment MAX5407 (tap 31 "up" towards tap 0 direction) to decrease attenuation (increase volume)
-			UPDOWN_GRILL_UP;							// set up for increment mode
+			UPDOWN_GRILL_UP;								// set up for increment mode
 			usec_pause(1);
-			VOL_CS_HI;									// lock in increment mode
+			VOL_CS_HI;										// lock in increment mode
 			for (i = 0; i < (base_station).GrillSpeakerVolume; i++)
 			{
 				UPDOWN_GRILL_LO;
@@ -1198,7 +1292,7 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 				usec_pause(1);
 				UPDOWN_GRILL_LO;
 			}
-			VOL_CS_LO;									// freeze tap
+			VOL_CS_LO;										// freeze tap
 		}
 
 		// adjust p_gain_spkr_fp POST gain
@@ -1207,6 +1301,7 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 
 		if ((base_station).AlangoProfile1)
 		{
+			// profile 1 / MA10
 			if ((base_station).InboundVol > INBOUND_P1)
 				AFESetGainPP2PPMixer(INBOUND_P1);
 			if ((base_station).CurrentOutboundVolume > OUTBOUND_P1)
@@ -1221,29 +1316,42 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 			ALANGO_PROFILE_1;
 		}
 		else
+		{
+			// profile 0 / MA11
+			if ((base_station).InboundVol > INBOUND_P0)
+				AFESetGainPP2PPMixer(INBOUND_P0);
+			if ((base_station).CurrentOutboundVolume > OUTBOUND_P0)
+			{
+				AFESetGainSpkrVolumeFP(OUTBOUND_P0);
+				(base_station).CurrentOutboundVolume = OUTBOUND_P0;
+			}
+			if ((base_station).PostSpeakerVolumeDay > OUTBOUND_P0)
+				(base_station).PostSpeakerVolumeDay = OUTBOUND_P0;
+			if ((base_station).PostSpeakerVolumeNight > OUTBOUND_P0)
+				(base_station).PostSpeakerVolumeNight = OUTBOUND_P0;
 			ALANGO_PROFILE_0;
+		}
 
 		// check for presence of RTC on Base (then check on Greeter if necessary)
+
 		SetupAccess1Bus();
-		BASE_RTC_ON;							// look for RTC on base board first
-		i = (ReadAccess1(RTC, 0x03) & 0x07);	// use day of week for a test
+		BASE_RTC_ON;										// look for RTC on base board first
+		i = (ReadAccess1(RTC, 0x03) & 0x07);				// use day of week for a test
 		WriteAccess1(RTC, 0x03, (8 - i));
 		if ((ReadAccess1(RTC, 0x03) & 0x07) == (8 - i))
 		{
-//			PrintStatus(0, ">>>>  RTC present on Base  <<<<<<< ");
 			(base_station).BaseRTC = TRUE;
-			WriteAccess1(RTC, 0x03, i);			// restore previous day of week
+			WriteAccess1(RTC, 0x03, i);						// restore previous day of week
 			if ((base_station).PowerOnCount < 2)
 			{
-//				PrintStatus(0, "       initializing RTC on Base");
-				// initialize the RTC to January 1, 2013 and clear the control/status registers
-				WriteAccess1(RTC, 0x00, 0x00);	// seconds
-				WriteAccess1(RTC, 0x04, 0x01);	// day of month
-				WriteAccess1(RTC, 0x05, 0x01);	// month
-				WriteAccess1(RTC, 0x06, 0x13);	// year
-				WriteAccess1(RTC, 0x0E, 0x00);	// CONTROL
-				WriteAccess1(RTC, 0x0F, 0x00);	// STATUS
-				WriteAccess1(RTC, 0x10, 0x00);	// TRICKLE CHARGER
+				// initialize the RTC to January 1, 2014 and clear the control/status registers
+				WriteAccess1(RTC, 0x00, 0x00);				// seconds
+				WriteAccess1(RTC, 0x04, 0x01);				// day of month
+				WriteAccess1(RTC, 0x05, 0x01);				// month
+				WriteAccess1(RTC, 0x06, 0x0E);				// year
+				WriteAccess1(RTC, 0x0E, 0x00);				// CONTROL
+				WriteAccess1(RTC, 0x0F, 0x00);				// STATUS
+				WriteAccess1(RTC, 0x10, 0x00);				// TRICKLE CHARGER
 			}
 			// set current time from RTC
 			(base_station).DisplayTime.timeMinMSB = ReadAccess1(RTC, 0x01);
@@ -1252,35 +1360,32 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 			(base_station).DisplayTime.timeHourMSB = ReadAccess1(RTC, 0x02);
 			(base_station).DisplayTime.timeHourLSB = ((base_station).DisplayTime.timeHourMSB & 0x0F);
 			(base_station).DisplayTime.timeHourMSB = ((base_station).DisplayTime.timeHourMSB & 0xF0) >> 4;
-			(base_station).CurrentDay = i - 1;	// base is 0-6:Mon-Sun; RTC is 1-7:Mon-Sun
-			BASE_PCM_ON;						// enable PCM pass through again
+			(base_station).CurrentDay = i - 1;				// base is 0-6:Mon-Sun; RTC is 1-7:Mon-Sun
+			BASE_PCM_ON;									// enable PCM pass through again
 		}
 		else
 		{
-//			PrintStatus(0, ">>>>  RTC not present on Base  <<<<<<< ");
 			BASE_PCM_ON;
 			if ((base_station).GreeterInstalled)
 			{
 				// look for RTC on greeter next
-				(base_station).GreetRTC = TRUE;			// assume RTC is present
-				RunGreetClock(MESSAGE_INIT, 2);			// switch Greeter mux to RTC if present
-				i = (ReadAccess1(RTC, 0x03) & 0x07);	// use day of week for a test
+				(base_station).GreetRTC = TRUE;				// assume RTC is present
+				RunGreetClock(MESSAGE_INIT, 2);				// switch Greeter mux to RTC if present
+				i = (ReadAccess1(RTC, 0x03) & 0x07);		// use day of week for a test
 				WriteAccess1(RTC, 0x03, (8 - i));
 				if ((ReadAccess1(RTC, 0x03) & 0x07) == (8 - i))
 				{
-//					PrintStatus(0, ">>>>  RTC present on Greeter  <<<<<<< ");
-					WriteAccess1(RTC, 0x03, i);			// restore previous day of week
+					WriteAccess1(RTC, 0x03, i);				// restore previous day of week
 					if ((base_station).PowerOnCount < 2)
 					{
-//						PrintStatus(0, "       initializing RTC on Greeter ");
-						// initialize the RTC to January 1, 2013 and clear the control/status registers
-						WriteAccess1(RTC, 0x00, 0x00);	// seconds
-						WriteAccess1(RTC, 0x04, 0x01);	// day of month
-						WriteAccess1(RTC, 0x05, 0x01);	// month
-						WriteAccess1(RTC, 0x06, 0x13);	// year
-						WriteAccess1(RTC, 0x0E, 0x00);	// CONTROL
-						WriteAccess1(RTC, 0x0F, 0x00);	// STATUS
-						WriteAccess1(RTC, 0x10, 0x00);	// TRICKLE CHARGER
+						// initialize the RTC to January 1, 2014 and clear the control/status registers
+						WriteAccess1(RTC, 0x00, 0x00);		// seconds
+						WriteAccess1(RTC, 0x04, 0x01);		// day of month
+						WriteAccess1(RTC, 0x05, 0x01);		// month
+						WriteAccess1(RTC, 0x06, 0x0E);		// year
+						WriteAccess1(RTC, 0x0E, 0x00);		// CONTROL
+						WriteAccess1(RTC, 0x0F, 0x00);		// STATUS
+						WriteAccess1(RTC, 0x10, 0x00);		// TRICKLE CHARGER
 					}
 					// set current time from RTC
 					(base_station).DisplayTime.timeMinMSB = ReadAccess1(RTC, 0x01);
@@ -1289,29 +1394,53 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 					(base_station).DisplayTime.timeHourMSB = ReadAccess1(RTC, 0x02);
 					(base_station).DisplayTime.timeHourLSB = ((base_station).DisplayTime.timeHourMSB & 0x0F);
 					(base_station).DisplayTime.timeHourMSB = ((base_station).DisplayTime.timeHourMSB & 0xF0) >> 4;
-					(base_station).CurrentDay = i - 1;	// base is 0-6:Mon-Sun; RTC is 1-7:Mon-Sun
-					RunGreetClock(MESSAGE_INIT, 1);		// switch Greeter mux back to PCM pass through if present
+					(base_station).CurrentDay = i - 1;		// base is 0-6:Mon-Sun; RTC is 1-7:Mon-Sun
+					RunGreetClock(MESSAGE_INIT, 1);			// switch Greeter mux back to PCM pass through if present
 				}
 				else
 				{
-//					PrintStatus(0, ">>>>  RTC not present on Greeter  <<<<<<< ");
-					RunGreetClock(MESSAGE_INIT, 1);		// switch Greeter mux back to PCM pass through if present
-					(base_station).GreetRTC = FALSE;	// Greet RTC is not present
+					RunGreetClock(MESSAGE_INIT, 1);			// switch Greeter mux back to PCM pass through if present
+					(base_station).GreetRTC = FALSE;		// Greet RTC is not present
 				}
 			}
 		}
 
-		P1_SET_DATA_REG = Px_3_SET;						// drive BC5 RESETN high to bring BC5 up
+		P1_SET_DATA_REG = Px_3_SET;							// drive BC5 RESETN high to bring BC5 up
 		PrintStatus(0, "*** BC5 RESETN is HI ");
 
-		SetupPCMBus();
+		SetupPCMBus();										// make sure PCM bus is set up in case ACCESSBUS was used for RTC
 
-		general_startTimer(-1, SETUP_DISPLAY, NULL, 0, 50);    // wait for 500ms
+		if (base_station.DualBase)
+			ConnectPCM();
+
+		if (!FIRST_BASE)
+			general_startTimer(-1, SETUP_SECOND_BASE, NULL, 0, 10);
+		else
+			general_startTimer(-1, SETUP_DISPLAY, NULL, 0, 50); // wait for 500ms
+	}
+	else if (ppid == 3)										// result of US vs EU setting
+	{
+		if (data[0] == 0x00)
+			(base_station).IsUS = FALSE;
+	}
+	else if (ppid == 4)										// to restore original greeter settings for this base
+	{
+		a = 0;
+		for (i = 0; i < NUM_OF_MESSAGES; i++)
+		{
+			(base_station).Message[i].MessageEnableName = data[a++];
+			for (ii = 0; ii < 4; ii++)
+			{
+				(base_station).Message[i].StartTime[ii] = data[a++];
+				(base_station).Message[i].StopTime[ii] = data[a++];
+			}
+		}
+		(base_station).GreeterActive = data[a++];
 	}
 }
 
 void fp_system_init()
 {
   PrintStatus(0, "eeprom read req");
-  general_startTimer(-1, READ_EEPROM, NULL, 0, 150);	// Request eeprom info in 1500ms, to avoid the answer is received in a task which is not ready
+  general_startTimer(-1, READ_EEPROM, NULL, 0, 150);		// Request eeprom info in 1500ms, to avoid the answer is received in a task which is not ready
 }

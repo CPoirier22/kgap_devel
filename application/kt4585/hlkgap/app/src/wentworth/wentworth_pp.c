@@ -53,10 +53,6 @@ typedef struct
 
 WENTWORTHEEpromStruct WENTWORTHeepromData;
 
-UByte CBTIMERSEQTASK1;
-UByte CBTIMERSEQTASK1TIMER;
-UByte PBTIMERSEQTASK1;
-UByte PBTIMERSEQTASK1TIMER;
 UByte OTTIMERSEQTASK1;
 UByte OTTIMERSEQTASK1TIMER;
 UByte DIAGTIMERSEQTASK1;
@@ -124,9 +120,7 @@ void spi_write_bytes(UByte *data, UByte data_length)
 	}
 
 	SPI_EN_HI;
-
-	// TODO: CRP - convert usec_pause to use timer
-	usec_pause(10000);											// pause to reset slave for next SPI command
+	usec_pause(10000);											// pause to reset SPI slave for next SPI command
 
 	return;
 }
@@ -151,6 +145,10 @@ void check_touch_board(void)
 			ptr = StringPrint(ptr, " invalid DeviceID - unless older \"cut trace\" headset, check touch board connection !!! ");
 			PrintStatus(0, StatusString);
 			headset.TouchBoardStatus = 2;
+			TurnOffYellowLED;
+		    TurnOnRedLED;										// LO = Red LED on
+		    headset.TouchBoardFail = 1;
+		    headset.TouchBoardCode = 1;							// Device ID fail
 		    OSStartTimer(PPTOUCHTIMERSEQTASK1TIMER, 10);
 			return;
 		}
@@ -222,6 +220,8 @@ void check_touch_board(void)
 				PrintStatus(0, StatusString);
 				TurnOffYellowLED;
 			    TurnOnRedLED;									// LO = Red LED on
+			    headset.TouchBoardFail = 1;
+			    headset.TouchBoardCode = 2;						// RAM fail
 				return;
 			}
 		}
@@ -231,6 +231,8 @@ void check_touch_board(void)
 			PrintStatus(0, StatusString);
 			TurnOffYellowLED;
 		    TurnOnRedLED;										// LO = Red LED on
+		    headset.TouchBoardFail = 1;
+		    headset.TouchBoardCode = 2;							// RAM fail
 			return;
 		}
 	}
@@ -262,28 +264,26 @@ void finish_programming_touch_board(void)
 				ptr = StringPrint(ptr, " EEPROM programming SUCCESSFUL @375kHz ");
 		}
 		else
+		{
 			ptr = StringPrint(ptr, " RAM programming successful, but EEPROM programming not successful @375kHz ");
+		    headset.TouchBoardCode = 3;							// RAM ok, EEPROM fail
+		}
 	}
 	PrintStatus(0, StatusString);
     headset.TouchBoardStatus = 2;
     OSStartTimer(PPTOUCHTIMERSEQTASK1TIMER, 10);
 }
 
-UByte loop = 1;
 void check_touch_pins(void)
 {
-  if (loop++ == 3)
-	  loop = 1;
-
   // headset not in a call yet, and not in test mode, so ignore button presses
-  if (((headset.SystemMode == UNREGISTERED) || (headset.SystemMode == NOT_LOCKED)) && !headset.ProductionTest) return;
+  if (((headset.SystemMode == UNREGISTERED) || (headset.SystemMode == NOT_LOCKED)) && !headset.IsInTestMode) return;
 
   UByte key_pressed = 0x00;
   UByte changed_keys = 0x00;
 
   // pressed keys: HIGH in P1_DATA_REG; HIGH in key_pressed
   key_pressed = (P1_DATA_REG & 0x003F) & (PAGE_BUTTON | VOL4_BUTTON | VOL3_BUTTON | VOL2_BUTTON | CALL_BUTTON);		// ignore V1
-//  key_pressed = (P1_DATA_REG & 0x003F) & (PAGE_BUTTON | VOL4_BUTTON | VOL3_BUTTON | VOL2_BUTTON | VOL1_BUTTON | CALL_BUTTON);
 
   // save previous states
   headset.PreviousHeadsetButtonStates = headset.CurrentHeadsetButtonStates;
@@ -299,139 +299,96 @@ void check_touch_pins(void)
 
   if (WENTWORTHTASK!=0xFF) // (-1) Important if we by chance forget to start this task, then the application will hang
   {
-	  if (changed_keys & CALL_BUTTON)
-	  {
-		  CheckCallControlPP(key_pressed);
-		  // ignore PAGE_BUTTON change until next pass
-		  if (changed_keys & PAGE_BUTTON)
-			  headset.CurrentHeadsetButtonStates = (headset.CurrentHeadsetButtonStates & ~PAGE_BUTTON) | (headset.PreviousHeadsetButtonStates & PAGE_BUTTON);
-	  }
-	  else if (changed_keys & PAGE_BUTTON)
-	  {
-		  // ignore PAGE_BUTTON until every 3rd pass
-		  if (loop == 3)
-			  CheckPageControlPP(key_pressed);
-		  else
-			  headset.CurrentHeadsetButtonStates = (headset.CurrentHeadsetButtonStates & ~PAGE_BUTTON) | (headset.PreviousHeadsetButtonStates & PAGE_BUTTON);
-	  }
-	  if ((changed_keys & VOL1_BUTTON) || (changed_keys & VOL2_BUTTON) || (changed_keys & VOL3_BUTTON) || (changed_keys & VOL4_BUTTON))
-	  {
-		  CheckVolumeControlPP(key_pressed);
-	  }
+	if (changed_keys & CALL_BUTTON)
+	  CheckCallControlPP(key_pressed);
+	if (changed_keys & PAGE_BUTTON)
+	  CheckPageControlPP(key_pressed);
+	if ((changed_keys & VOL1_BUTTON) || (changed_keys & VOL2_BUTTON) || (changed_keys & VOL3_BUTTON) || (changed_keys & VOL4_BUTTON))
+	  CheckVolumeControlPP(key_pressed);
   }
 }
 
 static void wentworth_pptask(MailType * MailPtr)
 {
-  HMMailType *msg_ptr=(HMMailType *)MailPtr; // HM reuse a MailType - we just need to get the first couple of bytes after the primitive
-  switch (MailPtr->Primitive)
-  {
-    case INITTASK:
-		break;
-    case HM_Filler_D2:
-    	// Data[0]: 1 = Playback_finished (from void PlaybackInt(WORD intvec))
-    	if (msg_ptr->Data[0]==1)
-    		PlayFinished();
-    	break;
-	case TIMEOUT:
-		// manage LED blinking and Alert tone for vehicle detect
-		if (headset.CarWaiting && (headset.TakingOrder == FALSE) && (headset.Pager == FALSE))
-		{
-		  // if vehicle detect tone is currently playing
-		  if (headset.VehicleAlert1 || headset.VehicleAlert2)
-		  {
-			  // check if 3 500ms periods has passed
-			  if (headset.AlertCount > 2)
-			  {
-				  PlaySoundPP(sound_vehicle_detect_100ms);
-				  headset.AlertCount = 1;
-			  }
-			  else
-			  {
-				  headset.AlertCount++;
-			  }
-		  }
+	HMMailType *msg_ptr=(HMMailType *)MailPtr; // HM reuse a MailType - we just need to get the first couple of bytes after the primitive
+	switch (MailPtr->Primitive)
+	{
+		case INITTASK:
+			break;
+		case HM_Filler_D2:
+			// Data[0]: 1 = Playback_finished (from void PlaybackInt(WORD intvec))
+			if (msg_ptr->Data[0]==1)
+				PlayFinished();
+			break;
+		case TIMEOUT:
+			// manage LED blinking and Alert tone for vehicle detect
+			if (headset.CarAtOrderPost && (headset.TakingOrder == FALSE) && (headset.Pager == FALSE))
+			{
+				// check if nine 170ms periods has passed
+				if (headset.AlertCount > 8)
+				{
+					if (headset.VehicleAlert && !headset.MenuA)
+						PlaySoundPP(sound_double_beep);
+					else if (headset.VehicleAlert)
+						PlaySoundPP(sound_vehicle_detect_100ms);
+					headset.AlertCount = 1;
+				}
+				else
+				{
+					headset.AlertCount++;
+				}
 
-		  // if LEDs are blinking due to vehicle detect
-		  if (headset.YellowLEDisBlinking)
-		  {
-			  if (headset.YellowLEDisOn)
-			  {
-				  TurnOffYellowLED;
-				  headset.YellowLEDisOn= FALSE;
-			  }
-			  else
-			  {
-				  TurnOnYellowLED;
-				  headset.YellowLEDisOn = TRUE;
-			  }
-		  }
-		  else if (headset.RedLEDisBlinking)
-		  {
-			  if (headset.RedLEDisOn)
-			  {
-				  TurnOffRedLED;
-				  headset.RedLEDisOn = FALSE;
-			  }
-			  else
-			  {
-				  TurnOnRedLED;
-				  headset.RedLEDisOn = TRUE;
-			  }
-		  }
-		  else if (headset.GreenLEDisBlinking)
-		  {
-			  if (headset.GreenLEDisOn)
-			  {
-				  TurnOffGreenLED;
-				  headset.GreenLEDisOn = FALSE;
-			  }
-			  else
-			  {
-				  TurnOnGreenLED;
-				  headset.GreenLEDisOn = TRUE;
-			  }
-		  }
-		  OSStartTimer(WENTWORTHTASKTIMER, 50);					// 50 x 10ms = 0.5s before toggling
-		}
-		else if ((headset.TakingOrder == FALSE) && (headset.Pager == FALSE))
-		{
-		  TurnOffYellowLED;
-		  headset.AlertCount = 0;
-		  headset.VehicleAlert1 = FALSE;
-		  headset.VehicleAlert2 = FALSE;
-		  headset.RedLEDisBlinking = FALSE;
-		  headset.RedLEDisOn = FALSE;
-		}
-		break;
-  }
-}
-
-// timer to be used for Call Button
-static void cbtimerseqtask1(MailType * MailPtr)
-{
-  switch (MailPtr->Primitive)
-  {
-    case INITTASK:
-      break;
-    case TIMEOUT:
-      headset.CBtimer = FALSE;					// indicate timer is not running
-      break;
-  }
-}
-
-// timer to be used for Page Button
-static void pbtimerseqtask1(MailType * MailPtr)
-{
-  switch (MailPtr->Primitive)
-  {
-    case INITTASK:
-      break;
-    case TIMEOUT:
-	  // send mail to run CheckPageControlPP()
-      headset.PBtimer = FALSE;					// indicate timer is not running
-      break;
-  }
+				// if LEDs are blinking due to vehicle detect
+				if (headset.RedLEDisBlinking)
+				{
+					if (headset.AlertCount > 3)
+					{
+						TurnOffYellowLED;
+						headset.RedLEDisOn = FALSE;
+						headset.YellowLEDisOn = FALSE;
+						headset.GreenLEDisOn = FALSE;
+					}
+					else
+					{
+						TurnOnRedLED;
+						headset.RedLEDisOn = TRUE;
+						headset.YellowLEDisOn = FALSE;
+						headset.GreenLEDisOn = FALSE;
+					}
+				}
+				else if (headset.GreenLEDisBlinking)
+				{
+					if ((headset.AlertCount == 2) || (headset.AlertCount > 3))
+					{
+						TurnOffYellowLED;
+						headset.RedLEDisOn = FALSE;
+						headset.YellowLEDisOn = FALSE;
+						headset.GreenLEDisOn = FALSE;
+					}
+					else
+					{
+						TurnOnGreenLED;
+						headset.RedLEDisOn = FALSE;
+						headset.YellowLEDisOn = FALSE;
+						headset.GreenLEDisOn = TRUE;
+					}
+				}
+				OSStartTimer(WENTWORTHTASKTIMER, 17);					// 17 x 10ms = 170ms pause
+			}
+			else if ((headset.TakingOrder == FALSE) && (headset.Pager == FALSE))
+			{
+				TurnOffYellowLED;
+				headset.AlertCount = 0;
+				headset.VehicleAlert = FALSE;
+				headset.RedLEDisBlinking = FALSE;
+				headset.YellowLEDisBlinking = FALSE;
+				headset.GreenLEDisBlinking = FALSE;
+				headset.RedLEDisOn = FALSE;
+				headset.YellowLEDisOn = FALSE;
+				headset.GreenLEDisOn = FALSE;
+			}
+			break;
+	}
 }
 
 // timer to be used for re-assigning Order Taker in Auto Hands Free mode
@@ -442,24 +399,45 @@ static void ottimerseqtask1(MailType * MailPtr)
     case INITTASK:
       break;
     case TIMEOUT:
-      headset.OTtimer = FALSE;					// indicate timer is not running
-      // pressed keys: HIGH in P1_DATA_REG; HIGH in key_pressed
+      // using this timer for single OT mode since there is no AHF mode at the same time
+      if (headset.SingleOT & (headset.OtherLaneWaiting > 0))
+      {
+  		if (headset.MenuA & !headset.TakingOrder)
+  		  PlaySoundPP(sound_double_beep);			// play notification for lane B
+  		else if (!headset.MenuA & !headset.TakingOrder)
+  		  PlaySoundPP(sound_vehicle_detect_100ms);	// play notification for lane A
+  		OSStartTimer(OTTIMERSEQTASK1TIMER, 400);	// check again in 4s
+  		break;
+      }
+      headset.OTtimer = FALSE;						// indicate timer is not running
+      // pressed keys: HIGH in P1_DATA_REG
       if (((P1_DATA_REG & 0x003F) & (PAGE_BUTTON | CALL_BUTTON)) == (PAGE_BUTTON | CALL_BUTTON))
       {
-  		// PB released == pager off
-  		SendPageCmd(0);
-  		PrintStatus(0, "Page - off");
-  		headset.Pager = FALSE;
-  		// now make sure CB is on
-		AFEEnableMicPathPP();
-		SendMicMuteCmd(2);						// tell base we've turned on our MIC, request to be new OT
-		headset.OrderTaker = TRUE;
-		headset.TakingOrder = TRUE;
-		headset.RedLEDisOn = TRUE;
-		headset.VehicleAlert1 = FALSE;
-		PlaySoundPP(sound_AHFmode);
-		TurnOnRedLED;							// LO = Red LED on
-		headset.LastButtonPressed = CALL_BUTTON;
+        if (!headset.IsInTestMode)
+        {
+      	  // PB released == pager off
+      	  SendPageCmd(0);
+      	  PrintStatus(0, "Page - off");
+      	  headset.Pager = FALSE;
+      	  // now make sure CB is on
+      	  AFEEnableMicPathPP();
+      	  SendMicMuteCmd(2);						// tell base we've turned on our MIC, request to be new OT
+      	  headset.OrderTaker = TRUE;
+      	  headset.TakingOrder = TRUE;
+      	  headset.RedLEDisOn = TRUE;
+      	  headset.VehicleAlert = FALSE;
+      	  PlaySoundPP(sound_AHFmode);
+      	  TurnOnRedLED;								// LO = Red LED on
+      	  headset.LastButtonPressed = CALL_BUTTON;
+        }
+        else
+        {
+          // reset test bit in EEPROM to restore production mode
+          UByte test[1];
+          test[0] = 0xFF;
+          general_eeprom_write_req(EE_FIRST_ACTION, test, 1, 0);
+    	  PlaySoundPP(sound_z_headset_on);
+        }
       }
       break;
   }
@@ -473,13 +451,11 @@ static void diagtimerseqtask1(MailType * MailPtr)
     case INITTASK:
       break;
     case TIMEOUT:
-      TurnOffRedLED;
-      TurnOffGreenLED;
+      TurnOffYellowLED;
       if (headset.PowerOnStatus == 0)
       {
     	PrintStatus(0, "YELLOW");
-    	TurnOnRedLED;
-    	TurnOnGreenLED;
+    	TurnOnYellowLED;
     	OSStartTimer(DIAGTIMERSEQTASK1TIMER, 75);
     	headset.PowerOnStatus++;
       }
@@ -577,6 +553,9 @@ static void pptimerseqtask1(MailType * MailPtr)
 	    	  P2_RESET_DATA_REG = Px_7_RESET;					// set DECT P2[7] to be driven LO (BC5 RESETN) to reset BC5 again
 //			  TurnOff();
 	    	  TurnOffYellowLED;
+			  headset.RedLEDisOn = FALSE;
+			  headset.YellowLEDisOn = FALSE;
+			  headset.GreenLEDisOn = FALSE;
 	    	  TurnOnRedLED;
 	    	  headset.RedLEDisOn = TRUE;
 	    	  StopTimer(PPTOUCHTIMERSEQTASK1TIMER);
@@ -615,16 +594,30 @@ static void pptouchtimerseqtask1(MailType * MailPtr)
     case TIMEOUT:
       if (headset.TouchBoardStatus == 3)
       {
-       	  check_touch_pins();
-		  OSStartTimer(PPTOUCHTIMERSEQTASK1TIMER, 10); 			// 10 x 10ms = 100ms
+    	check_touch_pins();
+    	OSStartTimer(PPTOUCHTIMERSEQTASK1TIMER, 10); 			// 10 x 10ms = 100ms
       }
       else if (headset.TouchBoardStatus == 2)
       {
-      	  headset.TouchBoardStatus = 3;
-		  OSStartTimer(PPTOUCHTIMERSEQTASK1TIMER, 10); 			// 10 x 10ms = 100ms
+      	headset.TouchBoardStatus = 3;
+      	OSStartTimer(PPTOUCHTIMERSEQTASK1TIMER, 10); 			// 10 x 10ms = 100ms
+      	if (headset.TouchBoardFail)
+		  general_startTimer(0, TOGGLE_TB_FAIL_LED, NULL, 0, 100);
+		switch (headset.TouchBoardCode)
+		{
+		  case 1:
+			PrintStatus(0, "    TOUCHBOARD FAIL: CAN'T READ DEVICE ID               ");
+			break;
+		  case 2:
+			PrintStatus(0, "    TOUCHBOARD FAIL: CAN'T PROGRAM RAM                  ");
+			break;
+		  case 3:
+			PrintStatus(0, "    TOUCHBOARD WARNING: CAN'T PROGRAM EEPROM (RAM OK)   ");
+			break;
+		}
       }
       else
-    	  finish_programming_touch_board();
+    	finish_programming_touch_board();
       break;
   }
 }
@@ -633,18 +626,6 @@ void initializeWentworth_ppTask(void)
 {
 	WENTWORTHTASK = OSRegisterTask(wentworth_pptask, "wentworth_pptask", REALPPTASK);
 	WENTWORTHTASKTIMER = OSRegisterTimer(WENTWORTHTASK);
-}
-
-void initializeCBTimerTask(void)
-{
-	CBTIMERSEQTASK1 = OSRegisterTask(cbtimerseqtask1, "cbtimerseqtask1", REALPPTASK);
-	CBTIMERSEQTASK1TIMER = OSRegisterTimer(CBTIMERSEQTASK1);
-}
-
-void initializePBTimerTask(void)
-{
-	PBTIMERSEQTASK1 = OSRegisterTask(pbtimerseqtask1, "pbtimerseqtask1", REALPPTASK);
-	PBTIMERSEQTASK1TIMER = OSRegisterTimer(PBTIMERSEQTASK1);
 }
 
 void initializeOTTimerTask(void)
@@ -718,8 +699,7 @@ void ConfigLEDPins(void)
 	PAD_CTRL_REG |= P21_OD;						// P2[1] is OD
 
 	// set P2[1,0] as driven HI (LEDs initially are off)
-	TurnOffRedLED;								// turn off Red LED
-	TurnOffGreenLED;							// turn off Green LED
+	TurnOffYellowLED;							// turn off Red and Green LEDs
 }
 
 void ConfigBC5Pins(void)
@@ -791,23 +771,23 @@ void StartPCM()
 {
     PrintStatus(0, "*** Starting PCM for PP ");
 
-    P2_DIR_REG |=  Px_5_DIR;						// enable PCM_FSC as an output
-    P2_DIR_REG |=  Px_4_DIR;						// enable PCM_DO as an output
-    P2_DIR_REG &= ~Px_3_DIR;						// enable PCM_DI as an input w/no pull resistor
-    P2_DIR_REG |=  Px_2_DIR;						// enable PCM_CLK as an output
+    P2_DIR_REG |=  Px_5_DIR;					// enable PCM_FSC as an output
+    P2_DIR_REG |=  Px_4_DIR;					// enable PCM_DO as an output
+    P2_DIR_REG &= ~Px_3_DIR;					// enable PCM_DI as an input w/no pull resistor
+    P2_DIR_REG |=  Px_2_DIR;					// enable PCM_CLK as an output
 
     P2_MODE_REG &= ~(P2_5_MODE | P2_4_MODE | P2_3_MODE | P2_2_MODE);	// clear all the bits in question first
-    P2_MODE_REG |= (P2_5_MODE & 0x0400);			// enable PCM_FSC
-    P2_MODE_REG |= (P2_4_MODE & 0x0100);			// enable PCM_DO
-    P2_MODE_REG |= (P2_3_MODE & 0x0040);			// enable PCM_DI
-    P2_MODE_REG |= (P2_2_MODE & 0x0010);			// enable PCM_CLK
+    P2_MODE_REG |= (P2_5_MODE & 0x0400);		// enable PCM_FSC
+    P2_MODE_REG |= (P2_4_MODE & 0x0100);		// enable PCM_DO
+    P2_MODE_REG |= (P2_3_MODE & 0x0040);		// enable PCM_DI
+    P2_MODE_REG |= (P2_2_MODE & 0x0010);		// enable PCM_CLK
 
-	DSP_PCM_CTRL_REG &= ~PCM_FSC0LEN;				// clear PCM_FSC0LEN bits first
-	DSP_PCM_CTRL_REG |= (PCM_EN | PCM_MASTER);		// set PCM_EN, PCM_MASTER (PCM_FSC0LEN is 1-bit)
+	DSP_PCM_CTRL_REG &= ~PCM_FSC0LEN;			// clear PCM_FSC0LEN bits first
+	DSP_PCM_CTRL_REG |= (PCM_EN | PCM_MASTER);	// set PCM_EN, PCM_MASTER (PCM_FSC0LEN is 1-bit)
 
-	DSP_MAIN_SYNC1_REG = 0;							// clear the entire register: everything at 8kHz
+	DSP_MAIN_SYNC1_REG = 0;						// clear the entire register: everything at 8kHz
 
-	CLK_CODEC_REG |= 0x4000;						// set CLK_PCM_EN
+	CLK_CODEC_REG |= 0x4000;					// set CLK_PCM_EN
 }
 
 void InitHeadsetVariables(void)
@@ -816,8 +796,8 @@ void InitHeadsetVariables(void)
 	P1_MODE_REG &= ~(0x0019);
 
 	// set P1[5:0] as inputs
-	P1_DIR_REG &= ~(0x0FFF);				// input, no pull resistor
-	P1_DIR_REG |= (0x0AAA);					// input, with pull-down resistor
+	P1_DIR_REG &= ~(0x0FFF);					// input, no pull resistor
+	P1_DIR_REG |= (0x0AAA);						// input, with pull-down resistor
 
 	// initialize the headset status
 	headset.DoublePressWindow = 50;				// 50 x 10ms = 0.5 of a second
@@ -829,10 +809,9 @@ void InitHeadsetVariables(void)
 	headset.OrderTaker = FALSE;
 	headset.TakingOrder = FALSE;
 	headset.Pager = FALSE;
-	headset.SwitchOT = FALSE;
-	headset.VehicleAlert1 = FALSE;
-	headset.VehicleAlert2 = FALSE;
-	headset.CarWaiting = FALSE;
+	headset.VehicleAlert = FALSE;
+	headset.CarAtOrderPost = FALSE;
+	headset.OtherLaneWaiting = 0;
 	headset.AlertCount = 0;
 	headset.BatteryLowCounter = 0;
 	headset.GainVolume = 1;						// dB; pre-TX GAIN block
@@ -849,13 +828,15 @@ void InitHeadsetVariables(void)
 	headset.YellowLEDisOn = FALSE;
 	headset.YellowLEDisBlinking = FALSE;
 	headset.CurrentLEDState = 0;
-	headset.CBtimer = FALSE;
-	headset.PBtimer = FALSE;
 	headset.OTtimer = FALSE;
-	headset.DualLane = FALSE;
+	headset.DualMenu = FALSE;
+	headset.MenuA = TRUE;
+	headset.SingleOT = FALSE;
 	headset.SystemMode = UNREGISTERED;
 	headset.TouchBoardStatus = 0;
-	headset.ProductionTest = FALSE;
+	headset.TouchBoardFail = 0;
+	headset.TouchBoardCode = 0;
+	headset.IsInTestMode = FALSE;
 #ifdef ENABLE_CHANNEL_MESSAGES
 	headset.ChannelInfo = 0;
 	headset.LEDCount = 0;
@@ -865,14 +846,11 @@ void InitHeadsetVariables(void)
 void InitWentworth_pp(void)
 {
   initializeWentworth_ppTask();				// task which handles all the headset button presses and LED blinking
-  initializeCBTimerTask();					// timer task used by Call Button
-  initializePBTimerTask();					// timer task used by Page Button
   initializeOTTimerTask();					// timer task used by Page Button for OT assignment in AHF
   initializeDiagTimerTask();				// timer task used by Diagnostic mode
   initializeBC5TimerTask();					// timer task used by BC5
   initializePPTimerTask();					// timer task used to monitor battery voltage
   initializePPTouchTimerTask();				// timer task used to monitor touch board inputs
-//  initializePPAudioInTask();				// timer task used to monitor audio in
 
   ConfigBC5Pins();							// setup BC5 PIO and RESETN pins
 

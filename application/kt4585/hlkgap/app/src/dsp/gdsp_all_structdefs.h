@@ -198,8 +198,8 @@ typedef struct
   unsigned short attn;                 // Output attenuation factor 0.5
   unsigned short temp;                 // working value
   unsigned short out;                  // mixer output
-  unsigned short inputs[7];            // inputs
-  unsigned short weights[7];           // channel weights
+  unsigned short inputs[8];            // inputs
+  unsigned short weights[8];           // channel weights
 } gdsp_mixer;
 
 typedef struct

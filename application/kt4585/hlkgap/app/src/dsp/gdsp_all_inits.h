@@ -39,6 +39,7 @@ extern const unsigned short gendspgainconstant[];
 extern gdsp_constant* p_gendspgainconstant_pp;
 extern gdsp_constant* p_gendspgainconstant_fp;
 extern gdsp_constant* p_gendspgainconstant_encoder;
+extern gdsp_constant* p_gendsp_pcm_command_out;
 
 extern const unsigned short dtmfdetector[];
 extern const unsigned short dtmfdetector_code[8];
@@ -68,10 +69,16 @@ extern gdsp_mixer* p_dynmixer4;
 extern gdsp_mixer* p_dynmixer5;
 extern gdsp_mixer* p_dynmixer6;
 extern gdsp_mixer* p_dynmixer7;
+extern gdsp_mixer* p_dynmixer8;
+extern gdsp_mixer* p_dynmixer9;
 
 extern const unsigned short playbackbuffer[];
 extern const unsigned short playbackbuffer_code[8];
 extern gdsp_playbackbuffer_18* p_playbackbuffer;
+
+extern const unsigned short pcm_buffer[];
+extern const unsigned short pcm_buffer_code[8];
+extern gdsp_recordbuffer_18* p_pcm_buffer;
 
 extern const unsigned short singletonedetector[];
 extern const unsigned short singletonedetector_code[8];

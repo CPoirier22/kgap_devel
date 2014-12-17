@@ -120,7 +120,6 @@ void runTestCode(void)
     ConfigBC5Pins();
     P2_SET_DATA_REG = Px_7_SET;						// set DECT P2[7] to be driven HI (BC5 RESETN) to bring BC5 up
     PrintStatus(0, "**** DSPSignalHandler: BC5 RESETN is HI");
-	// TODO: CRP - convert usec_pause to use timer
     usec_pause(50000);
     if (gen2dsp_init() == GDSP_NO_SUCCESS)
     	PrintStatus(0, "gen2dsp_init() failed!!");

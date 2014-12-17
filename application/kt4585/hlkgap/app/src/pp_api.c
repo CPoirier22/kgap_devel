@@ -20,6 +20,7 @@
 #include "dsp/gdsp_all_inits.h"
 
 extern UByte WENTWORTHTASKTIMER;
+extern UByte OTTIMERSEQTASK1TIMER;
 
 static UByte info_cnt = 0;
 
@@ -214,28 +215,74 @@ PrintStatus(0, "@@@@@@@ let 0x16 timer expire");
   }
   else if (subEvent == TOGGLE_LED)
   {
+	TurnOffYellowLED;
+	headset.YellowLEDisOn = FALSE;
 	if (headset.RedLEDisOn)
 	{
-	  TurnOffRedLED;
 	  headset.RedLEDisOn = FALSE;
 	  TurnOnGreenLED;
 	  headset.GreenLEDisOn = TRUE;
 	}
 	else
 	{
-	  TurnOffGreenLED;
 	  headset.GreenLEDisOn = FALSE;
 	  TurnOnRedLED;
 	  headset.RedLEDisOn = TRUE;
 	}
 	general_startTimer(0, TOGGLE_LED, NULL, 0, 100);
   }
+  else if (subEvent == TOGGLE_TB_FAIL_LED)
+  {
+	// when touch board fails to program, slowly blink RED/GREEN
+	switch (headset.TouchBoardFail)
+	{
+	  case 0:
+	  {
+		// off -> RED
+		TurnOnRedLED;
+	    headset.RedLEDisOn = TRUE;
+	    headset.TouchBoardFail = 1;
+	    break;
+	  }
+	  case 1:
+	  {
+		// RED -> off
+	    TurnOffYellowLED;
+	    headset.RedLEDisOn = FALSE;
+	    headset.YellowLEDisOn = FALSE;
+	    headset.GreenLEDisOn = FALSE;
+	    headset.TouchBoardFail = 2;
+	    break;
+	  }
+	  case 2:
+	  {
+		// off -> GREEN
+		TurnOnGreenLED;
+		headset.GreenLEDisOn = TRUE;
+		headset.TouchBoardFail = 3;
+	    break;
+	  }
+	  case 3:
+	  {
+		// GREEN - off
+	    TurnOffYellowLED;
+	    headset.RedLEDisOn = FALSE;
+	    headset.YellowLEDisOn = FALSE;
+	    headset.GreenLEDisOn = FALSE;
+	    headset.TouchBoardFail = 0;
+	    break;
+	  }
+	}
+	  general_startTimer(0, TOGGLE_TB_FAIL_LED, NULL, 0, 100);
+  }
 #ifdef ENABLE_CHANNEL_MESSAGES
   else if (subEvent == CHECK_CHANNEL)
   {
 	if (headset.GreenLEDisOn && (headset.LEDCount++ > 3))
 	{
-	  TurnOffGreenLED;
+	  TurnOffYellowLED;
+	  headset.RedLEDisOn = FALSE;
+	  headset.YellowLEDisOn = FALSE;
 	  headset.GreenLEDisOn = FALSE;
 	  headset.LEDCount = 0;
 	}
@@ -274,7 +321,7 @@ WWMSF WWMSFVal; // Could be allocated on stack in function instead, but could al
 void SendMicMuteCmd(unsigned char value)
 {
   WWMSFVal.SubStatusType = MIC_MUTE_CMD;			// Command
-  WWMSFVal.Sub.SetMicMute.MicMute = value;  		// set post MIC command 0 = unmute, 1 = mute, 2 = re-assign OT in AHF mode
+  WWMSFVal.Sub.SetMicMute.MicMute = value;  		// set post MIC command 0 = open to menu A, 1 = is mute menu A, 2 is become OT menu A, 3 is open to menu B, 4 is mute menu B, 5 is become OT menu B
   pp_msf_send_ppstatus_ind(WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
 }
 
@@ -315,101 +362,236 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
       HandleConfigurationFromBS(&WWMSFptr->Sub);
       break;
     case CAR_WAITING_CMD:
-	  headset.CarWaiting = FALSE;
-	  headset.VehicleAlert1 = FALSE;
-	  headset.VehicleAlert2 = FALSE;
-	  headset.AlertCount = 0;
-	  TurnOffYellowLED;
-	  headset.RedLEDisBlinking = FALSE;
-	  headset.RedLEDisOn = FALSE;
-	  headset.GreenLEDisBlinking = FALSE;
-	  headset.GreenLEDisOn = FALSE;
-	  headset.YellowLEDisBlinking = FALSE;
-	  headset.YellowLEDisOn = FALSE;
+      if ((headset.MenuA && ((WWMSFptr->Sub.SetCarWaiting.CarWaiting == 0) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 10) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 11)))
+       || (!headset.MenuA && ((WWMSFptr->Sub.SetCarWaiting.CarWaiting == 1) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 20) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 21))))
+      {
+		headset.CarAtOrderPost = FALSE;
+		headset.VehicleAlert = FALSE;
+		headset.AlertCount = 0;
+		TurnOffYellowLED;
+		headset.RedLEDisBlinking = FALSE;
+		headset.RedLEDisOn = FALSE;
+		headset.GreenLEDisBlinking = FALSE;
+		headset.GreenLEDisOn = FALSE;
+		headset.YellowLEDisBlinking = FALSE;
+		headset.YellowLEDisOn = FALSE;
+		headset.TakingOrder = FALSE;
+      }
+
+      // listen for "other lane"
+      if ((!headset.MenuA && ((WWMSFptr->Sub.SetCarWaiting.CarWaiting == 0) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 10) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 11)))
+       ||  (headset.MenuA && ((WWMSFptr->Sub.SetCarWaiting.CarWaiting == 1) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 20) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 21))))
+      {
+  		headset.OtherLaneWaiting = 0;
+      }
+
       switch (WWMSFptr->Sub.SetCarWaiting.CarWaiting)
       {
-		case 0:		// CAR_WAITING_CMD - NO CAR
-		  headset.CurrentLEDState = 0;
-		  if (headset.TakingOrder)
+		case 0:												// CAR_WAITING_CMD - LANE A NO CAR
+		  if (headset.MenuA)
 		  {
-			PlaySoundPP(sound_double_beep);
+			headset.CurrentLEDState = 0;
+			if (headset.TakingOrder)
+			{
+			  PlaySoundPP(sound_double_beep);
+			}
 		  }
 		  break;
-		case 10:	// CAR_WAITING_CMD - LANE 1 + NO BEEP
-		case 20:	// CAR_WAITING_CMD - LANE 2 + NO BEEP
-		  headset.CarWaiting = TRUE;
-		  headset.CurrentLEDState = 0;
-		  break;
-		case 11:	// CAR_WAITING_CMD - LANE 1 + BEEP
-		  headset.CarWaiting = TRUE;
-		  headset.CurrentLEDState = 1;
-		  if ((headset.SystemMode == AUTO_HANDS_FREE) && headset.OrderTaker)
+		case 1:												// CAR_WAITING_CMD - LANE B NO CAR
+		  if (!headset.MenuA)
 		  {
-			general_startTimer(0, 0xA3, NULL, 0, 60);				// pause 0.6s before opening MIC
-		  }
-		  else
-		  {
-			PlaySoundPP(sound_vehicle_detect_100ms);
-		    headset.VehicleAlert1 = TRUE;
-		    headset.AlertCount = 1;
-		    TurnOnRedLED;											// LO = Red LED on
-		    headset.RedLEDisOn = TRUE;
-			headset.RedLEDisBlinking = TRUE;
-		    OSStartTimer(WENTWORTHTASKTIMER, 50);					// 50 x 10ms = 0.5s before toggling
+		    headset.CurrentLEDState = 4;
+		    if (headset.TakingOrder)
+		    {
+			  PlaySoundPP(sound_double_beep);
+		    }
 		  }
 		  break;
-		case 21:		// CAR_WAITING_CMD - LANE 2 + BEEP
-		  PlaySoundPP(sound_vehicle_detect_100ms);
-		  headset.CarWaiting = TRUE;
-		  headset.CurrentLEDState = 2;
-		  headset.VehicleAlert2 = TRUE;
+		case 10:											// CAR_WAITING_CMD - LANE A + NO BEEP
+		  if (headset.MenuA)
+		  {
+			headset.CarAtOrderPost = TRUE;
+			headset.CurrentLEDState = 0;
+		  }
+		  break;
+		case 20:											// CAR_WAITING_CMD - LANE B + NO BEEP
+		  if (!headset.MenuA)
+		  {
+			headset.CarAtOrderPost = TRUE;
+			headset.CurrentLEDState = 4;
+		  }
+		  break;
+		case 11:											// CAR_WAITING_CMD - LANE A + BEEP
+		  if (headset.MenuA)
+		  {
+			headset.CarAtOrderPost = TRUE;
+			headset.CurrentLEDState = 1;
+			if ((headset.SystemMode == AUTO_HANDS_FREE) && headset.OrderTaker)
+			{
+			  general_startTimer(0, 0xA3, NULL, 0, 60);		// pause 0.6s before opening MIC
+			}
+			else
+			{
+			  PlaySoundPP(sound_vehicle_detect_100ms);
+			  headset.VehicleAlert = TRUE;
+			  headset.AlertCount = 1;						// pause 9 170ms periods before beeping again
+			  TurnOnRedLED;									// HI = Red LED on
+			  headset.RedLEDisOn = TRUE;
+			  headset.RedLEDisBlinking = TRUE;
+			  OSStartTimer(WENTWORTHTASKTIMER, 50);			// 50 x 10ms = 0.5s before toggling
+			}
+		  }
+		  else if (headset.SingleOT)
+		  {
+			headset.OtherLaneWaiting = MENU_A;
+			PlaySoundPP(sound_vehicle_detect_100ms);		// play notification for lane A
+			OSStartTimer(OTTIMERSEQTASK1TIMER, 400);		// check again in 4s
+		  }
+		  break;
+		case 21:											// CAR_WAITING_CMD - LANE B + DOUBLE BEEP
+		  if (!headset.MenuA)
+		  {
+		    headset.CarAtOrderPost = TRUE;
+		    headset.CurrentLEDState = 7;
+		    if ((headset.SystemMode == AUTO_HANDS_FREE) && headset.OrderTaker)
+		    {
+			  general_startTimer(0, 0xA3, NULL, 0, 60);		// pause 0.6s before opening MIC
+		    }
+		    else
+		    {
+		      PlaySoundPP(sound_double_beep);
+		      headset.VehicleAlert = TRUE;
+		      headset.AlertCount = 1;						// pause 9 170ms periods before beeping again
+		      TurnOnGreenLED;								// HI = Green LED on
+		      headset.GreenLEDisOn = TRUE;
+		      headset.GreenLEDisBlinking = TRUE;
+		      OSStartTimer(WENTWORTHTASKTIMER, 50);			// 50 x 10ms = 0.5s before toggling
+		    }
+		  }
+		  else if (headset.SingleOT)
+		  {
+			headset.OtherLaneWaiting = MENU_B;
+			PlaySoundPP(sound_double_beep);					// play notification for lane B
+			OSStartTimer(OTTIMERSEQTASK1TIMER, 400);		// check again in 4s
+		  }
 		  break;
 		default:
 		  break;
       }
-      if (!headset.Pager)											// no need to shut off MIC if in PAGE mode
+      if ((!headset.Pager && headset.MenuA && ((WWMSFptr->Sub.SetCarWaiting.CarWaiting == 0) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 10) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 11)))
+       || (!headset.Pager && !headset.MenuA && ((WWMSFptr->Sub.SetCarWaiting.CarWaiting == 1) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 20) || (WWMSFptr->Sub.SetCarWaiting.CarWaiting == 21))))
       {
-    	AFEDisableMicPathPP();										// shut off MIC if not PAGE mode
+    	AFEDisableMicPathPP();								// shut off MIC if not PAGE mode
       }
-      else
+      else if (headset.Pager)
       {
-    	TurnOnRedLED;												// LO = Red LED on
-    	headset.RedLEDisOn = TRUE;									// keep Red LED on in PAGE mode
+    	TurnOnRedLED;										// HI = Red LED on
+    	headset.RedLEDisOn = TRUE;							// keep Red LED on in PAGE mode
       }
-	  headset.TakingOrder = FALSE;									// toggle TakingOrder flag
       break;
     case BLINK_LED_CMD:
-      headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+      if (headset.SingleOT && (((WWMSFptr->Sub.SetLEDColor.LEDColor == 0) && !headset.MenuA) || ((WWMSFptr->Sub.SetLEDColor.LEDColor == 4) && headset.MenuA)))
+    	headset.OtherLaneWaiting = 0;						// "other" lane is no longer waiting
 	  if ((headset.TakingOrder == FALSE) && (headset.Pager == FALSE))
 	  {
 	    switch (WWMSFptr->Sub.SetLEDColor.LEDColor)
 	    {
-		  case 0:		// LED off
-		    TurnOffYellowLED;										// HI = Red and Green LEDs off
-		    headset.GreenLEDisBlinking = FALSE;
-		    headset.GreenLEDisOn = FALSE;
-		    headset.RedLEDisBlinking = FALSE;
-		    headset.RedLEDisOn = FALSE;
-		    headset.VehicleAlert1 = FALSE;
+		  case 0:		// Lane 1 LED off
+			if (headset.MenuA)
+			{
+		      headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOffYellowLED;								// LO = Red and Green LEDs off
+			  headset.GreenLEDisBlinking = FALSE;
+			  headset.GreenLEDisOn = FALSE;
+			  headset.RedLEDisBlinking = FALSE;
+			  headset.RedLEDisOn = FALSE;
+			  headset.VehicleAlert = FALSE;
+			}
 		    break;
 		  case 1:		// RED LED on
-		    TurnOnRedLED;											// LO = Red LED on
-		    headset.RedLEDisBlinking = TRUE;
-		    headset.RedLEDisOn = TRUE;
-		    OSStartTimer(WENTWORTHTASKTIMER, 50);					// 50 x 10ms = 0.5s before toggling
+			if (headset.MenuA)
+			{
+			  headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOffYellowLED;								// LO = Red and Green LEDs off
+			  headset.GreenLEDisBlinking = FALSE;
+			  headset.GreenLEDisOn = FALSE;
+		      TurnOnRedLED;									// HI = Red LED on
+		      headset.RedLEDisBlinking = TRUE;
+		      headset.RedLEDisOn = TRUE;
+		      OSStartTimer(WENTWORTHTASKTIMER, 50);			// 50 x 10ms = 0.5s before toggling
+			}
 		    break;
 		  case 2:		// YELLOW LED on
-		    TurnOnYellowLED;										// LO = Red and Green LEDs on
-		    headset.GreenLEDisBlinking = TRUE;
-		    headset.GreenLEDisOn = TRUE;
-		    headset.RedLEDisBlinking = TRUE;
-		    headset.RedLEDisOn = TRUE;
+			if (headset.MenuA)
+			{
+			  headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOnYellowLED;								// HI = Red and Green LEDs on
+			  headset.GreenLEDisBlinking = TRUE;
+			  headset.GreenLEDisOn = TRUE;
+			  headset.RedLEDisBlinking = TRUE;
+			  headset.RedLEDisOn = TRUE;
+			}
 		    break;
 		  case 3:		// GREEN LED on
-		    TurnOnGreenLED;											// LO = Green LED on
-		    headset.GreenLEDisBlinking = TRUE;
-		    headset.GreenLEDisOn = TRUE;
+			if (headset.MenuA)
+			{
+			  headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOffYellowLED;								// LO = Red and Green LEDs off
+			  headset.RedLEDisBlinking = FALSE;
+			  headset.RedLEDisOn = FALSE;
+			  TurnOnGreenLED;								// HI = Green LED on
+			  headset.GreenLEDisBlinking = TRUE;
+			  headset.GreenLEDisOn = TRUE;
+			}
 		    break;
+		  case 4:		// menu B LED off
+			if (!headset.MenuA)
+			{
+			  headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOffYellowLED;								// LO = Red and Green LEDs off
+			  headset.GreenLEDisBlinking = FALSE;
+			  headset.GreenLEDisOn = FALSE;
+			  headset.RedLEDisBlinking = FALSE;
+			  headset.RedLEDisOn = FALSE;
+			  headset.VehicleAlert = FALSE;
+			}
+		    break;
+		  case 5:		// menu B RED LED on
+			if (!headset.MenuA)
+			{
+			  headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOffYellowLED;								// LO = Red and Green LEDs off
+			  headset.GreenLEDisBlinking = FALSE;
+			  headset.GreenLEDisOn = FALSE;
+		      TurnOnRedLED;									// HI = Red LED on
+		      headset.RedLEDisBlinking = TRUE;
+		      headset.RedLEDisOn = TRUE;
+			}
+		    break;
+		  case 6:		// menu B YELLOW LED on
+			if (!headset.MenuA)
+			{
+			  headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOnYellowLED;								// HI = Red and Green LEDs on
+			  headset.GreenLEDisBlinking = TRUE;
+			  headset.GreenLEDisOn = TRUE;
+			  headset.RedLEDisBlinking = TRUE;
+			  headset.RedLEDisOn = TRUE;
+			}
+		    break;
+		  case 7:		// menu B GREEN LED on
+			if (!headset.MenuA)
+			{
+			  headset.CurrentLEDState = WWMSFptr->Sub.SetLEDColor.LEDColor;
+			  TurnOffYellowLED;								// LO = Red and Green LEDs off
+			  headset.RedLEDisBlinking = FALSE;
+			  headset.RedLEDisOn = FALSE;
+			  TurnOnGreenLED;								// HI = Green LED on
+			  headset.GreenLEDisBlinking = TRUE;
+			  headset.GreenLEDisOn = TRUE;
+			  OSStartTimer(WENTWORTHTASKTIMER, 50);			// 50 x 10ms = 0.5s before toggling
+			}
+			break;
 		  default:
 		    break;
 	    }
@@ -417,41 +599,56 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
 	  break;
     case SYSTEM_MODE_CMD:
       headset.GainSpkrVolume = ((WWMSFptr->Sub.SetSystemMode.SystemMode & 0x00F0) >> 3) - 7;	// GainSpkrVolume = (base_station).InboundVol x 2 - 7 offset
-      if (WWMSFptr->Sub.SetSystemMode.SystemMode & 0x8000)
+      if ((WWMSFptr->Sub.SetSystemMode.SystemMode & 0x0F00) > 0x0100)
       {
-          AFESetGainSpkrVolumePP(headset.SpkrVolOffset);		// set up pre-LSR gain
-    	  BC5BypassPP;
+    	headset.DualMenu = TRUE;
+    	if (((WWMSFptr->Sub.SetSystemMode.SystemMode & 0x0F00) == 0x0200)
+    	 || ((WWMSFptr->Sub.SetSystemMode.SystemMode & 0x0F00) == 0x0300))
+    	{
+    	  headset.SingleOT = TRUE;						// dual menus, 1OT
+    	}
+    	else
+    	{
+    	  headset.SingleOT = FALSE;						// dual menus, 2OTs
+    	}
       }
       else
       {
-    	  BC5IsUsedPP;
-          AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);	// set up pre-LSR gain
+    	headset.DualMenu = FALSE;
+    	headset.MenuA = TRUE;
+    	headset.SingleOT = FALSE;
+    	if (headset.CurrentLEDState > 3)
+		  headset.CurrentLEDState -= 4;
       }
-//char *ptr;
-//ptr = StringPrint(StatusString, "headset.GainSpkrVolume[");
-//ptr = StrPrintDecByte(ptr, headset.GainSpkrVolume);
-//ptr = StringPrint(ptr, "/0x");
-//ptr = StrPrintHexByte(ptr, headset.GainSpkrVolume);
-//ptr = StringPrint(ptr, "]");
-//PrintStatus(0, StatusString);
-      switch (headset.GainSpkrVolume)					// adjust summator accordingly:
-      {													// in2_ptr dB = (InboundVol x -2) - 13.1
-		case -7: headset.WavAtten = 0x1C53; break;		// -13.1dB (Inbound Volume = 0)
-		case -5: headset.WavAtten = 0x1680; break;		// -15.1dB (Inbound Volume = 1)
-		case -3: headset.WavAtten = 0x11DF; break;		// -17.1dB (Inbound Volume = 2)
-		case -1: headset.WavAtten = 0x0E32; break;		// -19.1dB (Inbound Volume = 3)
-		case  1: headset.WavAtten = 0x0B46; break;		// -21.1dB (Inbound Volume = 4)
-		case  3: headset.WavAtten = 0x08F5; break;		// -23.1dB (Inbound Volume = 5)
-		case  5: headset.WavAtten = 0x071D; break;		// -25.1dB (Inbound Volume = 6)
-		case  7: headset.WavAtten = 0x05A6; break;		// -27.1dB (Inbound Volume = 7)
-		case  9: headset.WavAtten = 0x047D; break;		// -29.1dB (Inbound Volume = 8)
-		case 11: headset.WavAtten = 0x0390; break;		// -31.1dB (Inbound Volume = 9)
+      if (WWMSFptr->Sub.SetSystemMode.SystemMode & 0x8000)
+      {
+    	AFESetGainSpkrVolumePP(headset.SpkrVolOffset);	// set up pre-LSR gain
+    	BC5BypassPP;
+      }
+      else
+      {
+    	BC5IsUsedPP;
+    	AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);	// set up pre-LSR gain
+      }
+      switch (headset.GainSpkrVolume)						// adjust summator accordingly:
+      {														// in2_ptr dB = (InboundVol x -2) - 13.1
+		case -7: headset.WavAtten = 0x1C53; break;			// -13.1dB (Inbound Volume = 0)
+		case -5: headset.WavAtten = 0x1680; break;			// -15.1dB (Inbound Volume = 1)
+		case -3: headset.WavAtten = 0x11DF; break;			// -17.1dB (Inbound Volume = 2)
+		case -1: headset.WavAtten = 0x0E32; break;			// -19.1dB (Inbound Volume = 3)
+		case  1: headset.WavAtten = 0x0B46; break;			// -21.1dB (Inbound Volume = 4)
+		case  3: headset.WavAtten = 0x08F5; break;			// -23.1dB (Inbound Volume = 5)
+		case  5: headset.WavAtten = 0x071D; break;			// -25.1dB (Inbound Volume = 6)
+		case  7: headset.WavAtten = 0x05A6; break;			// -27.1dB (Inbound Volume = 7)
+		case  9: headset.WavAtten = 0x047D; break;			// -29.1dB (Inbound Volume = 8)
+		case 11: headset.WavAtten = 0x0390; break;			// -31.1dB (Inbound Volume = 9)
       }
       AFESetGainInboundVolumePP(headset.GainSpkrVolume + (headset.SpeakerVolume - 8));	// set up post summator gain
       // only play "SYSTEM MODE" announcement when it's system mode change and not a base inbound volume change
       if (headset.SystemMode != (WWMSFptr->Sub.SetSystemMode.SystemMode & 0x000F))
       {
 	    headset.SystemMode = WWMSFptr->Sub.SetSystemMode.SystemMode & 0x000F;
+	    headset.OrderTaker = FALSE;							// clear OT assignment on system mode change
 	    switch (headset.SystemMode)
 	    {
 	      case HANDS_FREE:
@@ -466,8 +663,9 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
 			  PrintStatus(0, "CB OFF / LED off");
 			  headset.TakingOrder = FALSE;
 			  TurnOffYellowLED;								// turn off LED completely
-			  headset.GreenLEDisOn = FALSE;
 			  headset.RedLEDisOn = FALSE;
+			  headset.YellowLEDisOn = FALSE;
+			  headset.GreenLEDisOn = FALSE;
 			  SendMicMuteCmd(1);							// tell base we've turned off our MIC
 		    }
 		    break;
@@ -486,8 +684,9 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
 	    	  PrintStatus(0, "CB OFF / LED off");
 	    	  headset.TakingOrder = FALSE;
 	    	  TurnOffYellowLED;								// turn off LED completely
-	    	  headset.GreenLEDisOn = FALSE;
-	    	  headset.RedLEDisOn = FALSE;
+			  headset.RedLEDisOn = FALSE;
+			  headset.YellowLEDisOn = FALSE;
+			  headset.GreenLEDisOn = FALSE;
 	    	  SendMicMuteCmd(1);							// tell base we've turned off our MIC
 		    }
 		    break;
@@ -508,34 +707,34 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
 	  // headset.SpkrVolOffset has a range of -6 to +6 for +/- 6dB calibration
 	  switch (WWMSFptr->Sub.SetPPOffset.PPOffset)
 	  {
-	  case 0:	// - PP MIC offset
-		if (headset.GainVolume > -5)
-		  --headset.GainVolume;
-		AFESetVolume(headset.GainVolume);
-		break;
-	  case 1:	// reset PP MIC offset
-		headset.GainVolume = 1;
-		AFESetVolume(headset.GainVolume);
-		break;
-	  case 2:	// + PP MIC offset
-		if (headset.GainVolume < 7)
-		  ++headset.GainVolume;
-		AFESetVolume(headset.GainVolume);
-		break;
-	  case 3:	// - PP RCV offset
-		if (headset.SpkrVolOffset > -6)
-		  --headset.SpkrVolOffset;
-		AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
-		break;
-	  case 4:	// reset PP RCV offset
-		headset.SpkrVolOffset = 0;
-		AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
-		break;
-	  case 5:	// + PP RCV offset
-		if (headset.SpkrVolOffset < 6)
-		  ++headset.SpkrVolOffset;
-		AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
-		break;
+	    case 0:	// - PP MIC offset
+		  if (headset.GainVolume > -5)
+		    --headset.GainVolume;
+		  AFESetVolume(headset.GainVolume);
+		  break;
+	    case 1:	// reset PP MIC offset
+	      headset.GainVolume = 1;
+	      AFESetVolume(headset.GainVolume);
+	      break;
+	    case 2:	// + PP MIC offset
+		  if (headset.GainVolume < 7)
+		    ++headset.GainVolume;
+		  AFESetVolume(headset.GainVolume);
+		  break;
+	    case 3:	// - PP RCV offset
+		  if (headset.SpkrVolOffset > -6)
+		    --headset.SpkrVolOffset;
+		  AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
+		  break;
+	    case 4:	// reset PP RCV offset
+		  headset.SpkrVolOffset = 0;
+		  AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
+		  break;
+	    case 5:	// + PP RCV offset
+		  if (headset.SpkrVolOffset < 6)
+		    ++headset.SpkrVolOffset;
+		  AFESetGainSpkrVolumePP(12 + headset.SpkrVolOffset);
+		  break;
 	  }
 	  // now set up EEPROM values
 	  if (headset.GainVolume == 1)
@@ -689,7 +888,7 @@ void pp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
     if (WENTWORTHeepromData.action_after_logon == 0x22)
     {
       PrintStatus(0, "--- AMI TEST MODE ---");
-      headset.ProductionTest = TRUE;
+      headset.IsInTestMode = TRUE;
       enableAudio();
       gdsp_BC5SpeakerPath(0x10);
     }

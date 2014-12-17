@@ -123,6 +123,34 @@ const unsigned short spkr_buffer_code[8] =
 };
 gdsp_recordbuffer_128* p_spkr_buffer;
 
+const unsigned short pcm_buffer[] =
+{
+  GDSP_INIT_CTRL_DEFAULT | 1,
+  0x0001,                              // mode
+  GDSP_INIT_CTRL_PTR     | 1,
+  GDSP_INIT_CTRL_DEFAULT | 2,
+  0,                                   // out_ptr
+  0x0012,                              // buffer_size
+  GDSP_INIT_CTRL_REL_PTR | 1,
+  10,                                  // buffer_ptr
+  GDSP_INIT_CTRL_DEFAULT | 5,
+  0x0000,                              // read_idx
+  0x0000,                              // write_idx
+  0x0010,                              // buffer_irq_size
+  0,                                   // irq
+  0,                                   // out
+  GDSP_INIT_CTRL_ZERO | 18,            // taps
+  GDSP_INIT_CTRL_END                   // End of Init structure
+};
+const unsigned short pcm_buffer_code[8] =
+{
+  CALL_INSTR, CBUFFER,
+  LDO_INSTR, 0,
+  LDC_INSTR, 0,
+  CIRQ_INSTR, PCM_BUFFER_INT
+};
+gdsp_recordbuffer_18* p_pcm_buffer;
+
 const unsigned short g726decoder[] = 
 {
   GDSP_INIT_CTRL_DEFAULT | 12,
@@ -279,6 +307,7 @@ const unsigned short gendspgainconstant[] =
 gdsp_constant* p_gendspgainconstant_pp;
 gdsp_constant* p_gendspgainconstant_fp;
 gdsp_constant* p_gendspgainconstant_encoder;
+gdsp_constant* p_gendsp_pcm_command_out;
 
 const unsigned short gain[] = 
 {
@@ -320,51 +349,51 @@ const unsigned short dynmixer_pp[] =
 {
   GDSP_INIT_CTRL_REL_PTR | 2,
   6,                                   // ptr_ptr
-  13,                                  // w_ptr
+  14,                                  // w_ptr
   GDSP_INIT_CTRL_DEFAULT | 4,
-  0x0007,                              // n
+  0x0008,                              // n
   0x7FFF,                              // attn
   0,                                   // temp
   0,                                   // out
-  GDSP_INIT_CTRL_PTR     | 7,
-  GDSP_INIT_CTRL_DEFAULT | 7,
+  GDSP_INIT_CTRL_PTR     | 8,
+  GDSP_INIT_CTRL_DEFAULT | 8,
   MIXER_ATTEN, MIXER_ATTEN,			   // weights
   MIXER_ATTEN, MIXER_ATTEN,
-  MIXER_ATTEN, 0x7FFF, MIC_A_ATTEN,
+  MIXER_ATTEN, 0x7FFF, MIC_A_ATTEN, 0x7FFF,
   GDSP_INIT_CTRL_END                   // End of Init structure
 };
 const unsigned short dynmixer_post[] =
 {
   GDSP_INIT_CTRL_REL_PTR | 2,
   6,                                   // ptr_ptr
-  13,                                  // w_ptr
+  14,                                  // w_ptr
   GDSP_INIT_CTRL_DEFAULT | 4,
-  0x0007,                              // n
+  0x0008,                              // n
   0x7FFF,                              // attn
   0,                                   // temp
   0,                                   // out
-  GDSP_INIT_CTRL_PTR     | 7,
-  GDSP_INIT_CTRL_DEFAULT | 7,
+  GDSP_INIT_CTRL_PTR     | 8,
+  GDSP_INIT_CTRL_DEFAULT | 8,
   MIXER6_ATTEN, MIXER6_ATTEN,		   // weights
   MIXER6_ATTEN, MIXER6_ATTEN,
-  MIXER6_ATTEN, MIXER6_ATTEN, 0x7FFF,
+  MIXER6_ATTEN, MIXER6_ATTEN, 0x7FFF, 0x7FFF,
   GDSP_INIT_CTRL_END                   // End of Init structure
 };
 const unsigned short dynmixer_pcm[] =
 {
   GDSP_INIT_CTRL_REL_PTR | 2,
   6,                                   // ptr_ptr
-  13,                                  // w_ptr
+  14,                                  // w_ptr
   GDSP_INIT_CTRL_DEFAULT | 4,
-  0x0007,                              // n
+  0x0008,                              // n
   0x7FFF,                              // attn
   0,                                   // temp
   0,                                   // out
-  GDSP_INIT_CTRL_PTR     | 7,
-  GDSP_INIT_CTRL_DEFAULT | 7,
+  GDSP_INIT_CTRL_PTR     | 8,
+  GDSP_INIT_CTRL_DEFAULT | 8,
   MIXER_ATTEN, MIXER_ATTEN,			   // weights
   MIXER_ATTEN, MIXER_ATTEN,
-  MIXER_ATTEN, MIXER_ATTEN, MIC_A_ATTEN,
+  MIXER_ATTEN, MIXER_ATTEN, MIC_A_ATTEN, 0x7FFF,
   GDSP_INIT_CTRL_END                   // End of Init structure
 };
 const unsigned short dynmixer_code[4] =
@@ -380,6 +409,8 @@ gdsp_mixer* p_dynmixer4;
 gdsp_mixer* p_dynmixer5;
 gdsp_mixer* p_dynmixer6;
 gdsp_mixer* p_dynmixer7;
+gdsp_mixer* p_dynmixer8;
+gdsp_mixer* p_dynmixer9;
 
 const unsigned short gendsppcmmasterdestinations[] =
 {

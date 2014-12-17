@@ -38,6 +38,7 @@
 #include "../../../../../../include/common/include/print_status.h"
 #include "../../../../../../include/mac/startup/include/fp/bmc_3f_6sl.h"
 #include "../../../../../../include/common/include/map_480_gcc.h"
+
 #define FP_CONTEXT DSP1_8KHZ
 
 #include "background_trigger.e.PM"
@@ -169,9 +170,13 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
   result &= GdspAdd((const unsigned long*)&dynmixer_code,sizeof(dynmixer_code)/4,(unsigned short**)&p_dynmixer5,sizeof(gdsp_mixer)/2,FP_CONTEXT);
   result &= GdspAdd((const unsigned long*)&dynmixer_code,sizeof(dynmixer_code)/4,(unsigned short**)&p_dynmixer6,sizeof(gdsp_mixer)/2,FP_CONTEXT);
   result &= GdspAdd((const unsigned long*)&dynmixer_code,sizeof(dynmixer_code)/4,(unsigned short**)&p_dynmixer7,sizeof(gdsp_mixer)/2,FP_CONTEXT);
+  result &= GdspAdd((const unsigned long*)&dynmixer_code,sizeof(dynmixer_code)/4,(unsigned short**)&p_dynmixer8,sizeof(gdsp_mixer)/2,FP_CONTEXT);
+  result &= GdspAdd((const unsigned long*)&dynmixer_code,sizeof(dynmixer_code)/4,(unsigned short**)&p_dynmixer9,sizeof(gdsp_mixer)/2,FP_CONTEXT);
 
   result &= GdspAdd((const unsigned long*)&gendsppcmsource_code,sizeof(gendsppcmsource_code)/4,(unsigned short**)&p_gendsppcmsource,sizeof(gdsp_pcmsource)/2,DSP1_8KHZ);
   result &= GdspAdd((const unsigned long*)&gendsppcmmasterdestinations_code,sizeof(gendsppcmmasterdestinations_code)/4,(unsigned short**)&p_gendsppcmmasterdestinations,sizeof(gdsp_pcmmasterdestinations)/2,DSP1_8KHZ);
+  result &= GdspAdd((const unsigned long*)&pcm_buffer_code,sizeof(pcm_buffer_code)/4,(unsigned short**)&p_pcm_buffer,sizeof(gdsp_recordbuffer_18)/2,FP_CONTEXT);
+  result &= GdspAdd((const unsigned long*)0,0,(unsigned short**)&p_gendsp_pcm_command_out,sizeof(gdsp_constant)/2,FP_CONTEXT);
 
   if (GDSP_SUCCESS != result)
     PrintStatus(0, "*** GdspAdd() failed *** ");
@@ -180,6 +185,8 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
 
   result &= GdspInitFunctionBlock((const unsigned short*)&gendsppcmsource,(unsigned short*)p_gendsppcmsource);
   result &= GdspInitFunctionBlock((const unsigned short*)&gendsppcmmasterdestinations,(unsigned short*)p_gendsppcmmasterdestinations);
+  result &= GdspInitFunctionBlock((const unsigned short*)&pcm_buffer,(unsigned short*)p_pcm_buffer);
+  result &= GdspInitFunctionBlock((const unsigned short*)&gendspgainconstant,(unsigned short*)p_gendsp_pcm_command_out);
 
 #ifdef ENABLE_TONEGEN
   result &= GdspInitFunctionBlock((const unsigned short*) &playbackbuffer, (unsigned short*) p_playbackbuffer);
@@ -235,6 +242,8 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
   result &= GdspInitFunctionBlock((const unsigned short*)&dynmixer_pp,	(unsigned short*)p_dynmixer5);
   result &= GdspInitFunctionBlock((const unsigned short*)&dynmixer_post,(unsigned short*)p_dynmixer6);
   result &= GdspInitFunctionBlock((const unsigned short*)&dynmixer_pcm,	(unsigned short*)p_dynmixer7);
+  result &= GdspInitFunctionBlock((const unsigned short*)&dynmixer_pcm,	(unsigned short*)p_dynmixer8);
+  result &= GdspInitFunctionBlock((const unsigned short*)&dynmixer_pcm,	(unsigned short*)p_dynmixer9);
 
   if (GDSP_SUCCESS != result)
     PrintStatus(0, "*** GdspInitFunctionBlock() failed *** ");
@@ -327,60 +336,75 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
   // connect the CODEC_MIC to the gain_inbound block
   GdspConnect(&(p_gain_inbound->in_ptr), &(p_gendspcodecsource->codecdatainsrc));
 
+  // NULL the unused PCM slots 0, 1, & 2; use slot 3 for sending commands
+  GdspConnect(&(p_gendsppcmmasterdestinations->scrptr0), &(p_gendspgainconstant_fp->value));
+  GdspConnect(&(p_gendsppcmmasterdestinations->scrptr1), &(p_gendspgainconstant_fp->value));
+  GdspConnect(&(p_gendsppcmmasterdestinations->scrptr2), &(p_gendspgainconstant_fp->value));
+  GdspConnect(&(p_gendsppcmmasterdestinations->scrptr3), &(p_gendsp_pcm_command_out->value));		// for sending cmds to other FP
+
+  // connect PCM[3] to PCM buffer for receiving commands
+  GdspConnect(&(p_pcm_buffer->in_ptr), &(p_gendsppcmsource->pcm3insrc));
+
   // Connect 7 sources to each of the mixer inputs
-  // no ch0 input needed to mixer0
+  // no ch0 decoder input needed to mixer0
   GdspConnect(&(p_dynmixer0->inputs[0]), &(p_g726decoder[1]->g_out1));
   GdspConnect(&(p_dynmixer0->inputs[1]), &(p_g726decoder[2]->g_out1));
   GdspConnect(&(p_dynmixer0->inputs[2]), &(p_g726decoder[3]->g_out1));
   GdspConnect(&(p_dynmixer0->inputs[3]), &(p_g726decoder[4]->g_out1));
   GdspConnect(&(p_dynmixer0->inputs[4]), &(p_g726decoder[5]->g_out1));
-  GdspConnect(&(p_dynmixer0->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM input initially
+  GdspConnect(&(p_dynmixer0->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[2] input initially
   GdspConnect(&(p_dynmixer0->inputs[6]), &(p_gain_inbound->out));
+  GdspConnect(&(p_dynmixer0->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[0] input initially
 
-  // no ch1 input needed to mixer1
+  // no ch1 decoder input needed to mixer1
   GdspConnect(&(p_dynmixer1->inputs[0]), &(p_g726decoder[0]->g_out1));
   GdspConnect(&(p_dynmixer1->inputs[1]), &(p_g726decoder[2]->g_out1));
   GdspConnect(&(p_dynmixer1->inputs[2]), &(p_g726decoder[3]->g_out1));
   GdspConnect(&(p_dynmixer1->inputs[3]), &(p_g726decoder[4]->g_out1));
   GdspConnect(&(p_dynmixer1->inputs[4]), &(p_g726decoder[5]->g_out1));
-  GdspConnect(&(p_dynmixer1->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM input initially
+  GdspConnect(&(p_dynmixer1->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[2] input initially
   GdspConnect(&(p_dynmixer1->inputs[6]), &(p_gain_inbound->out));
+  GdspConnect(&(p_dynmixer1->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[0] input initially
 
-  // no ch2 input needed to mixer2
+  // no ch2 decoder input needed to mixer2
   GdspConnect(&(p_dynmixer2->inputs[0]), &(p_g726decoder[0]->g_out1));
   GdspConnect(&(p_dynmixer2->inputs[1]), &(p_g726decoder[1]->g_out1));
   GdspConnect(&(p_dynmixer2->inputs[2]), &(p_g726decoder[3]->g_out1));
   GdspConnect(&(p_dynmixer2->inputs[3]), &(p_g726decoder[4]->g_out1));
   GdspConnect(&(p_dynmixer2->inputs[4]), &(p_g726decoder[5]->g_out1));
-  GdspConnect(&(p_dynmixer2->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM input initially
+  GdspConnect(&(p_dynmixer2->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[2] input initially
   GdspConnect(&(p_dynmixer2->inputs[6]), &(p_gain_inbound->out));
+  GdspConnect(&(p_dynmixer2->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[0] input initially
 
-  // no ch3 input needed to mixer3
+  // no ch3 decoder input needed to mixer3
   GdspConnect(&(p_dynmixer3->inputs[0]), &(p_g726decoder[0]->g_out1));
   GdspConnect(&(p_dynmixer3->inputs[1]), &(p_g726decoder[1]->g_out1));
   GdspConnect(&(p_dynmixer3->inputs[2]), &(p_g726decoder[2]->g_out1));
   GdspConnect(&(p_dynmixer3->inputs[3]), &(p_g726decoder[4]->g_out1));
   GdspConnect(&(p_dynmixer3->inputs[4]), &(p_g726decoder[5]->g_out1));
-  GdspConnect(&(p_dynmixer3->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM input initially
+  GdspConnect(&(p_dynmixer3->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[2] input initially
   GdspConnect(&(p_dynmixer3->inputs[6]), &(p_gain_inbound->out));
+  GdspConnect(&(p_dynmixer3->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[0] input initially
 
-  // no ch4 input needed to mixer4
+  // no ch4 decoder input needed to mixer4
   GdspConnect(&(p_dynmixer4->inputs[0]), &(p_g726decoder[0]->g_out1));
   GdspConnect(&(p_dynmixer4->inputs[1]), &(p_g726decoder[1]->g_out1));
   GdspConnect(&(p_dynmixer4->inputs[2]), &(p_g726decoder[2]->g_out1));
   GdspConnect(&(p_dynmixer4->inputs[3]), &(p_g726decoder[3]->g_out1));
   GdspConnect(&(p_dynmixer4->inputs[4]), &(p_g726decoder[5]->g_out1));
-  GdspConnect(&(p_dynmixer4->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM input initially
+  GdspConnect(&(p_dynmixer4->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[2] input initially
   GdspConnect(&(p_dynmixer4->inputs[6]), &(p_gain_inbound->out));
+  GdspConnect(&(p_dynmixer4->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[0] input initially
 
-  // no ch5 input needed to mixer5
+  // no ch5 decoder input needed to mixer5
   GdspConnect(&(p_dynmixer5->inputs[0]), &(p_g726decoder[0]->g_out1));
   GdspConnect(&(p_dynmixer5->inputs[1]), &(p_g726decoder[1]->g_out1));
   GdspConnect(&(p_dynmixer5->inputs[2]), &(p_g726decoder[2]->g_out1));
   GdspConnect(&(p_dynmixer5->inputs[3]), &(p_g726decoder[3]->g_out1));
   GdspConnect(&(p_dynmixer5->inputs[4]), &(p_g726decoder[4]->g_out1));
-  GdspConnect(&(p_dynmixer5->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM input initially
+  GdspConnect(&(p_dynmixer5->inputs[5]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[2] input initially
   GdspConnect(&(p_dynmixer5->inputs[6]), &(p_gain_inbound->out));
+  GdspConnect(&(p_dynmixer5->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[0] input initially
 
   // no MIC input needed to mixer6 - output to the post MIC and SPEAKER
   GdspConnect(&(p_dynmixer6->inputs[0]), &(p_g726decoder[0]->g_out1));
@@ -389,9 +413,10 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
   GdspConnect(&(p_dynmixer6->inputs[3]), &(p_g726decoder[3]->g_out1));
   GdspConnect(&(p_dynmixer6->inputs[4]), &(p_g726decoder[4]->g_out1));
   GdspConnect(&(p_dynmixer6->inputs[5]), &(p_g726decoder[5]->g_out1));
-  GdspConnect(&(p_dynmixer6->inputs[6]), &(p_gendspgainconstant_fp->value));			// NULL the PCM input initially
+  GdspConnect(&(p_dynmixer6->inputs[6]), &(p_gendspgainconstant_fp->value));			// NULL the PCM[1] input initially
+  GdspConnect(&(p_dynmixer6->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the unused input
 
-  // mixer7 to send to 2nd base
+  // mixer7 - to send post MIC and headset CALL & PAGE to other base
   GdspConnect(&(p_dynmixer7->inputs[0]), &(p_g726decoder[0]->g_out1));
   GdspConnect(&(p_dynmixer7->inputs[1]), &(p_g726decoder[1]->g_out1));
   GdspConnect(&(p_dynmixer7->inputs[2]), &(p_g726decoder[2]->g_out1));
@@ -399,6 +424,27 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
   GdspConnect(&(p_dynmixer7->inputs[4]), &(p_g726decoder[4]->g_out1));
   GdspConnect(&(p_dynmixer7->inputs[5]), &(p_g726decoder[5]->g_out1));
   GdspConnect(&(p_dynmixer7->inputs[6]), &(p_gain_inbound->out));
+  GdspConnect(&(p_dynmixer7->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the unused input
+
+  // mixer8 - to send only headset CALL to other base
+  GdspConnect(&(p_dynmixer8->inputs[0]), &(p_g726decoder[0]->g_out1));
+  GdspConnect(&(p_dynmixer8->inputs[1]), &(p_g726decoder[1]->g_out1));
+  GdspConnect(&(p_dynmixer8->inputs[2]), &(p_g726decoder[2]->g_out1));
+  GdspConnect(&(p_dynmixer8->inputs[3]), &(p_g726decoder[3]->g_out1));
+  GdspConnect(&(p_dynmixer8->inputs[4]), &(p_g726decoder[4]->g_out1));
+  GdspConnect(&(p_dynmixer8->inputs[5]), &(p_g726decoder[5]->g_out1));
+  GdspConnect(&(p_dynmixer8->inputs[6]), &(p_gendspgainconstant_fp->value));			// NULL the unused input
+  GdspConnect(&(p_dynmixer8->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the unused input
+
+  // mixer9 - to send only headset CALL & PAGE to other base
+  GdspConnect(&(p_dynmixer9->inputs[0]), &(p_g726decoder[0]->g_out1));
+  GdspConnect(&(p_dynmixer9->inputs[1]), &(p_g726decoder[1]->g_out1));
+  GdspConnect(&(p_dynmixer9->inputs[2]), &(p_g726decoder[2]->g_out1));
+  GdspConnect(&(p_dynmixer9->inputs[3]), &(p_g726decoder[3]->g_out1));
+  GdspConnect(&(p_dynmixer9->inputs[4]), &(p_g726decoder[4]->g_out1));
+  GdspConnect(&(p_dynmixer9->inputs[5]), &(p_g726decoder[5]->g_out1));
+  GdspConnect(&(p_dynmixer9->inputs[6]), &(p_gendspgainconstant_fp->value));			// NULL the unused input
+  GdspConnect(&(p_dynmixer9->inputs[7]), &(p_gendspgainconstant_fp->value));			// NULL the unused input
 
   //Connect outputs from mixer blocks to destinations
   GdspConnect(&(p_g726encoder[0]->g_in1_ptr), &(p_dynmixer0->out));
@@ -457,11 +503,12 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
 #ifdef ENABLE_TONEGEN
   GdspConnect(&(p_law2lin->lawin_ptr), &(p_playbackbuffer->out));
 
-  p_tonegen->timerpreset2=0xFFFF; // no off tone
+  p_tonegen->timerpreset2 = 0xFFFF; // no off tone
 #endif
 
   result &= GdspStart((unsigned short*)p_gendsppcmsource);
   result &= GdspStart((unsigned short*)p_gendsppcmmasterdestinations);
+  result &= GdspStart((unsigned short*)p_pcm_buffer);
 
 #ifdef ENABLE_TONEGEN
   result &= GdspStart((unsigned short*) p_playbackbuffer);
@@ -471,7 +518,7 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
 
   result &= GdspStart((unsigned short*)p_copySpeechBuffer1);
   result &= GdspStart((unsigned short*)p_clearPointers1);
-  for (i=0;i<6;i++)
+  for (i = 0; i < 6; i++)
   {
     result &= GdspStart((unsigned short*)p_g726decoder[i]);
     result &= GdspStart((unsigned short*)p_g726encoder[i]);
@@ -494,6 +541,8 @@ int gen2dspblock_init_fp(GDSP_INIT_STRUCT *init_str,GDSP_INTERFACE_INIT_STRUCT *
   result &= GdspStart((unsigned short*)p_dynmixer5);
   result &= GdspStart((unsigned short*)p_dynmixer6);
   result &= GdspStart((unsigned short*)p_dynmixer7);
+  result &= GdspStart((unsigned short*)p_dynmixer8);
+  result &= GdspStart((unsigned short*)p_dynmixer9);
 
   return result;
 }
@@ -539,7 +588,7 @@ void EnableTonegeneratorFPToMixer(void)
 {
   // HM Testing
     int i;
-    for (i=0;i<6;i++)
+    for (i = 0; i < 7; i++)
     {
       p_dynmixer0->weights[i] = 0x0000;
       p_dynmixer1->weights[i] = 0x0000;
@@ -551,14 +600,14 @@ void EnableTonegeneratorFPToMixer(void)
       p_dynmixer7->weights[i] = 0x0000;
     }
 
-    /*GdspConnect(&(p_dynmixer0->inputs[6]), &(p_law2lin->linear_out));
-    GdspConnect(&(p_dynmixer1->inputs[6]),&(p_law2lin->linear_out));
-    GdspConnect(&(p_dynmixer2->inputs[6]),&(p_law2lin->linear_out));
-    GdspConnect(&(p_dynmixer3->inputs[6]),&(p_law2lin->linear_out));
-    GdspConnect(&(p_dynmixer4->inputs[6]),&(p_law2lin->linear_out));
-    GdspConnect(&(p_dynmixer5->inputs[6]),&(p_law2lin->linear_out));
-    GdspConnect(&(p_dynmixer6->inputs[6]),&(p_law2lin->linear_out));
-    GdspConnect(&(p_dynmixer7->inputs[6]),&(p_law2lin->linear_out));*/
+  /*GdspConnect(&(p_dynmixer0->inputs[6]), &(p_law2lin->linear_out));
+    GdspConnect(&(p_dynmixer1->inputs[6]), &(p_law2lin->linear_out));
+    GdspConnect(&(p_dynmixer2->inputs[6]), &(p_law2lin->linear_out));
+    GdspConnect(&(p_dynmixer3->inputs[6]), &(p_law2lin->linear_out));
+    GdspConnect(&(p_dynmixer4->inputs[6]), &(p_law2lin->linear_out));
+    GdspConnect(&(p_dynmixer5->inputs[6]), &(p_law2lin->linear_out));
+    GdspConnect(&(p_dynmixer6->inputs[6]), &(p_law2lin->linear_out));
+    GdspConnect(&(p_dynmixer7->inputs[6]), &(p_law2lin->linear_out));*/
 
 	GdspConnect(&(p_dynmixer0->inputs[6]), &(p_tonegen->tone_out));
     GdspConnect(&(p_dynmixer1->inputs[6]), &(p_tonegen->tone_out));
@@ -577,3 +626,44 @@ void EnableTonegeneratorFPToMixer(void)
     GdspConnect(&(p_g726encoder[5]->g_in1_ptr), &(p_tonegen->tone_out));
 }
 #endif
+
+// connect PCM bus when it is known that a second FP is present
+void ConnectPCM(void)
+{
+	// null the inputs on the sharing mixers until they're used
+    int i;
+	for (i = 0; i < 6; i++)
+	{
+		p_dynmixer7->weights[i] = 0x0000;
+		p_dynmixer8->weights[i] = 0x0000;
+		p_dynmixer9->weights[i] = 0x0000;
+	}
+
+	// connections used when PP is connected to this base's menu; brings other base's PPs CALL & PAGE to this base
+	GdspConnect(&(p_dynmixer0->inputs[5]), &(p_gendsppcmsource->pcm2insrc));			// CALL & PAGE audio in from other base on PCM[2]
+	GdspConnect(&(p_dynmixer1->inputs[5]), &(p_gendsppcmsource->pcm2insrc));			// CALL & PAGE audio in from other base on PCM[2]
+	GdspConnect(&(p_dynmixer2->inputs[5]), &(p_gendsppcmsource->pcm2insrc));			// CALL & PAGE audio in from other base on PCM[2]
+	GdspConnect(&(p_dynmixer3->inputs[5]), &(p_gendsppcmsource->pcm2insrc));			// CALL & PAGE audio in from other base on PCM[2]
+	GdspConnect(&(p_dynmixer4->inputs[5]), &(p_gendsppcmsource->pcm2insrc));			// CALL & PAGE audio in from other base on PCM[2]
+	GdspConnect(&(p_dynmixer5->inputs[5]), &(p_gendsppcmsource->pcm2insrc));			// CALL & PAGE audio in from other base on PCM[2]
+
+	// connections used when PP is connected to other base's menu; brings other base's PPs CALL & PAGE and post MIC to this base
+	GdspConnect(&(p_dynmixer0->inputs[7]), &(p_gendsppcmsource->pcm0insrc));			// MIC, CALL, & PAGE audio in from other base on PCM[0]
+	GdspConnect(&(p_dynmixer1->inputs[7]), &(p_gendsppcmsource->pcm0insrc));			// MIC, CALL, & PAGE audio in from other base on PCM[0]
+	GdspConnect(&(p_dynmixer2->inputs[7]), &(p_gendsppcmsource->pcm0insrc));			// MIC, CALL, & PAGE audio in from other base on PCM[0]
+	GdspConnect(&(p_dynmixer3->inputs[7]), &(p_gendsppcmsource->pcm0insrc));			// MIC, CALL, & PAGE audio in from other base on PCM[0]
+	GdspConnect(&(p_dynmixer4->inputs[7]), &(p_gendsppcmsource->pcm0insrc));			// MIC, CALL, & PAGE audio in from other base on PCM[0]
+	GdspConnect(&(p_dynmixer5->inputs[7]), &(p_gendsppcmsource->pcm0insrc));			// MIC, CALL, & PAGE audio in from other base on PCM[0]
+
+	// send this base's PPs and post MIC over to other base; used when other base's PPs are connected to this base's menu
+	GdspConnect(&(p_gendsppcmmasterdestinations->scrptr0), &(p_dynmixer7->out));		// MIC, CALL, & PAGE audio out to other base on PCM[0]
+
+	// connection used to bring other base's PPs to this base's post SPKR
+	GdspConnect(&(p_dynmixer6->inputs[6]), &(p_gendsppcmsource->pcm1insrc));			// only PP CALL audio in from other base (without PAGE) on PCM[1] for post SPKR
+
+	// send this base's only PPs CALL over to other base; used when this base's PPs are connected to other base's menu
+	GdspConnect(&(p_gendsppcmmasterdestinations->scrptr1), &(p_dynmixer8->out));		// only PP CALL audio out to other base (without PAGE) on PCM[1] for post SPKR
+
+	// send this base's PPs CALL & PAGE over to other base; used when this base's PPs are connected to other base's menu
+	GdspConnect(&(p_gendsppcmmasterdestinations->scrptr2), &(p_dynmixer9->out));		// CALL & PAGE audio out to other base (for conference call) on PCM[2]
+}

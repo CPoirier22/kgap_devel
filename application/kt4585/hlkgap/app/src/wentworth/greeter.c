@@ -5,7 +5,7 @@
  *		Saco, Maine, USA 04072													*
  *		+1 207-571-9744															*
  *		www.wentworthtechnology.com												*
- *		copyright 2011															*
+ *		copyright 2014															*
  *																				*
  ********************************************************************************
  * $History:: greeter.c														  $	*
@@ -123,7 +123,7 @@ void RunGreetClock(UByte greet_cmd, UByte greet_selection)
 	// so this loop only sets QA HI because otherwise QA is usually LO
 	if (greet_cmd == MESSAGE_RECORD_START)
 	{
-		for (i = 24; i > 0; i--)
+		for (i = 24; i; i--)
 		{
 			if (i == 9)
 				SET_MESSAGE_DATA_LO;	// set SET_RTC LO (PCM)
@@ -144,7 +144,7 @@ void RunGreetClock(UByte greet_cmd, UByte greet_selection)
 
 	// these loops send the greet_data3, greet_data2, and greet_data (selected Mn is LO)
 	// all commands require Mn to be set LO
-	for (i = 8; i > 0; i--)
+	for (i = 8; i; i--)
 	{
 		mask = (1 << (i - 1));
 		if (greet_data3 & mask)			// set data before clock
@@ -159,7 +159,7 @@ void RunGreetClock(UByte greet_cmd, UByte greet_selection)
 		SET_CLOCK_LO;					// HL clock edge clocks control bit
 		CLOCK_PULSE_WIDTH_DELAY;
 	}
-	for (i = 8; i > 0; i--)
+	for (i = 8; i; i--)
 	{
 		mask = (1 << (i - 1));
 		if (greet_data2 & mask)			// set data before clock
@@ -174,7 +174,7 @@ void RunGreetClock(UByte greet_cmd, UByte greet_selection)
 		SET_CLOCK_LO;					// HL clock edge clocks control bit
 		CLOCK_PULSE_WIDTH_DELAY;
 	}
-	for (i = 8; i > 0; i--)
+	for (i = 8; i; i--)
 	{
 		mask = (1 << (i - 1));
 		if (greet_data & mask)			// set data before clock
@@ -201,7 +201,7 @@ void RunGreetClock(UByte greet_cmd, UByte greet_selection)
 		(greet_cmd == MESSAGE_RECORD_STOP))
 	{
 		usec_pause(35000);				// 35ms pause for LO Mn pulse
-		for (i = 24; i > 0; i--)
+		for (i = 24; i; i--)
 		{
 			if ((i == 9) || (i == 1))
 				SET_MESSAGE_DATA_LO;	// set QA and SET_RTC LO (PCM)
@@ -222,7 +222,7 @@ void RunGreetClock(UByte greet_cmd, UByte greet_selection)
 
 	SET_MESSAGE_DATA_LO;				// set control bit LO
 
-	if (((base_station).MessageIsPlaying > 0) || ((base_station).MessageIsRecording > 0))
+	if ((base_station).MessageIsPlaying || (base_station).MessageIsRecording)
 	{
 		// for recording, TEOM TDeb = 30ms, so wait 50ms before starting to check for TEOM during a recording
 		general_startTimer(-1, CHECK_TEOM, NULL, 0, 5);

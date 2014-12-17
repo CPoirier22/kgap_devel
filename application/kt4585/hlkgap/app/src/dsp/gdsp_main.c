@@ -131,9 +131,17 @@ int gen2dsp_init(void)
     init_str.no_contexts = 2;
     interface_str.int_enabled = TRUE;
     interface_str.int_priority = 7;
-	interface_str.pcm_interf_mode = GDSP_MASTER;
+	if (P3_DATA_REG & Px_7_DATA)
+	{
+	  PrintStatus(0,"Initialising DSP for FP mode, PCM slave, menu A");
+	  interface_str.pcm_interf_mode = GDSP_SLAVE;
+	}
+	else
+	{
+	  PrintStatus(0,"Initialising DSP for FP mode, PCM master, menu B");
+	  interface_str.pcm_interf_mode = GDSP_MASTER;
+	}
     result = gen2dspblock_init_fp(&init_str, &interface_str);
-    PrintStatus(0,"Initialising DSP for FP mode");
     // IMPORTANT - make sure DSP is maxed out, otherwise we don't have enough DSP processing power for a 6-7 party conference with ADPCM encoding/decoding
     // InitClockRegisters(PLL_160); // CRC16=41MHz, DSP=82MHz, Fpll=165Mhz - see also AN-D-181 and SC14480ClockTree excel spreadsheet
     startPLL(165); // preliminary solution until InitClockRegisters(PLL_160) is working

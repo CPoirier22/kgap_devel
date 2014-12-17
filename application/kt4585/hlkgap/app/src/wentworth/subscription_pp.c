@@ -128,14 +128,15 @@ void pp_subscription_statusReceived(UByte status, UByte index)
           general_startTimer(0, 0xA1, NULL, 0, 200);		// wait for wav to finish playing before playing double_beep
           AFEDisableMicPathPP();
         }
-        if (headset.TakingOrder | headset.CarWaiting)
+        if (headset.TakingOrder | headset.CarAtOrderPost)
         {
       	  PrintStatus(0, "CB OFF / LED off");
       	  headset.TakingOrder = FALSE;
-      	  headset.CarWaiting = FALSE;
+      	  headset.CarAtOrderPost = FALSE;
       	  TurnOffYellowLED;							// turn off LED completely
-      	  headset.GreenLEDisOn = FALSE;
       	  headset.RedLEDisOn = FALSE;
+      	  headset.YellowLEDisOn = FALSE;
+      	  headset.GreenLEDisOn = FALSE;
         }
       }
       break;
@@ -169,14 +170,15 @@ PrintStatus(0, "lost lock?");
     	general_startTimer(0, 0xA1, NULL, 0, 200);	// wait for wav to finish playing before playing double_beep
     	AFEDisableMicPathPP();
       }
-      if (headset.TakingOrder | headset.CarWaiting)
+      if (headset.TakingOrder | headset.CarAtOrderPost)
       {
     	PrintStatus(0, "CB OFF / LED off");
     	headset.TakingOrder = FALSE;
-    	headset.CarWaiting = FALSE;
+    	headset.CarAtOrderPost = FALSE;
     	TurnOffYellowLED;							// turn off LED completely
-    	headset.GreenLEDisOn = FALSE;
-    	headset.RedLEDisOn = FALSE;
+		headset.RedLEDisOn = FALSE;
+		headset.YellowLEDisOn = FALSE;
+		headset.GreenLEDisOn = FALSE;
       }
       break;
     case SS_LocRegSucceeded | SS_Subscripted | SS_Locked:

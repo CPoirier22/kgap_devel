@@ -11,9 +11,21 @@
 //#				Saco, ME  04072
 //#				(207) 571-9744
 //#
-//#				Copyright © 2013 Wentworth Technology
+//#				Copyright © 2014 Wentworth Technology
 //#
 //#############################################################################
+// Update v2.0-AL CRP 12/3/2014 - supported by FP rev2.0-AL
+// Revised several macros to support dual lane
+// 1) removed delayed_switch_button_pressed macro
+// 2) added labels to greeter_screen_setup to handle dual greeters
+// 3) added request_volume_b for dual bases
+// 4) added labels to request_greet_authorization to handle dual greeters
+// 5) merged request_power_count_reset2 into request_power_count_reset
+// 6) added request_lane_config, pre_lane_config, and lane_config macros
+// 7) added the `eB` parameter back to calls to tools
+// 8) updated copyright year to 2014
+//
+//=================================================
 // Update v1.3-AL CRP 8/16/2013 - supported by FP rev1.5-AL
 // 1) added delayed_switch_button_pressed macro to support dual bases
 //
@@ -240,8 +252,8 @@
 //	e7 grill volume
 //  e8 day volume
 //	e9 night volume
-//  eA m_volume lanes "0"= single, "1" = lane A of two lanes, "2" = lane B of two lanes
-//  eB Multi-lane "0"= single, "1" = dual
+//  eA m_volume lanes "0" = single, "1" = menu A, "2" = menu B
+//  eB Multi-lane "0" = single ONLY, "1" = single EXP, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
 //---------------------------------------------------------------------------------------
 
 
@@ -325,8 +337,8 @@ set e9 `9`								// Save current night volume
 // Then runs main macro
 //---------------------------------------------------------------------------------------
 //
-//  `A` m_volume lanes "0"= single, "1" = lane A of two lanes, "2" = lane B of two lanes
-//  `B` Multi-lane "0"= single, "1" = dual
+//  `A` m_volume lanes "0" = single, "1" = menu A, "2" = menu B
+//  `B` Multi-lane "0" = single ONLY, "1" = single EXP, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
 //  
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
@@ -355,9 +367,9 @@ set e6 0								// Save inbound volume
 set e7 8								// Save grill current volume
 set e8 9 								// Save day volume
 set e9 1								// Save night volume
-set eA 0								// Save volume lanes info
-set eB 0								// Save multi-lane
-m main		    // Start it up!!
+set eA 1								// Save volume lanes info
+set eB 2								// Save multi-lane
+m main		    						// Start it up!!
 #end
 
 
@@ -394,22 +406,77 @@ out "\xFF\xFF\x4D\x12\x02\x10\x00\x10"	// tell base we're displaying the main sc
 touch on								// enable screen touches
 #end
 
-
 //---------------------------------------------------------------------
 // MACRO: pre_greeter_setup
-// Tell base to clear macros before displaying greeter_setup
+// Display apropriate GreeterA or GreeterB screen
 //
 //---------------------------------------------------------------------
 //
 #define pre_greeter_setup
+m greeter_screen_setup:lbl_`eA`
+#end
+
+//---------------------------------------------------------------------
+// MACRO: greeter_screen_setup
+// Tell base to clear macros before displaying greeter_setup
+// Display GreeterA and GreeterB if necessary
+//
+//---------------------------------------------------------------------
+//
+#define greeter_screen_setup
+:lbl_0
 out "\xFF\xFF\x4D\x12\x03\x01\x01\x05\x07"	// request base to display the greeter_setup screen
+:lbl_1
+touch off									// disable screen touches until screen is ready
+m reset_display 50							// Display the background
+xi 119 0 0     								// Display the "Select Greeter" banner
+bd 16 430 222 1 "" 0 0 17 17				// Setup the "Home" button
+xm 16 main									// Go back to main screen
+bd 1 125 100 1 "" 0 0 120 120				// Setup the Greeter A button.
+xm 1 pre_greeter_A_setup
+bd 2 250 100 1 "" 0 0 121 121				// Setup the Greeter B button.
+xm 2 pre_greeter_B_setup
+touch on									// enable screen touches
+:lbl_2
+touch off									// disable screen touches until screen is ready
+m reset_display 50							// Display the background
+xi 119 0 0     								// Display the "Select Greeter" banner
+bd 16 430 222 1 "" 0 0 17 17				// Setup the "Home" button
+xm 16 main									// Go back to main screen
+bd 1 125 100 1 "" 0 0 120 120				// Setup the Greeter A button.
+xm 1 pre_greeter_A_setup
+bd 2 250 100 1 "" 0 0 121 121				// Setup the Greeter B button.
+xm 2 pre_greeter_B_setup
+touch on									// enable screen touches
+#end
+
+//---------------------------------------------------------------------
+// MACRO: pre_greeter_A_setup
+// Tell base to clear macros before displaying greeter_setup
+// Tells base that this is greeter setup for menu A of dual lane
+//
+//---------------------------------------------------------------------
+//
+#define pre_greeter_A_setup
+out "\xFF\xFF\x4D\x12\x03\x01\x01\x06\x08"	// request base to display the greeter_setup screen
+#end
+
+//---------------------------------------------------------------------
+// MACRO: pre_greeter_B_setup
+// Tell base to clear macros before displaying greeter_setup
+// Tells base that this is greeter setup for menu B of dual lane
+//
+//---------------------------------------------------------------------
+//
+#define pre_greeter_B_setup
+out "\xFF\xFF\x4D\x12\x03\x01\x01\x07\x09"	// request base to display the greeter_setup screen
 #end
 
 //---------------------------------------------------------------------------------------
 // MACRO: greeter_setup
 // For Greeter Setup screen display.
 //
-//  
+//
 //---------------------------------------------------------------------------------------
 #define greeter_setup
 touch off									// disable screen touches until screen is ready
@@ -1549,9 +1616,10 @@ out "\xFF\xFF\x4D\x12\x03\x01\x01\x02\x04"	// request base to display the tools 
 
 //---------------------------------------------------------------------------------------
 // MACRO: tools
-// For Tool screen display.
+// For Tool screen display
 //
-//  `eB` - "0" = single lane, "1" = two lanes.
+//  `eA` - "0" = single lane, "1" = menu A, "2" = menu B
+//  `eB` - "0" = single ONLY, "1" = single EXP, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
 //  
 //---------------------------------------------------------------------------------------
 #define tools
@@ -1559,8 +1627,7 @@ touch off								// disable screen touches until screen is ready
 m reset_display 50						// Display the background.
 bd 16 430 222 1 "" 0 0 17 17			// Setup the "Home" button.
 xm 16 main								// Go back to main screen
-m volume_button:lbl_`eB`				// Set up the "Set Volume" button based on number of lanes.
-xm 10 request_volume       				// run request_volume macro, request parameters for volume
+m volume_button:lbl_`eA`				// Set up the "Set Volume" button based on number of menus.
 bd 11 134 11 1 "" 0 0 66 66				// Setup the the "Set Clock" button.
 xm 11 request_clock:x11					// Go to clock screen
 bd 12 248 11 1 "" 0 0 69 69				// Setup the "Set Night Volume" button.
@@ -1568,6 +1635,7 @@ xm 12 request_clock:x12					// Go to set night clock screen for night volume
 bd 13 362 11 1 "" 0 0 67 67				// Setup the the "Set PIN" button.
 xm 13 new_pin							// Go to set pin screen
 bd 14 20 170 1 "" 0 0 68 68				// Setup the "Lane Configuration" button.
+xm 14 pre_lane_config					// Go to lane configuration screen
 bd 15 380 222 1 "" 0 0 12 12			// Setup the "Help" button.
 xm 15 show_help_settings
 out "\xFF\xFF\x4D\x12\x02\x04\x00\x04"	// tell base we're displaying the tools screen
@@ -1581,6 +1649,15 @@ touch on								// enable screen touches
 //---------------------------------------------------------------------------------------
 #define request_volume
 out "\xFF\xFF\x4D\x12\x02\x0A\x00\x0A"	// request current volume settings from base
+#end
+
+//---------------------------------------------------------------------------------------
+// MACRO: request_volume_b
+// Request current volume settings from base B before setting up the volume screen.
+//
+//---------------------------------------------------------------------------------------
+#define request_volume_b
+out "\xFF\xFF\x4D\x12\x02\x60\x00\x60"	// request current volume settings from base B
 #end
 
 //---------------------------------------------------------------------------------------
@@ -1606,7 +1683,7 @@ set i5 `4`								// Save night volume max
 // MACRO: volume
 // For changing the volume setting.
 //
-//  `0` (eA) lanes, "0" = single, "1" = DTA, "2" = DTB.
+//  `0` (eA) lanes, "0" = single, "1" = menu A, "2" = menu B
 //  `1` (e5) detect volume - not used
 //  `2` (e6) inbound volume
 //  `3`	(e7) grill volume
@@ -1623,17 +1700,17 @@ m reset_display 50						// Display the background.
 bd 26 430 222 1 "" 0 0 17 17			// Display "Home" button.
 xm 26 main
 
-set i8 2								// Start with "Grill Speaker" selected.
-set i7 `e7`								// Set bar graph to grill speaker volume.
 set eA `0`								// Save current volume lane configuration
 set e5 `1`								// Save current detect volume
 set e6 `2`								// Save current inbound volume
 set e7 `3`								// Save current grill volume
 set e8 `4` 								// Save current day volume
 set e9 `5`								// Save current night volume
+set i8 2								// Start with "Grill Speaker" selected.
+set i7 `e7`								// Set bar graph to grill speaker volume.
 
 //bd 17 00 48 2 "" "" 0 0 0 0 70 71		// Show the "Detection Tone" button.
-//xmq 17 det_sel							// Specify macro and disable output.
+//xmq 17 det_sel						// Specify macro and disable output.
 
 bd 18 00 93 2 "" "" 0 0 0 0 99 100		// Show the "Inbound Volume" button.
 xmq 18 inbound_sel						// Specify macro and disable output.
@@ -1651,7 +1728,7 @@ f 24B									// Set the font size.
 s 2 2									// Set foreground /background color to blue
 //xi 26 242 48							// Display yellow box.
 //ta CC									// Set text justification mode.
-//t "`e5`" 265 71 TR						// Display volume number.
+//t "`e5`" 265 71 TR					// Display volume number.
 xi 26 242 93							// Display yellow box.
 ta CC									// Set text justification mode.
 t "`e6`" 265 116 TR						// Display volume number.
@@ -1686,7 +1763,7 @@ xm 25 show_help_volume
 bd 27 430 172 1 "" 0 0 86 86			// Display "Tools" button.
 xm 27 tools
 
-m volume_banner:lbl_0					// Call the banner macro. 
+m volume_banner:lbl_`eA`				// Call the banner macro. 
 touch on								// enable screen touches
 #end
 
@@ -2620,15 +2697,25 @@ set i7 `e9`								// store current value
 //---------------------------------------------------------------------------------------
 // MACRO: volume_button
 // Display the "Set Volume" button on Tools screen.
-//	lbl_0 = single lane, lbl_1 = two lanes.
+//	lbl_0 = single menu
+//	lbl_1, lbl_2 = two menus
 //---------------------------------------------------------------------------------------
 #define volume_button
 :lbl_0
-bd 10 20 11 1 "" 0 0 65 65     			// Setup "Volume" button for one lane.
+bd 10 20 11 1 "" 0 0 65 65     			// Setup "Volume" button for one menu.
+xm 10 request_volume       				// run request_volume macro, request parameters for volume
 :lbl_1
-xi 96 20 11								// Display the two lane button.
-xs 128 62 53 110 101					// Hotspot for "Set A" button.
-xs 129 62 107 110 155					// Hotspot for "Set B" button.
+xi 96 20 11								// Display the two menus button.
+xs 210 62 53 110 101					// Hotspot for "Set A" button.
+xm 210 request_volume      				// run request_volume macro, request parameters for volume
+xs 211 62 107 110 155					// Hotspot for "Set B" button.
+xm 211 request_volume_b    				// run request_volume_b macro, request parameters for volume
+:lbl_2
+xi 96 20 11								// Display the two menus button.
+xs 210 62 53 110 101					// Hotspot for "Set A" button.
+xm 210 request_volume      				// run request_volume macro, request parameters for volume
+xs 211 62 107 110 155					// Hotspot for "Set B" button.
+xm 211 request_volume_b    				// run request_volume_b macro, request parameters for volume
 #end
 
 //---------------------------------------------------------------------------------------
@@ -2852,17 +2939,6 @@ out "\xFF\xFF\x4D\x12\x02\x1F\x00\x1F"			// send make headset listen only reques
 #end
 
 //---------------------------------------------------------------------------------------
-// MACRO: delayed_switch_button_pressed
-// Handles refreshing the registration screen for two base system
-//
-//---------------------------------------------------------------------------------------
-#define delayed_switch_button_pressed
-out "\xFF\xFF\x4D\x12\x02\x1F\x00\x1F"			// send make headset listen only request to base to trigger display mux switch
-w 1000											// delay 1 second for display mux to switch
-m register_main									// refresh the register_main screen
-#end
-
-//---------------------------------------------------------------------------------------
 // MACRO: delete_button_pressed
 // Handles deleting a registered headset
 //
@@ -3006,7 +3082,8 @@ xa `(`e1`+23)` p pre_pin_unlock then_main	// Locked, goto password screen
 #end
 
 //---------------------------------------------------------------------------------------
-// MACRO: Setup System Mode button.
+// MACRO: hand_button_press
+// Setup System Mode button.
 //  1 = Hands Free (57) = button 24
 //  2 = Push To Talk (101) = button 25
 //  3 = Auto Hands Free (58) = button 26
@@ -3014,49 +3091,25 @@ xa `(`e1`+23)` p pre_pin_unlock then_main	// Locked, goto password screen
 //---------------------------------------------------------------------------------------
 #define hand_button_press
 :lbl_1
-bd 24 386 4 1 "" 0 0 57 57
-xm 24 update_system_mode:x24
-out "\xFF\xFF\x4D\x12\x03\x08\x01\x02\x0B"	// tell base to go to Hands Free Mode
+bd 24 386 4 1 "" 0 0 57 57				// HF
+xm 24 update_system_mode
 :lbl_2
-bd 25 386 4 1 "" 0 0 101 101
-xm 25 update_system_mode:x25
-out "\xFF\xFF\x4D\x12\x03\x08\x01\x03\x0C"	// tell base to go to Push To Talk Mode
+bd 25 386 4 1 "" 0 0 101 101			// PTT
+xm 25 update_system_mode
 :lbl_3
-bd 26 386 4 1 "" 0 0 58 58
-xm 26 update_system_mode:x26
-out "\xFF\xFF\x4D\x12\x03\x08\x01\x04\x0D"	// tell base to go to Auto Hands Free Mode
+bd 26 386 4 1 "" 0 0 58 58				// AHF
+xm 26 update_system_mode
 :lbl_4
-bd 27 386 4 1 "" 0 0 56 56
-xm 27 update_system_mode:x27
-out "\xFF\xFF\x4D\x12\x03\x08\x01\x05\x0E"	// tell base to go to Speed Team Mode
+bd 27 386 4 1 "" 0 0 56 56				// ST
+xm 27 update_system_mode
 #end
 
 //---------------------------------------------------------------------------------------
-// MACRO: update_system_mode variable.
-//  1 = Hands Free (57) = button 24
-//  2 = Push To Talk (101) = button 25
-//  3 = Auto Hands Free (58) = button 26
-//  4 = Speed Team (56) = button 27
-//  Update the System Mode (e1) to the next mode
-//  Call macro to display the new System Mode button
+// MACRO: update_system_mode variable
+//  request base to increment system mode and refresh button
 //---------------------------------------------------------------------------------------
 #define update_system_mode
-:x24
-set e1 2
-bc 24									// clear button 24 macro
-m hand_button_press:lbl_2
-:x25
-set e1 3
-bc 25									// clear button 25 macro
-m hand_button_press:lbl_3
-:x26
-set e1 4
-bc 26									// clear button 26 macro
-m hand_button_press:lbl_4
-:x27
-set e1 1
-bc 27									// clear button 27 macro
-m hand_button_press:lbl_1
+out "\xFF\xFF\x4D\x12\x02\x08\x00\x08"	// tell base to go to go to next mode Mode
 #end
 
 //---------------------------------------------------------------------------------------
@@ -3500,9 +3553,9 @@ touch on					// enable screen touches
 
 #define show_help_lanes
 touch off					// disable screen touches until screen is ready
-zs 35
+zs 118
 xs 128 0 0 479 271			// whole screen touch area
-//xm 128 lanes				// Return to lanes when touched
+xm 128 pre_lane_config		// return to lane_config when touched
 touch on					// enable screen touches
 #end
 
@@ -3559,21 +3612,21 @@ xs 128 0 0 479 271								// whole screen touch area
 xm 128 main										// Return to main when touched.
 s 0 1											// Black on White
 f 14x24
-t "                          "     	13  25 T	// help clear the screen before writing
-t "      Wentworth Technology"     	13  25 T
-t "     Saco, Maine, USA 04072"    	13  50 T
-t "        (877) 495-1634"      	13  75 T
-t "  www.wentworthtechnology.com"	13 100 T
+t "                          "      13  25 T	// help clear the screen before writing
+t "      Wentworth Technology"      13  25 T
+t "     Saco, Maine, USA 04072"     13  50 T
+t "        (877) 495-1634"          13  75 T
+t "  www.wentworthtechnology.com"   13 100 T
 :single
 t "   Firmware Version - `0`.`1`-AL"13 150 T	// Display the firmware version number.
-t "   Base Serial # - `2`"       	13 175 T	// Display the master serial number.
-t "   Copyright \xA9 2013  v1.3-AL" 13 250 T
+t "   Base Serial # - `2`"          13 175 T	// Display the master serial number.
+t "   Copyright \xA9 2014  v2.0-AL" 13 250 T
 touch on										// enable screen touches
 :dual
-t " Firmware Version - `0`.`1`-AL" 	13 150 T	// Display the firmware version number.
-t " 1st Base Serial # - `2`"       	13 175 T	// Display the master serial number.
-t " 2nd Base Serial # - `3`"       	13 200 T	// Display the slave number.
-t "  Copyright \xA9 2013  v1.3-AL"  13 250 T
+t " Firmware Version - `0`.`1`-AL"  13 150 T	// Display the firmware version number.
+t " 1st Base Serial # - `2`"        13 175 T	// Display the master serial number.
+t " 2nd Base Serial # - `3`"        13 200 T	// Display the slave number.
+t "  Copyright \xA9 2014  v2.0-AL"  13 250 T
 touch on										// enable screen touches
 #end
 
@@ -3614,23 +3667,23 @@ xs 128 429 221 479 271							// bottom right of screen touch area
 xm 128 main										// Return to main when touched
 s 0 1											// Black on White
 f 14x24
-t "                          "     	60  30 T	// help clear the screen before writing
+t "                          "     	60	30 	T	// help clear the screen before writing
 bd 1 5 224 1 "" 0 0 97 98						// Setup the "greet" button
-xm 1 request_greet_authorization				// request to save greet authorization code
-t " Greet"							60  239 T
-t " Code"							60  259 T
+xm 1 request_greet_authorization:x1				// request to save greet authorization code
+t "Greet"							60  239 T
+t "Code"							60  259 T
 :single
 bd 2 5 164 1 "" 0 0 43 49						// Setup the first "erase" button
-xm 2 request_power_count_reset					// request reset of counter
-t " # power ups: `0`"				60 189 T	// Display the number of times the base has been powered up
+xm 2 request_power_count_reset:x2				// request reset of counter
+t " # power ups: `0`"				60	189 T	// Display the number of times the base has been powered up
 touch on										// enable screen touches
 :dual
-bd 2 5 110 1 "" 0 0 43 49						// Setup the first "erase" button
-xm 2 request_power_count_reset					// request reset of counter
-bd 3 5 164 1 "" 0 0 43 49						// Setup the second "erase" button
-xm 3 request_power_count_reset2					// request reset of counter
-t " # power ups (master): `0`"		60 135 T	// Display the number of times the base has been powered up
-t " # power ups  (slave): `1`"		60 189 T	// Display the number of times the base has been powered up
+bd 2 5 164 1 "" 0 0 43 49						// Setup the first "erase" button
+xm 2 request_power_count_reset:x2				// request reset of counter
+bd 3 248 164 1 "" 0 0 43 49						// Setup the second "erase" button
+xm 3 request_power_count_reset:x3				// request reset of counter
+t "#pupsA:`0`"						60  189 T	// Display the number of times the base has been powered up
+t "#pupsB:`1`"						303 189 T	// Display the number of times the base has been powered up
 touch on										// enable screen touches
 #end
 
@@ -3641,11 +3694,11 @@ touch on										// enable screen touches
 //---------------------------------------------------------------------
 //
 #define show_greeter_promo
-touch off										// disable screen touches until screen is ready
-zs 27											// display the help screen
-xs 128 0 0 479 271								// whole screen touch area
-xm 128 main										// Return to main when touched.
-s 0 1											// Black on White
+touch off											// disable screen touches until screen is ready
+zs 27												// display the help screen
+xs 128 0 0 479 271									// whole screen touch area
+xm 128 main											// Return to main when touched.
+s 0 1												// Black on White
 f 14x24
 t "                                "	13  25 T	// help clear the screen before writing
 t "   This system does not have	   " 	13  25 T
@@ -3656,7 +3709,7 @@ t "      Wentworth Technology	   "    13 150 T
 t "     Saco, Maine, USA 04072	   "    13 175 T
 t "        (877) 495-1634		   "    13 200 T
 t "  www.wentworthtechnology.com   "	13 225 T
-touch on										// enable screen touches
+touch on											// enable screen touches
 #end
 
 //---------------------------------------------------------------------
@@ -3666,7 +3719,10 @@ touch on										// enable screen touches
 //---------------------------------------------------------------------------------------
 //
 #define request_greet_authorization
-out "\xFF\xFF\x4D\x12\x02\x43\x00\x43"	// tell base we want to save the greeter authorization code
+:x1
+out "\xFF\xFF\x4D\x12\x03\x42\x01\x01\x44"		// tell base we want to save the greeter A authorization code
+:x9
+out "\xFF\xFF\x4D\x12\x03\x42\x01\x02\x45"		// tell base we want to save the greeter B authorization code
 #end
 
 //---------------------------------------------------------------------
@@ -3676,11 +3732,10 @@ out "\xFF\xFF\x4D\x12\x02\x43\x00\x43"	// tell base we want to save the greeter 
 //---------------------------------------------------------------------
 //
 #define request_power_count_reset
-out "\xFF\xFF\x4D\x12\x02\x41\x00\x41"			// tell base we want to reset the Wentworth debug info
-#end
-
-#define request_power_count_reset2
-out "\xFF\xFF\x4D\x12\x02\x42\x00\x42"			// tell base we want to reset the Wentworth debug info
+:x2
+out "\xFF\xFF\x4D\x12\x03\x41\x01\x01\x43"			// tell base we want to reset the base A counter
+:x3
+out "\xFF\xFF\x4D\x12\x03\x41\x01\x02\x44"			// tell base we want to reset the base B counter
 #end
 
 //---------------------------------------------------------------------------------------
@@ -3692,10 +3747,10 @@ out "\xFF\xFF\x4D\x12\x02\x42\x00\x42"			// tell base we want to reset the Wentw
 #define request_base_command
 m outByte `0`							// convert digit to hex
 set s1 `s0`								// save it (s1)
-set i6 `(69+`0`)`						// add 0x44 + 0x01 + arg0 create checksum
+set i6 `(68+`0`)`						// add 0x43 + 0x01 + arg0 create checksum
 m outByte `i6`							// convert checksum (i6) to hex
 set s2 `s0`								// save it (s2)
-out "\xFF\xFF\x4D\x12\x03\x44\x01\x`s1`\x`s2`"	// tell base what which command is being requested
+out "\xFF\xFF\x4D\x12\x03\x43\x01\x`s1`\x`s2`"	// tell base what which command is being requested
 #end
 
 //---------------------------------------------------------------------
@@ -3728,6 +3783,158 @@ xi 15 72 146	// thumbs down icon.
 //
 #define set_pin_thumbs_dn
 xi 15 402 86	// thumbs down icon.
+#end
+
+//---------------------------------------------------------------------
+// MACRO: pre_lane_config
+// Display the set lanes screen
+//
+//---------------------------------------------------------------------
+//
+#define pre_lane_config
+m lane_config:lbl_`eB`
+#end
+
+//---------------------------------------------------------------------
+// MACRO: lane_config
+// Display the set lanes screen
+//
+//---------------------------------------------------------------------
+//
+#define lane_config
+touch off									// disable screen touches until screen is ready
+m reset_display 50							// Display the background
+
+xi 107 0 0     								// Display the "Set Lane Configuration" banner
+bd 16 430 222 1 "" 0 0 17 17				// Setup the "Home" button
+xm 16 main									// Go back to main screen
+bd 27 430 172 1 "" 0 0 86 86				// Display "Tools" button
+xm 27 tools									// Go back to tools screen
+bd 15 380 222 1 "" 0 0 12 12				// Setup the "Help" button
+xm 15 show_help_lanes						// Display the help screen
+
+:lbl_0
+xi 109 40 107
+xi 110 140 55
+xi 112 260 55
+xi 114 140 164
+xi 116 260 164
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x00\x62"	// tell base we're displaying the lane configuration screen
+touch on									// enable screen touches
+
+:lbl_1
+bd 17 40 107 1 "" 0 0 109 108				// Setup the the "Set Single Lane" button
+xm 17 request_lane_config:x17				// Go to request_lane_config
+xd 17
+bd 18 140 55 1 "" 0 0 110 111				// Setup the the "Set Parallel Lanes 1OT" button
+xm 18 request_lane_config:x18				// Go to request_lane_config
+xe 18
+bd 19 260 55 1 "" 0 0 112 113				// Setup the the "Set Tandem Lane 1OT" button
+xm 19 request_lane_config:x19				// Go to request_lane_config
+xe 19
+bd 20 140 164 1 "" 0 0 114 115				// Setup the the "Set Parallel Lanes 2OTs" button
+xm 20 request_lane_config:x20				// Go to request_lane_config
+xe 20
+bd 21 260 164 1 "" 0 0 116 117				// Setup the the "Set Tandem Lane 2OTs" button
+xm 21 request_lane_config:x21				// Go to request_lane_config
+xe 21
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x00\x62"	// tell base we're displaying the lane configuration screen
+touch on									// enable screen touches
+
+:lbl_2
+bd 17 40 107 1 "" 0 0 108 109				// Setup the the "Set Single Lane" button
+xm 17 request_lane_config:x17				// Go to request_lane_config
+xe 17
+bd 18 140 55 1 "" 0 0 111 110				// Setup the the "Set Parallel Lanes 1OT" button
+xm 18 request_lane_config:x18				// Go to request_lane_config
+xd 18
+bd 19 260 55 1 "" 0 0 112 113				// Setup the the "Set Tandem Lane 1OT" button
+xm 19 request_lane_config:x19				// Go to request_lane_config
+xe 19
+bd 20 140 164 1 "" 0 0 114 115				// Setup the the "Set Parallel Lanes 2OTs" button
+xm 20 request_lane_config:x20				// Go to request_lane_config
+xe 20
+bd 21 260 164 1 "" 0 0 116 117				// Setup the the "Set Tandem Lane 2OTs" button
+xm 21 request_lane_config:x21				// Go to request_lane_config
+xe 21
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x00\x62"	// tell base we're displaying the lane configuration screen
+touch on									// enable screen touches
+
+:lbl_3
+bd 17 40 107 1 "" 0 0 108 109				// Setup the the "Set Single Lane" button
+xm 17 request_lane_config:x17				// Go to request_lane_config
+xe 17
+bd 18 140 55 1 "" 0 0 110 111				// Setup the the "Set Parallel Lanes 1OT" button
+xm 18 request_lane_config:x18				// Go to request_lane_config
+xe 18
+bd 19 260 55 1 "" 0 0 113 112				// Setup the the "Set Tandem Lane 1OT" button
+xm 19 request_lane_config:x19				// Go to request_lane_config
+xd 19
+bd 20 140 164 1 "" 0 0 114 115				// Setup the the "Set Parallel Lanes 2OTs" button
+xm 20 request_lane_config:x20				// Go to request_lane_config
+xe 20
+bd 21 260 164 1 "" 0 0 116 117				// Setup the the "Set Tandem Lane 2OTs" button
+xm 21 request_lane_config:x21				// Go to request_lane_config
+xe 21
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x00\x62"	// tell base we're displaying the lane configuration screen
+touch on									// enable screen touches
+
+:lbl_4
+bd 17 40 107 1 "" 0 0 108 109				// Setup the the "Set Single Lane" button
+xm 17 request_lane_config:x17				// Go to request_lane_config
+xe 17
+bd 18 140 55 1 "" 0 0 110 111				// Setup the the "Set Parallel Lanes 1OT" button
+xm 18 request_lane_config:x18				// Go to request_lane_config
+xe 18
+bd 19 260 55 1 "" 0 0 112 113				// Setup the the "Set Tandem Lane 1OT" button
+xm 19 request_lane_config:x19				// Go to request_lane_config
+xe 19
+bd 20 140 164 1 "" 0 0 115 114				// Setup the the "Set Parallel Lanes 2OTs" button
+xm 20 request_lane_config:x20				// Go to request_lane_config
+xd 20
+bd 21 260 164 1 "" 0 0 116 117				// Setup the the "Set Tandem Lane 2OTs" button
+xm 21 request_lane_config:x21				// Go to request_lane_config
+xe 21
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x00\x62"	// tell base we're displaying the lane configuration screen
+touch on									// enable screen touches
+
+:lbl_5
+bd 17 40 107 1 "" 0 0 108 109				// Setup the the "Set Single Lane" button
+xm 17 request_lane_config:x17				// Go to request_lane_config
+xe 17
+bd 18 140 55 1 "" 0 0 110 111				// Setup the the "Set Parallel Lanes 1OT" button
+xm 18 request_lane_config:x18				// Go to request_lane_config
+xe 18
+bd 19 260 55 1 "" 0 0 112 113				// Setup the the "Set Tandem Lane 1OT" button
+xm 19 request_lane_config:x19				// Go to request_lane_config
+xe 19
+bd 20 140 164 1 "" 0 0 114 115				// Setup the the "Set Parallel Lanes 2OTs" button
+xm 20 request_lane_config:x20				// Go to request_lane_config
+xe 20
+bd 21 260 164 1 "" 0 0 117 116				// Setup the the "Set Tandem Lane 2OTs" button
+xm 21 request_lane_config:x21				// Go to request_lane_config
+xd 21
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x00\x62"	// tell base we're displaying the lane configuration screen
+touch on									// enable screen touches
+#end
+
+//---------------------------------------------------------------------
+// MACRO: request_lane_config
+// Send new lane configuration request to base
+//
+//---------------------------------------------------------------------
+//
+#define request_lane_config
+:x17
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x01\x63"	// request single lane configuration
+:x18
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x02\x64"	// request parallel lanes 1OT configuration
+:x19
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x03\x65"	// request tandem lane 1OT configuration
+:x20
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x04\x66"	// request parallel lanes 2OTs configuration
+:x21
+out "\xFF\xFF\x4D\x12\x03\x61\x01\x05\x67"	// request tandem lane 2OTs configuration
 #end
 
 //---------------------------------------------------------------------
