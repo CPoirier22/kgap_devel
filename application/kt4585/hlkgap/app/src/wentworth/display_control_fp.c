@@ -505,19 +505,6 @@ void RegistrationScreen(UByte cmd)
 				}
 				if ((base_station).HeadsetButtonIsPressed[i])
 				{
-					if ((base_station).CalibratingPPMic)
-					{
-						CopyToUartTxBuffer((UByte *)"t \"decrease MIC volume\" 10 250\r", 31);
-						BroadcastCalOffset(i, 0);
-						break;
-					}
-					else if ((base_station).CalibratingPPRcv)
-					{
-						CopyToUartTxBuffer((UByte *)"t \"decrease RCV volume\" 10 250\r", 31);
-						BroadcastCalOffset(i, 3);
-						break;
-					}
-
 					(base_station).DisplayValueChanged = TRUE;
 					(base_station).HeadsetButtonIsPressed[i] = FALSE;
 					fp_subscription_removeSubscription(i);
@@ -589,19 +576,6 @@ void RegistrationScreen(UByte cmd)
 				}
 				if ((base_station).HeadsetButtonIsPressed[i])
 				{
-					if ((base_station).CalibratingPPMic)
-					{
-						CopyToUartTxBuffer((UByte *)"t \"increase MIC volume\" 10 250\r", 31);
-						BroadcastCalOffset(i, 2);
-						break;
-					}
-					else if ((base_station).CalibratingPPRcv)
-					{
-						CopyToUartTxBuffer((UByte *)"t \"increase RCV volume\" 10 250\r", 31);
-						BroadcastCalOffset(i, 5);
-						break;
-					}
-
 					(base_station).HeadsetButtonIsPressed[i] = FALSE;
 					if (QuickData[i].EmptyMarker == 0)
 					{
@@ -1912,55 +1886,44 @@ void HandleDebugButton(UByte cmd)
 {
 	int i = 0;
 	(base_station).HeadsetCounter = 0;
-	(base_station).DeletionCounter = 0;
-	(base_station).ListenOnlyCounter = 0;
-	(base_station).CalibratingPPMic = FALSE;
-	(base_station).CalibratingPPRcv = FALSE;
 
 	CopyToUartTxBuffer((UByte *)"t \"                                        \" 10 250\r", 52);
 
-	switch (cmd)
+	i = (base_station).HeadsetCounter++;
+	while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).HeadsetCounter < MAX_Allowed_Users))
 	{
-		case 31:	// - PP MIC offset
-			(base_station).CalibratingPPMic = TRUE;
-			RegistrationScreen(0x1E);
-			break;
-		case 32:	// reset PP MIC offset
-			i = (base_station).HeadsetCounter++;
-			while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).HeadsetCounter < MAX_Allowed_Users))
-			{
-				i = (base_station).HeadsetCounter++;
-			}
-			if ((base_station).HeadsetButtonIsPressed[i])
-			{
+		i = (base_station).HeadsetCounter++;
+	}
+
+	if ((base_station).HeadsetButtonIsPressed[i])
+	{
+		switch (cmd)
+		{
+			case 31:	// - PP MIC offset
+				CopyToUartTxBuffer((UByte *)"t \"decrease MIC volume\" 10 250\r", 31);
+				BroadcastCalOffset(i, 0);
+				break;
+			case 32:	// reset PP MIC offset
 				CopyToUartTxBuffer((UByte *)"t \"reset MIC volume\" 10 250\r", 28);
 				BroadcastCalOffset(i, 1);
-			}
-			break;
-		case 33:	// + PP MIC offset
-			(base_station).CalibratingPPMic = TRUE;
-			RegistrationScreen(0x1F);
-			break;
-		case 34:	// - PP RCV offset
-			(base_station).CalibratingPPRcv = TRUE;
-			RegistrationScreen(0x1E);
-			break;
-		case 35:	// reset PP RCV offset
-		i = (base_station).HeadsetCounter++;
-		while ((!(base_station).HeadsetButtonIsPressed[i]) && ((base_station).HeadsetCounter < MAX_Allowed_Users))
-		{
-				i = (base_station).HeadsetCounter++;
-			}
-			if ((base_station).HeadsetButtonIsPressed[i])
-			{
+				break;
+			case 33:	// + PP MIC offset
+				CopyToUartTxBuffer((UByte *)"t \"increase MIC volume\" 10 250\r", 31);
+				BroadcastCalOffset(i, 2);
+				break;
+			case 34:	// - PP RCV offset
+				CopyToUartTxBuffer((UByte *)"t \"decrease RCV volume\" 10 250\r", 31);
+				BroadcastCalOffset(i, 3);
+				break;
+			case 35:	// reset PP RCV offset
 				CopyToUartTxBuffer((UByte *)"t \"reset RCV volume\" 10 250\r", 28);
 				BroadcastCalOffset(i, 4);
-			}
-			break;
-		case 36:	// + PP RCV offset
-			(base_station).CalibratingPPRcv = TRUE;
-			RegistrationScreen(0x1F);
-			break;
+				break;
+			case 36:	// + PP RCV offset
+				CopyToUartTxBuffer((UByte *)"t \"increase RCV volume\" 10 250\r", 31);
+				BroadcastCalOffset(i, 5);
+				break;
+		}
 	}
 }
 
@@ -2269,10 +2232,6 @@ void ServiceDisplay()
 
 			if ((base_station).PPCalibration)
 				(base_station).PPCalibration = FALSE;
-			if ((base_station).CalibratingPPMic)
-				(base_station).CalibratingPPMic = FALSE;
-			if ((base_station).CalibratingPPRcv)
-				(base_station).CalibratingPPRcv = FALSE;
 
 			if (FIRST_BASE && (base_station).GreeterScreenB)
 			{

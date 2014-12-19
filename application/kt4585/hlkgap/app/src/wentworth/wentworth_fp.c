@@ -1478,8 +1478,6 @@ static void ConfigureBaseStationVariables()
 	(base_station).AlertPlayed = FALSE;
 	(base_station).BC5Bypassed = FALSE;
 	(base_station).PPCalibration = FALSE;
-	(base_station).CalibratingPPMic = FALSE;
-	(base_station).CalibratingPPRcv = FALSE;
 	(base_station).MsgCounter = NUM_OF_MESSAGES;
 	(base_station).MsgBeingEdited = 0;
 	(base_station).MsgDayBeingEdited = MONDAY;

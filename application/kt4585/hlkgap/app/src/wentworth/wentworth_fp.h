@@ -235,7 +235,7 @@ typedef struct
 	BOOLEAN GreeterInstalled;
 	UByte ActiveGreetNumber;
 	WORD ActiveMessages;
-	BOOLEAN FillingMsgDisplay, GreetClockRunning, AlertWaiting, AlertPlayed, BC5Bypassed, PPCalibration, CalibratingPPMic, CalibratingPPRcv;
+	BOOLEAN FillingMsgDisplay, GreetClockRunning, AlertWaiting, AlertPlayed, BC5Bypassed, PPCalibration;
 	UByte MsgCounter;
 	UByte MsgBeingEdited;
 	MsgDayNames MsgDayBeingEdited;
