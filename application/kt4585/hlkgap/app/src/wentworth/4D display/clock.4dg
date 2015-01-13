@@ -1,0 +1,672 @@
+#platform "uLCD-43PT"
+
+var DisplayFont;
+var hndl;                                                   // Global Touch variable
+var return_to_main;                                         // flag for returning to main screen
+var h1, h2, m1, m2;                                         // globals
+var day[10];
+
+#CONST
+    CR              13
+    QUOTE           34
+    BUFSIZE         80 // Max 128 chars    was 64, increased to 80 to eliminate buffer overrun on long DECT messages
+    CMDLEN          8
+    P1LEN           30
+    PXLEN           10
+#END
+
+var combuf[BUFSIZE * 2];                                    // comm port circular buffer
+var iCharCounter;                                           // used to count chars as they're read into DECTBuffer
+var DECTBuffer[BUFSIZE];                                    // used to save DECT string once \r is received into combuf
+var pDECTBuffer;                                            // pointer to DECTBuffer
+var CMD[CMDLEN], param1[P1LEN], param2[PXLEN];              // buffers for DECT commands and parameters
+var param3[PXLEN], param4[PXLEN], param5[PXLEN];            // buffers for DECT commands and parameters
+var param6[PXLEN], param7[PXLEN], param8[PXLEN];            // buffers for DECT commands and parameters
+var param9[PXLEN], param10[PXLEN], param11[PXLEN];          // buffers for DECT commands and parameters
+
+func main()                                                 // no args = fn.4XE , with args = fn.4FN
+    return_to_main := 99;                                   // clear flag to return to the main screen
+
+    DisplayFont := FONT3;                                   // globalize the register display font
+    txt_Set(FONT_ID, DisplayFont);                          // we can use FONT4 inherited from the parent program
+
+    hndl := file_LoadImageControl("clock.Dat", "clock.Gci", 1);           // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+    if (hndl == 0)
+        repeat
+            txt_MoveCursor(10, 20);
+            txt_FGcolour(0xFFE0);
+            print("LoadImageControl failed ");
+            pause(200);
+            gfx_Cls();
+            pause(200);
+            hndl := file_LoadImageControl("clock.Dat", "clock.Gci", 1);   // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+        until(hndl);
+    endif
+
+    iCharCounter := 0;                                      // init the char counter
+    pDECTBuffer := str_Ptr(DECTBuffer);                     // init the pointer to DECTBuffer
+    com_Init(combuf, (BUFSIZE * 2), 0);                     // start up the comm port circular buffer with no qualifier so constantly receive chars
+
+    clock();
+
+    mem_Free(hndl);
+
+    return return_to_main;
+endfunc
+
+func reset_display()
+    gfx_BGcolour(0x001F);                                   // 0x001F == BLUE
+    gfx_Cls();
+    gfx_Set(SCREEN_MODE, LANDSCAPE_R);
+
+    txt_FontID(DisplayFont);                                // select custom font
+    txt_Width(1);                                           // font multiplier - not necessary if we get custom fonts working
+    txt_Height(1);                                          // font multiplier - not necessary if we get custom fonts working
+    txt_Bold(0);
+    txt_Opacity(0);                                         // draw background pixels
+    txt_FGcolour(0);                                        // black
+endfunc
+
+//---------------------------------------------------------------------
+//  This sends out strings on COM1.  Needs to be hex values separated by spaces - so replace \x with a space from Reach code
+//  Initially tried blocking code, but this spit out extra values based on the buffer size
+//  So buffer would have to be dynamically scaled.  This is a brute force technique, seems to work OK
+//
+//---------------------------------------------------------------------
+//
+func out(var out_string)
+    var l;                                                  // string pointer
+    var m;                                                  // counter
+    var hex_codes[30];                                      // array for our results
+    var out_p;                                              // string buffer
+
+    m := 0;
+    out_p := str_Ptr(out_string);                           // raise a string pointer so we can use it
+
+    while(str_GetHexW(&out_p, &hex_codes[m++]) != 0);       // scan through and pull out all of the hex numbers put in array
+
+    for (l := 0; l < (m - 1); l++)                          // loop through and send out serial port
+        serout(hex_codes[l]);                               // send out hex data
+    next
+endfunc
+
+//---------------------------------------------------------------------
+// This macro re-creates the reach button define macro
+// n is a don't care, global var hndl covers this
+// xy is location, type to be used later, text0 is a don't care
+// bmp0 is the primary image, bmp1 needs to be handled tbd
+//
+//---------------------------------------------------------------------
+//
+func bd(var n, var x, var y, var type, var text0, var dx, var dy, var bmp0, var bmp1)
+//////////
+// CP: just to eliminate "notices" during compile from unused variables:
+bmp1 := 0;
+type := 0;
+n := 0;
+dy := 0;
+dx := 0;
+text0 := 0;
+//////////
+    img_Enable(hndl, bmp0);                                 // enable button
+    img_ClearAttributes(hndl, bmp0, I_TOUCH_DISABLE);       // set to enable touch, only need to do this once
+    img_SetWord(hndl, bmp0, IMAGE_FLAGS, (img_GetWord(hndl, bmp0, IMAGE_FLAGS) | I_STAYONTOP) & ~I_TOUCH_DISABLE); // set to enable touch, only need to do this once
+    img_SetPosition(hndl, bmp0, x, y);
+    img_Show(hndl, bmp0);                                   // show button, only do this once
+endfunc
+
+//---------------------------------------------------------------------
+// This macro re-creates the reach button define macro
+// n is a don't care, global var hndl covers this
+// xy is location, type to be used later, text0 is a don't care
+// bmp0 is the primary image, bmp1 needs to be handled tbd
+// keypad number box is 55x55,characters are 28x24, manually calced center offset
+//
+//---------------------------------------------------------------------
+//
+func bdc(var n, var x, var y, var font, var text0, var bmp0, var bmp1, var sizex, var sizey)
+
+//////////
+// CP: just to eliminate "notices" during compile from unused variables:
+bmp1 := 0;
+//////////
+    img_Enable(hndl, bmp0);                                 // enable button
+    img_ClearAttributes(hndl, bmp0, I_TOUCH_DISABLE);       // set to enable touch, only need to do this once
+    img_SetWord(hndl, bmp0, IMAGE_FLAGS, (img_GetWord(hndl, bmp0, IMAGE_FLAGS) | I_STAYONTOP) & ~I_TOUCH_DISABLE); // set to enable touch, only need to do this once
+    img_SetPosition(hndl, bmp0, x, y);
+    img_Show(hndl, bmp0);                                   // show button, only do this once
+
+    txt_FontID(font);                                       // select custom font
+    txt_Width(3);                                           // font multiplier - not necessary if we get custom fonts working
+    txt_Height(3);                                          // font multiplier - not necessary if we get custom fonts working
+    if (n == 3)
+        txt_Width(2);                                       // font multiplier - not necessary if we get custom fonts working
+        txt_Height(2);                                      // font multiplier - not necessary if we get custom fonts working
+    endif
+    txt_Bold(0);
+    txt_Opacity(0);                                         // Don't draw background pixels
+    txt_FGcolour(0);                                        // black
+
+    gfx_MoveTo(x + ((sizex - strwidth(text0)) / 2), y + ((sizey - strheight()) / 2));   // strheight() uses previous strwidth calc
+    print([STR]text0);
+endfunc
+
+//---------------------------------------------------------------------
+// Shows help for set clock screen
+//
+//---------------------------------------------------------------------
+//
+func show_help_clock()
+    var state;
+
+    img_Disable(hndl, ALL);                                 // Disable all objects
+    bd(20, 0, 0, 1, "", 0, 0, 20, 20);                      // Display the actual help screen
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+    until (state == TOUCH_PRESSED);                         // return when screen is pressed anywhere
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: set_clock
+// setup day and time buttons
+//
+//  `0`  h1  MShour value
+//  `1`  h2  LShour value
+//  `2`  m1  MSminute value
+//  `3`  m2  LSminute value
+//  `4`  day day value
+//
+//---------------------------------------------------------------------
+//
+func set_clock()
+    var p2, p3, p4, p5;
+
+    p2 := str_Ptr(param2);
+    p3 := str_Ptr(param3);
+    p4 := str_Ptr(param4);
+    p5 := str_Ptr(param5);
+
+    str_GetW(&p2, &h1);                                     // save current h1 value
+    str_GetW(&p3, &h2);                                     // save current h2 value
+    str_GetW(&p4, &m1);                                     // save current m1 value
+    str_GetW(&p5, &m2);                                     // save current m2 value
+    to(day); print([STR]param6);                            // save current day
+
+    refresh_clock();
+endfunc
+
+func refresh_clock()
+    var string_buffer[10];
+
+    to(string_buffer); print([STR]day);                     // display the DAY button
+    bdc( 3,  76,  62, DisplayFont, string_buffer,  3,  3, 140, 25);
+    to(string_buffer); print(h1);                           // display the h1 button
+    bdc( 7,  18, 156, DisplayFont, string_buffer,  7,  7,  55, 55);
+    to(string_buffer); print(h2);                           // display the h2 button
+    bdc(10,  78, 156, DisplayFont, string_buffer, 10, 10,  55, 55);
+    to(string_buffer); print(m1);                           // display the m1 button
+    bdc(13, 157, 156, DisplayFont, string_buffer, 13, 13,  55, 55);
+    to(string_buffer); print(m2);                           // display the m2 button
+    bdc(16, 217, 156, DisplayFont, string_buffer, 16, 16,  55, 55);
+endfunc
+
+func clock_setup()
+    reset_display();
+    img_Disable(hndl, ALL);                                 // Disable all objects , start with a clean slate
+
+    bd( 0, 430, 222, 1, "", 0, 0,  0,  0);                  // display the "Home" button
+    bd( 1,   0,   0, 1, "", 0, 0,  1,  1);                  // display the "Set Clock" banner
+
+    bd( 2,  16,  50, 1, "", 0, 0,  2,  2);                  // display the left button
+    bd( 4, 215,  50, 1, "", 0, 0,  4,  4);                  // display the right button
+
+    bd( 6,  16, 104, 1, "", 0, 0,  6,  6);                  // display the h1 up button
+    bd( 8,  16, 214, 1, "", 0, 0,  8,  8);                  // display the h1 down button
+
+    bd( 9,  76, 104, 1, "", 0, 0,  9,  9);                  // display the h2 up button
+    bd(11,  76, 214, 1, "", 0, 0, 11, 11);                  // display the h2 down button
+
+    bd( 5, 138, 166, 1, "", 0, 0,  5,  5);                  // display top of colon
+    bd( 5, 138, 186, 1, "", 0, 0,  5,  5);                  // display bottom of colon
+
+    bd(12, 155, 104, 1, "", 0, 0, 12, 12);                  // display the m1 up button
+    bd(14, 155, 214, 1, "", 0, 0, 14, 14);                  // display the m1 down button
+
+    bd(15, 215, 104, 1, "", 0, 0, 15, 15);                  // display the m2 up button
+    bd(17, 215, 214, 1, "", 0, 0, 17, 17);                  // display the m2 down button
+
+    bd(19, 430, 172, 1, "", 0, 0, 19, 19);                  // display the "Tools" button
+    bd(18, 380, 222, 1, "", 0, 0, 18, 18);                  // Setup the "Help" button
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: clock
+// For changing the clock setting
+//
+//---------------------------------------------------------------------
+//
+func clock()
+    var nn, state;
+    var string_buffer[30], p, i;
+    var ch;
+
+    clock_setup();
+
+    out("FF FF 4D 12 03 1C 01 00 1D");                      // tell base to send current clock settings for set clock display; base will respond with "m set_clock h1 h2 m1 m2 day"
+
+    touch_Set(TOUCH_ENABLE);                                // enable the touch screen
+
+    nn := 99;
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+        if(state ==  TOUCH_PRESSED)
+            nn := img_Touched(hndl, -1);                    // scan image list, looking for a touch
+            if (nn == 0)
+                to(string_buffer); print("FF FF 4D 12 06 0B 04 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " ", [HEX2](11 + 4 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // report new time to base
+                return_to_main := 0;
+            else if (nn == 19)
+                to(string_buffer); print("FF FF 4D 12 06 0B 04 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " ", [HEX2](11 + 4 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // report new time to base
+                return_to_main := 1;
+
+            else if (nn == 18)
+                show_help_clock();                          // goto the help screen
+                clock_setup();                              // setup header and help buttons
+                refresh_clock();
+                touch_Set(TOUCH_ENABLE);                    // enable the touch screen
+
+            else if (nn == 2)
+                out("FF FF 4D 12 03 0F 01 00 10");          // day scroll left
+            else if (nn == 4)
+                out("FF FF 4D 12 03 0F 01 01 11");          // day scroll left
+
+            else if (nn == 6)
+                to(string_buffer); print("FF FF 4D 12 08 0D 06 01 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](13 + 6 + 1 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // h1 scroll up
+            else if (nn == 8)
+                to(string_buffer); print("FF FF 4D 12 08 0E 06 01 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](14 + 6 + 1 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // h1 scroll down
+
+            else if (nn == 9)
+                to(string_buffer); print("FF FF 4D 12 08 0D 06 02 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](13 + 6 + 2 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // h2 scroll up
+            else if (nn == 11)
+                to(string_buffer); print("FF FF 4D 12 08 0E 06 02 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](14 + 6 + 2 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // h2 scroll down
+
+            else if (nn == 12)
+                to(string_buffer); print("FF FF 4D 12 08 0D 06 03 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](13 + 6 + 3 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // m1 scroll up
+            else if (nn == 14)
+                to(string_buffer); print("FF FF 4D 12 08 0E 06 03 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](14 + 6 + 3 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // m1 scroll down
+
+            else if (nn == 15)
+                to(string_buffer); print("FF FF 4D 12 08 0D 06 04 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](13 + 6 + 4 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // m2 scroll up
+            else if (nn == 17)
+                to(string_buffer); print("FF FF 4D 12 08 0E 06 04 ", [HEX2]h1, " ", [HEX2]h2, " ", [HEX2]m1, " ", [HEX2]m2, " 00 ", [HEX2](14 + 6 + 4 + h1 + h2 + m1 + m2));
+                out(string_buffer);                         // m2 scroll down
+
+            endif
+
+            p := str_Ptr(string_buffer);
+            for(i := 0; i < 30; i++)
+                str_PutByte(p++, 0);                        // fill string with 0
+            next
+
+        endif
+
+        // check for anything from DECT
+        if (com_Count() > 0)
+            while (com_Count() > 0)
+                // Absolute non blocking code if the outside while is not present
+                ch := serin();
+                if (ch != -1)
+                    updateDECTBuffer(ch);
+                endif
+            wend
+        endif
+
+    until (return_to_main < 99);
+
+endfunc
+
+////////////////////////////////
+// process serial port traffic
+//
+func updateDECTBuffer(var ch)
+    var n, p;
+    if (ch == CR)                                           // CR is the response command; if the buffer needs saving, do something with it HERE
+        iCharCounter := 0;                                  // iCharCounter is reset to 0
+        parseDECTBuffer();
+        processDECTCommand();                               // Call function to process response in DECTBuffer
+
+        p := str_Ptr(DECTBuffer);
+        for(n := 0; n < BUFSIZE; n++)
+            str_PutByte(p++, 0);                            // fill string with 0
+        next
+    else
+        if (iCharCounter > (BUFSIZE * 2)) iCharCounter--;   // Protect from overflow
+        str_PutByte(pDECTBuffer + iCharCounter++, ch);      // ch is placed into DECTBuffer[iCharCounter]
+    endif
+endfunc
+
+////////////////////////////////
+// parse the command from the DECT and pass it along
+//
+func processDECTCommand()
+    var p, p1, p2, p3, p4, p5;
+
+    p  := str_Ptr(CMD);
+    p1 := str_Ptr(param1);
+
+    switch
+        case (str_MatchI(&p, "m"))
+            switch
+                case (str_MatchI(&p1, "set_clock_day"))
+                    to(day); print([STR]param2);            // save current day setting
+                    refresh_clock();
+                    break;
+                case (str_MatchI(&p1, "set_clock_time"))
+                    p2 := str_Ptr(param2);
+                    p3 := str_Ptr(param3);
+                    p4 := str_Ptr(param4);
+                    p5 := str_Ptr(param5);
+                    str_GetW(&p2, &h1);                     // save current h1 value
+                    str_GetW(&p3, &h2);                     // save current h2 value
+                    str_GetW(&p4, &m1);                     // save current m1 value
+                    str_GetW(&p5, &m2);                     // save current m2 value
+                    refresh_clock();
+                    break;
+                case (str_MatchI(&p1, "set_clock"))
+                    set_clock();                            // save current clock setting
+                    break;
+                case (str_MatchI(&p1, "main"))              // this case has to be AFTER anything else with "main" in it so it doesn't trigger falsely
+                    return_to_main := 0;                    // set flag to return to the main screen
+                    break;
+            endswitch
+            break;
+    endswitch
+endfunc
+
+func parseDECTBuffer()
+    var buffer[BUFSIZE];                                    // BUFSIZE character buffer for a source string
+    var n;                                                  // general purpose counter
+    var cmdFound;                                           // flag tracking whether or not a command was parsed
+    var p, p1, p_cnt;                                       // temp ptrs, temp pointer counter
+    var char;                                               // character holder
+
+    p := str_Ptr(buffer);
+    for(n := 0; n < BUFSIZE; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+
+    to(buffer); print([STR]DECTBuffer);                     // save a local copy of the DECTBuffer
+    p := str_Ptr(CMD);
+    for(n := 0; n < CMDLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param1);
+    for(n := 0; n < P1LEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param2);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param3);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param4);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param5);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param6);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param7);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param8);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param9);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param10);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param11);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+
+    cmdFound := 0;                                          // init
+    p := str_Ptr(buffer);                                   // re-init pointer to buffer
+    p_cnt := str_Ptr(buffer);                               // re-init pointer to buffer; used as moving index
+
+    if (strlen(buffer) == 0) goto done_parsing;             // no need to parse an empty string
+
+    // looking for CMD
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, it was all whitespace
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of CMD
+    cmdFound := 1;
+    p1 := str_Ptr(CMD);                                     // init p1 pointer to CMD string
+    str_PutByte(p1++, char);
+    while (str_GetC(&p_cnt, &char))                         // pull the next char off of buffer[p_cnt]
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param1
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param1
+    p1 := str_Ptr(param1);
+    str_PutByte(p1++, char);
+    // get the rest of param1
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param2
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param2
+    p1 := str_Ptr(param2);
+    str_PutByte(p1++, char);
+    // get the rest of param2
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param3
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param3
+    p1 := str_Ptr(param3);
+    str_PutByte(p1++, char);
+    // get the rest of param3
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param4
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param4
+    p1 := str_Ptr(param4);
+    str_PutByte(p1++, char);
+    // get the rest of param4
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param5
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param5
+    p1 := str_Ptr(param5);
+    str_PutByte(p1++, char);
+    // get the rest of param5
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param6
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param6
+    p1 := str_Ptr(param6);
+    str_PutByte(p1++, char);
+    // get the rest of param6
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param7
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param7
+    p1 := str_Ptr(param7);
+    str_PutByte(p1++, char);
+    // get the rest of param7
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param8
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param8
+    p1 := str_Ptr(param8);
+    str_PutByte(p1++, char);
+    // get the rest of param8
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param9
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param9
+    p1 := str_Ptr(param9);
+    str_PutByte(p1++, char);
+    // get the rest of param9
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param10
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param10
+    p1 := str_Ptr(param10);
+    str_PutByte(p1++, char);
+    // get the rest of param10
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param11
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param11
+    p1 := str_Ptr(param11);
+    str_PutByte(p1++, char);
+    // get the rest of param11
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+done_parsing:
+
+endfunc
+
+

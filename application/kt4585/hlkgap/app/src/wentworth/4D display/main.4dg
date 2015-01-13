@@ -1,0 +1,1291 @@
+#platform "uLCD-43PT"
+#inherit "FONT4.FNT"                                    // store font in parent DATA ROM
+
+#MODE RUNFLASH                                          // run program directly from FLASH
+#STACK 500                                              // default STACK is 200
+
+var hndl;                                               // Global Touch variable
+var help, return_to_main;                               // globals for handling time-out to return to the main screen
+var e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, eA, eB;     // more globals
+var pin_index;                                          // var to step across pin window
+var touch_bdcX1[20];                                    // top left corner touch regions for the buttons
+var touch_bdcY1[20];
+var touch_bdcX2[20];                                    // bottom right corner touch regions for the buttons
+var touch_bdcY2[20];
+
+//////////////////////////////////////////////////////
+// comm stuff
+
+#CONST
+    CR              13
+    QUOTE           34
+    BUFSIZE         128 // Max 128 chars    was 64
+    CMDLEN          8
+    P1LEN           30
+    PXLEN           11
+    MAIN            1
+    TOOLS           2
+    REGISTRATION    3
+    GREETER         4
+    WT_DEBUG        5
+#END
+
+var combuf[BUFSIZE * 2];                                    // comm port circular buffer
+var iCharCounter;                                           // used to count chars as they're read into DECTBuffer
+var DECTBuffer[BUFSIZE];                                    // used to save DECT string once \r is received into combuf
+var pDECTBuffer;                                            // pointer to DECTBuffer
+var CMD[CMDLEN], param1[P1LEN], param2[PXLEN];              // buffers for DECT commands and parameters
+var param3[PXLEN], param4[PXLEN], param5[PXLEN];            // buffers for DECT commands and parameters
+var param6[PXLEN], param7[PXLEN], param8[PXLEN];            // buffers for DECT commands and parameters
+var param9[PXLEN], param10[PXLEN], param11[PXLEN];          // buffers for DECT commands and parameters
+var p, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9;              // used for working with parameters in various functions
+
+func reset_display()
+    gfx_BGcolour(0x001F);                               // 0x001F == BLUE
+    gfx_Cls();
+    gfx_Set(SCREEN_MODE, LANDSCAPE_R);
+ endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: startup1
+// stores first set of global config states into eeprom
+//---------------------------------------------------------------------------------------
+//
+//  `0` PIN,    "0" = unlocked,     "1" = locked.
+//  `1` MODE,   "1" = hand,         "2" = push to talk,     "3" = no hand,      "4" = speed.
+//  `2` Lane 1, "0" = no lane 1,    "1" = lane 1 empty,     "2" = lane 1 full.
+//  `3` Lane 2, "0" = no lane 2,    "1" = lane 2 empty,     "2" = lane 2 full.
+//  `4` Volume, "0" = night mode,   "1" = day mode.
+//  `5` detect volume
+//  `6` inbound volume
+//  `7` grill volume
+//  `8` day volume
+//  `9` night volume
+//
+//---------------------------------------------------------------------------------------
+//
+func startup1()
+    /*
+    e0 := 0;                                    // Save the locked/unlocked state in variable 0=unlocked
+    e1 := 1;                                    // Save mode
+    e2 := 2;                                    // Save Lane 1
+    e3 := 3;                                    // Save Lane 2
+    e4 := 4;                                    // Save Volume mode  volume 0=night, 1=day, anything else no image
+    e5 := 5;                                    // Save current detect
+    e6 := 6;                                    // Save current inbound volume
+    e7 := 7;                                    // Save current grill volume
+    e8 := 8;                                    // Save current day volume
+    e9 := 9;                                    // Save current night volume
+    */
+
+    p0 := str_Ptr(param2);
+    p1 := str_Ptr(param3);
+    p2 := str_Ptr(param4);
+    p3 := str_Ptr(param5);
+    p4 := str_Ptr(param6);
+    p5 := str_Ptr(param7);
+    p6 := str_Ptr(param8);
+    p7 := str_Ptr(param9);
+    p8 := str_Ptr(param10);
+    p9 := str_Ptr(param11);
+
+    str_GetW(&p0, &e0);                         // Save the locked/unlocked state in variable 0=unlocked
+    str_GetW(&p1, &e1);                         // Save mode
+    str_GetW(&p2, &e2);                         // Save Lane 1
+    str_GetW(&p3, &e3);                         // Save Lane 2
+    str_GetW(&p4, &e4);                         // Save Volume mode  volume 0=night, 1=day, anything else no image
+    str_GetW(&p5, &e5);                         // Save current detect
+    str_GetW(&p6, &e6);                         // Save current inbound volume
+    str_GetW(&p7, &e7);                         // Save current grill volume
+    str_GetW(&p8, &e8);                         // Save current day volume
+    str_GetW(&p9, &e9);                         // Save current night volume
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: startup2
+// stores more global config states into eeprom
+// Then runs main macro
+//---------------------------------------------------------------------------------------
+//  `A` m_volume lanes "0"= single, "1" = lane A of two lanes, "2" = lane B of two lanes
+//  `B` Multi-lane "0"= single, "1" = dual
+//
+//---------------------------------------------------------------------------------------
+//
+func startup2()
+    /*
+    eA := 0;                                    // Save volume lanes info
+    eB := 1;                                    // Save multi-lane
+    */
+
+    p0 := str_Ptr(param2);
+    p1 := str_Ptr(param3);
+
+    str_GetW(&p0, &eA);                         // Save volume lanes info
+    str_GetW(&p1, &eB);                         // Save multi-lane
+
+    reach_main();                               // now set up the main screen
+endfunc
+
+//---------------------------------------------------------------------------------------
+// Refreshes and displays main screen
+//
+//---------------------------------------------------------------------------------------
+//
+func reach_main()
+    reset_display();                            // consistent starting condition
+    out("FF FF 4D 12 02 10 00 10");             // Tell base we're displaying the main screen
+    help := 0;
+    return_to_main := 0;
+    img_Disable(hndl, ALL);                     // Disable all objects
+    bd(9, 122, 122, 1, "", 0, 0, 9, 9);         // Display the Wentworth Logo button
+    bd(0,  14,   4, 1, "", 0, 0, 0, 0);         // Setup "Register" button
+    bd(1, 107,   4, 1, "", 0, 0, 1, 1);         // Setup "Greeter Setup" button
+    if (e0 == 0)                                // Setup the "Lock" button based on e0 (PIN state)
+        bd(2, 200, 4, 1, "", 0, 0, 2, 2);       // if e0 = 0, display unlocked button
+    else
+        bd(3, 200, 4, 1, "", 0, 0, 3, 3);       // if e0 = 1, display locked button
+    endif
+    bd(4, 293,   4, 1, "", 0, 0, 4, 4);         // Setup "Tools" button
+    hand_button_press();                        // Setup the "Hand" button based on e0 and e1 (PIN state and System Mode)
+    if (e2 == 2)                                // Display the lane #1 indicator based on e2 (lane 1 car flag)
+        xi(12, 12, 140, 194);                   // Display the lane #1 indicator with car
+    else
+        xi(11, 11, 140, 194);                   // Display the lane #1 indicator with no car
+    endif
+    volume_indicator();                         // Display the volume indicator based on e4 (Volume Mode)
+    bd(15, 430, 222, 1, "", 0, 0, 15, 15);      // Setup the "Help" button
+    touch_Set(TOUCH_ENABLE);                    // enable the touch screen
+endfunc
+
+//---------------------------------------------------------------------------------------
+// Main loop of the display program - everything comes back here
+//
+//---------------------------------------------------------------------------------------
+//
+func main()
+    var state, n, ch;
+
+    setup_comm_port();                          // setup comm port for Rx from DECT
+    mount_disk();                               // load image files
+    reset_display();
+
+    txt_FontID(FONT4 + 0x4000);                 // we can use FONT4 inherited from the parent program
+    txt_MoveCursor(8, 5);
+    print("system loading ... please wait");
+    touch_Set(TOUCH_ENABLE);                    // enable the touch screen
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);       // save touchscreen status
+        if (state ==  TOUCH_PRESSED)            // check for display button presses; button names are in image_constants.inc
+            n := img_Touched(hndl, -1);         // scan image list, looking for a touch
+            if (n != -1)
+                if (n == 15)
+                    pre_show_help_main();       // display help screen
+                else if (n == 9)
+                    request_info();             // request that the WT info screen be displayed
+                else if (n == 2)
+                    lock();                     // if it's unlocked and pressed, lock it
+                else if (n == 3)
+                    pin(MAIN);                  // if it's locked and pressed, unlock it
+                else if (n == 0)
+                    if (e0 == 1)
+                        pin(REGISTRATION);      // request that the registration screen be displayed after the PIN screen
+                    else
+                        pre_register_main();    // request that the registration screen be displayed
+                    endif
+                else if (n == 1)
+                    if (e0 == 1)
+                        pin(GREETER);           // request that the greeter screen be displayed after the PIN screen
+                    else
+                        pre_greeter_setup();
+                    endif
+                else if (n == 4)
+                    if (e0 == 1)
+                        pin(TOOLS);             // request that the tools screen be displayed after the PIN screen
+                    else
+                        pre_tools();            // request that the tools screen be displayed
+                    endif
+                else if ((n == 5) || (n == 6) || (n == 7) || (n == 8))
+                    if (e0 == 1)
+                        pin(MAIN);              // if it's locked and pressed, unlock it
+                    else
+                        update_system_mode();   // request to change system mode
+                    endif
+                endif
+            endif
+        endif
+
+        // check for anything from DECT
+        if (com_Count() > 0)
+            while (com_Count() > 0)
+                // Absolute non blocking code if the outside while is not present
+                ch := serin();
+                if (ch != -1)
+                    updateDECTBuffer(ch);
+                endif
+            wend
+        endif
+    forever
+
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO:  "Lock" it
+//  This is used to toggle the unlocked button to locked
+//  by setting eeprom lock bit e0 to 1 then returning to main
+//---------------------------------------------------------------------------------------
+//
+func lock()
+    e0 := 1;                                                // lock it
+    out("FF FF 4D 12 02 12 00 12");                         // tell base PIN is locked
+    reach_main();                                           // refresh the main screen
+endfunc
+
+//---------------------------------------------------------------------
+// Display the lane #1 indicator based on e2 (lane 1 car flag)
+//
+//---------------------------------------------------------------------
+//
+func lane_1()
+    p1 := str_Ptr(param1);
+    if (str_MatchI(&p1, "lbl_1"))
+        e2 := 1;
+        xi(11, 11, 140, 194);                               // Display the lane #1 indicator with no car
+    else if (str_MatchI(&p1, "lbl_2"))
+        e2 := 2;
+        xi(12, 12, 140, 194);                               // Display the lane #1 indicator with car
+    endif
+endfunc
+
+//---------------------------------------------------------------------
+// Sets a specific variable
+// Only sets e0, e2, and e4.  Ignores all others
+//
+//---------------------------------------------------------------------
+//
+func set()
+    p1 := str_Ptr(param1);
+    p2 := str_Ptr(param2);
+
+    switch
+        case (str_MatchI(&p1, "e0"))
+            str_GetW(&p2, &e0);                             // Save the locked/unlocked state in variable 0=unlocked
+            break;
+        case (str_MatchI(&p1, "e2"))
+            str_GetW(&p2, &e2);                             // Save Lane 1
+            break;
+        case (str_MatchI(&p1, "e4"))
+            str_GetW(&p2, &e4);                             // Save Volume mode  volume 0=night, 1=day, anything else no image
+            break;
+    endswitch
+endfunc
+
+//---------------------------------------------------------------------
+// Shows help for main screen
+//
+//---------------------------------------------------------------------
+//
+func show_help_main()
+    var state, x, y, ch;
+
+    help := 1;
+    img_Disable(hndl, ALL);                                 // Disable all objects
+    bd(16, 0, 0, 1, "", 0, 0, 16, 16);                      // Display the actual help screen
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+        x := touch_Get(TOUCH_GETX);                         // Grab x and the
+        y := touch_Get(TOUCH_GETY);                         // y coordinates of the touch
+
+        if ((x > 429) && (y < 50))
+            if (e0 == 1)
+                pin(WT_DEBUG);
+            else
+                out("FF FF 4D 12 02 40 00 40");            // tell base we want to display the Wentworth debug info
+            endif
+            return_to_main := 2;
+        else if (state == TOUCH_PRESSED)
+            return_to_main := 1;
+        endif
+
+        // check for anything from DECT
+        if (com_Count() > 0)
+            while (com_Count() > 0)
+                // Absolute non blocking code if the outside while is not present
+                ch := serin();
+                if (ch != -1)
+                    updateDECTBuffer(ch);
+                endif
+            wend
+        endif
+
+    until (return_to_main);                                 // return when screen is pressed anywhere except top right corner or display refresh occurs
+
+    if (return_to_main == 1) reach_main();                  // refresh the main screen
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: pre_show_help_main
+// Tell base to clear macros before displaying help
+//
+//---------------------------------------------------------------------
+//
+func pre_show_help_main()
+    out("FF FF 4D 12 03 01 01 04 06");                      // request base to display help for the main screen
+endfunc
+
+//---------------------------------------------------------------------
+// Shows wentworth information screen
+//
+//---------------------------------------------------------------------
+//
+func show_wentworth(var dual)
+    var state, ch;
+
+    help := 1;
+    img_Disable(hndl, ALL);                                 // Disable all objects
+    gfx_Cls();
+    bd(10, 0, 0, 1, "", 0, 0, 10, 10);                      // show the Home button
+    txt_FontID(FONT4);                                      // select font
+    txt_Width(1);                                           // font multiplier
+    txt_Height(1);                                          // font multiplier
+    txt_Opacity(0);                                         // Don't draw background pixels
+    txt_FGcolour(0);                                        // black
+    txt_MoveCursor(0, 0);                                   // set coordinates for cursor
+
+    print("\n");
+    print("         Wentworth Technology\n\n");
+    print("        Saco, Maine, USA 04072\n");
+    print("            (877) 495-1634\n");
+    print("      www.wentworthtechnology.com\n\n\n");
+    print("       Firmware Version - ", [STR]param2, ".", [STR]param3, "-AL\n\n");
+    if (!dual)
+        print("       Base Serial # - ", [STR]param4, "\n\n\n\n\n");
+    else
+        print("     1st Base Serial # - ", [STR]param4, "\n");
+        print("     2nd Base Serial # - ", [STR]param5, "\n\n\n\n");
+    endif
+//    print("      Copyright ",[CHR]184," 2015  v2.0-AL\n");    //DPM maybe go back and add a custom font to display the C
+    print("      Copyright C 2015  v2.0-AL\n");
+    touch_Set(TOUCH_ENABLE);                                // enable the touch screen
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+        // check for anything from DECT
+        if (com_Count() > 0)
+            while (com_Count() > 0)
+                // Absolute non blocking code if the outside while is not present
+                ch := serin();
+                if (ch != -1)
+                    updateDECTBuffer(ch);
+                endif
+            wend
+        endif
+    until ((state == TOUCH_PRESSED) || (return_to_main == 1));  // return when screen is pressed anywhere or display refresh occurs
+
+    reach_main();                                           // refresh the main screen
+endfunc
+
+//---------------------------------------------------------------------
+// Shows Greeter Promo screen
+//
+//---------------------------------------------------------------------
+//
+func show_greeter_promo()
+    var state, ch;
+
+    img_Disable(hndl, ALL);                                 // Disable all objects
+    gfx_Cls();
+    bd(10, 0, 0, 1, "", 0, 0, 10, 10);                      // show the Home button
+    txt_FontID(FONT4);                                      // select font
+    txt_Width(1);                                           // font multiplier
+    txt_Height(1);                                          // font multiplier
+    txt_Opacity(0);                                         // Don't draw background pixels
+    txt_FGcolour(0);                                        // black
+    txt_MoveCursor(1, 0);                                   // set coordinates for cursor
+
+    print("\n");
+    print("      This system does not have\n");
+    print("      a Greet System installed.\n");
+    print("      To discuss purchasing one,\n");
+    print("          please call us:\n\n\n");
+    print("         Wentworth Technology\n\n");
+    print("        Saco, Maine, USA 04072\n\n");
+    print("            (877) 495-1634\n\n");
+    print("      www.wentworthtechnology.com\n\n\n");
+    touch_Set(TOUCH_ENABLE);                                // enable the touch screen
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+        // check for anything from DECT
+        if (com_Count() > 0)
+            while (com_Count() > 0)
+                // Absolute non blocking code if the outside while is not present
+                ch := serin();
+                if (ch != -1)
+                    updateDECTBuffer(ch);
+                endif
+            wend
+        endif
+    until ((state == TOUCH_PRESSED) || (return_to_main == 1));  // return when screen is pressed anywhere or display refresh occurs
+
+    reach_main();                                           // refresh the main screen
+endfunc
+
+//---------------------------------------------------------------------
+//  This sends out strings on COM1.  Needs to be hex values separated by spaces - so replace \x with a space from Reach code
+//  Initially tried blocking code, but this spit out extra values based on the buffer size
+//  So buffer would have to be dynamically scaled.  This is a brute force technique, seems to work OK
+//
+//---------------------------------------------------------------------
+//
+func out(var out_string)
+    var l;                                                  // string pointer
+    var m;                                                  // counter
+    var hex_codes[30];                                      // array for our results
+    var out_p;                                              // string buffer
+
+    m := 0;
+    out_p := str_Ptr(out_string);                           // raise a string pointer so we can use it
+
+    while (str_GetHexW(&out_p, &hex_codes[m++]) != 0);      // scan through and pull out all of the hex numbers put in array
+
+    for (l := 0; l < (m - 1); l++)                            // loop through and send out serial port
+        serout(hex_codes[l]);                               // send out hex data
+    next
+endfunc
+
+//---------------------------------------------------------------------
+//  This is required to load the bmp images we use in the display
+//
+//---------------------------------------------------------------------
+//
+func mount_disk()
+    var disk;                                               // Handle to access uSD strings,
+    var r;
+
+    r := media_Init();                                      // initialize uSD card
+    if (!r)
+        print("Init failed\n") ;
+    else
+        media_SetSector(0, 0);
+    endif
+
+    if (!(disk := file_Mount()))
+        while (!(disk := file_Mount()))
+            pause(200);
+            gfx_Cls();
+            pause(200);
+        wend
+    endif
+
+    hndl := file_LoadImageControl("main.dat", "main.gci", 1);           // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+endfunc
+
+//---------------------------------------------------------------------
+// This macro re-creates the reach button define macro
+// n is a don't care, global var hndl covers this
+// xy is location, type to be used later, text0 is a don't care
+// bmp0 is the primary image, bmp1 needs to be handled tbd
+//
+//---------------------------------------------------------------------
+//
+func bd(var n, var x, var y, var type, var text0, var dx, var dy, var bmp0, var bmp1)
+//////////
+// CP: just to eliminate "notices" during compile:
+bmp1 := 0;
+type := 0;
+n := 0;
+dy := 0;
+dx := 0;
+text0 := 0;
+//////////
+
+    img_Enable(hndl, bmp0);                                 // enable button
+    img_ClearAttributes(hndl, bmp0, I_TOUCH_DISABLE);       // set to enable touch, only need to do this once
+    img_SetWord(hndl, bmp0, IMAGE_FLAGS, (img_GetWord(hndl, bmp0, IMAGE_FLAGS) | I_STAYONTOP) & ~I_TOUCH_DISABLE); // set to enable touch, only need to do this once
+    img_SetPosition(hndl, bmp0, x, y);
+    img_Show(hndl, bmp0);                                   // show button, only do this once
+endfunc
+
+//---------------------------------------------------------------------
+// This macro re-creates the reach button define macro
+// n is a don't care, global var hndl covers this
+// xy is location, type to be used later, text0 is a don't care
+// bmp0 is the primary image, bmp1 needs to be handled tbd
+// keypad number box is 55x55,characters are 28x24, manually calced center offset
+//
+//---------------------------------------------------------------------
+//
+func bdc(var n, var x, var y, var font, var text0, var bmp0, var bmp1, var sizex, var sizey)
+
+//////////
+// CP: just to eliminate "notices" during compile:
+bmp1 := 0;
+//////////
+
+    touch_bdcX1[n] := x;                                    // top left corner touch regions for the buttons
+    touch_bdcY1[n] := y;
+    touch_bdcX2[n] := x + sizex;                            // bottom right corner touch regions for the buttons
+    touch_bdcY2[n] := y + sizey;
+
+    img_Enable(hndl, bmp0);                                 // enable button
+    img_ClearAttributes(hndl, bmp0, I_TOUCH_DISABLE);       // set to enable touch, only need to do this once
+    img_SetWord(hndl, bmp0, IMAGE_FLAGS, (img_GetWord(hndl, bmp0, IMAGE_FLAGS) | I_STAYONTOP) & ~I_TOUCH_DISABLE); // set to enable touch, only need to do this once
+    img_SetPosition(hndl, bmp0, x, y);
+    img_Show(hndl, bmp0);                                   // show button, only do this once
+
+    txt_FontID(font);                                       // select custom font
+    txt_Width(2);                                           // font multiplier - not necessary if we get custom fonts working
+    txt_Height(2);                                          // font multiplier - not necessary if we get custom fonts working
+    txt_Bold(0);
+    txt_Opacity(0);                                         // Don't draw background pixels
+    txt_FGcolour(0);                                        // black
+
+    gfx_MoveTo(x + (sizex - strwidth(text0)) / 2, y + (sizey - strheight()) / 2);   // strheight() uses previous strwidth calc
+    print([STR]text0);
+endfunc
+
+//---------------------------------------------------------------------
+// This displays image bmp0 at location xy
+// var n assigns number to button for array loading
+//
+//---------------------------------------------------------------------
+//
+func xi(var n, var bmp0, var x, var y)
+//////////
+// CP: just to eliminate "notices" during compile:
+n := 0;
+//////////
+
+    img_Enable(hndl, bmp0);                                 // enable button
+    img_SetPosition(hndl, bmp0, x, y);
+    img_Show(hndl, bmp0);                                   // show button, only do this once
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: pin
+// Display PIN Screen
+//  2/28/2011 DPM added * to box when key pressed
+//  After 4 keypresses, master must stop allowing presses and go to the thumbs up/down screen
+//  or it's possible to have *'s across the whole screen
+//
+//---------------------------------------------------------------------
+//
+func pin(var dest)
+    var state;
+    var nn, x, y;                                           // coordinates of touch area
+    var n, x1, y1, x2, y2, r;                               // vars to detect location of button press
+    var buffer[25];                                         // buffer for DECT string
+    var ch;                                                 // char buffer for reading comm port
+
+    pin_index := 57;
+
+    img_Disable(hndl, ALL);                                 // Disable all objects
+    switch
+        case (dest == MAIN)
+            out("FF FF 4D 12 03 05 01 01 07");              // tell base to go to main screen after PIN
+            break;
+        case (dest == TOOLS)
+            out("FF FF 4D 12 03 05 01 02 08");              // tell base to go to tools screen after PIN
+            break;
+        case (dest == REGISTRATION)
+            out("FF FF 4D 12 03 05 01 03 09");              // tell base to go to register_main screen after PIN
+            break;
+        case (dest == GREETER)
+            out("FF FF 4D 12 03 05 01 04 0A");              // tell base to go to greeter_setup screen after PIN
+            break;
+        case (dest == WT_DEBUG)
+            out("FF FF 4D 12 03 05 01 05 0B");              // tell base to go to wentworth_debug screen after PIN
+            break;
+    endswitch
+    draw_keypad();                                          // draw the keys
+    touch_Set(TOUCH_ENABLE);                                // enable the touch screen
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+        if (state == TOUCH_PRESSED)
+            x := touch_Get(TOUCH_GETX);                     // Grab x and the
+            y := touch_Get(TOUCH_GETY);                     // y coordinates of the touch
+            nn := img_Touched(hndl, -1);                    // scan image list, looking for a touch
+
+            if (nn == 15)
+                show_help_pin();                            // goto the help screen
+                img_Disable(hndl, ALL);                     // Disable all objects
+                draw_keypad();                              // redraw keypad on return
+                pin_index := 57;                            // reset index to start
+                touch_Set(TOUCH_ENABLE);                    // enable the touch screen
+            else if (nn == 21)                              // this is the back key, redraw keypad
+                draw_keypad();                              // refresh
+                pin_index := 57;                            // reset index to start
+                out("FF FF 4D 12 02 07 00 07");             // reset PIN digit index
+            else
+                n := 0;
+                r := 99;
+                while (n < 10)                              // find which button was pressed and store the value in r
+                    x1 := touch_bdcX1[n];
+                    y1 := touch_bdcY1[n];
+                    x2 := touch_bdcX2[n];
+                    y2 := touch_bdcY2[n];
+                    if (x >= x1 && x < x2 && y >= y1 && y < y2) r := n;     //save the button that was pressed
+                    n++;
+                wend
+                if (r < 10)                                 // then we have a valid key pressed
+                    to(buffer); print("FF FF 4D 12 03 06 01 ", [HEX2]r, " ", [HEX2]r + 7);      // set up buffer to send to DECT
+                    out(buffer);                            // tell base which key was pressed
+                    gfx_MoveTo(pin_index, 88);              // walk * across number padprint("*");
+                    print("*");                             // print *
+                    pin_index := pin_index + 33;            // increment
+                    if (pin_index > 156) pin_index := 156;  // stop from printing outside the box on an error, should not happen but just in case
+                endif
+            endif
+        endif
+
+        // check for anything from DECT
+        if (com_Count() > 0)
+            while (com_Count() > 0)
+                // Absolute non blocking code if the outside while is not present
+                ch := serin();
+                if (ch != -1)
+                    updateDECTBuffer(ch);
+                endif
+            wend
+        endif
+    until ((e0 == 0) || (nn == 17));                        // 17 is home button
+    if (nn == 17) reach_main();                             // display the main screen
+
+endfunc
+
+//---------------------------------------------------------------------
+// Shows help screen for PIN
+//
+//---------------------------------------------------------------------
+//
+func show_help_pin()
+    var state;
+    img_Disable(hndl, ALL);                                 // Disable all objects
+    bd(23, 0, 0, 1, "", 0, 0, 23, 23);
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+    until (state == TOUCH_PRESSED);                         // return when screen is pressed anywhere
+  endfunc
+
+//---------------------------------------------------------------------
+// draws PIN keypad
+//
+//---------------------------------------------------------------------
+//
+func draw_keypad()
+    gfx_BGcolour(0x001F);                                   // 0x001F == BLUE
+    gfx_Cls();
+    bdc(17, 430, 222, FONT1, "", 17, 17, 45, 45);           // Setup the "Home" button.
+
+    xi(18, 18, 0, 0);                                       // Display the "Set PIN" banner.
+
+    bdc(1,  217, 47,  FONT1, "1", 20, 20, 55, 55);          // Display #1 key.
+    bdc(2,  273, 47,  FONT1, "2", 20, 20, 55, 55);          // Display #2 key.
+    bdc(3,  329, 47,  FONT1, "3", 20, 20, 55, 55);          // Display #3 key.
+    bdc(4,  217, 103, FONT1, "4", 20, 20, 55, 55);          // Display #4 key.
+    bdc(5,  273, 103, FONT1, "5", 20, 20, 55, 55);          // Display #5 key.
+    bdc(6,  329, 103, FONT1, "6", 20, 20, 55, 55);          // Display #6 key.
+    bdc(7,  217, 159, FONT1, "7", 20, 20, 55, 55);          // Display #7 key.
+    bdc(8,  273, 159, FONT1, "8", 20, 20, 55, 55);          // Display #8 key.
+    bdc(9,  329, 159, FONT1, "9", 20, 20, 55, 55);          // Display #9 key.
+    bdc(10, 217, 220, FONT1, " ", 21, 21, 55, 55);          // Display the clear key.
+    bdc(0,  273, 215, FONT1, "0", 20, 20, 55, 55);          // Display #0 key.
+
+    xi(11, 19,  48, 75);                                    // Draw the 4 empty gray boxes
+    xi(12, 19,  81, 75);
+    xi(13, 19, 114, 75);
+    xi(14, 19, 147, 75);
+
+    bd(15, 380, 222, 1, "", 0, 0, 15, 15);                  // Setup the "Help" button.
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: pre_greeter_setup
+// Tell base to clear macros before displaying register_main
+//
+//---------------------------------------------------------------------
+//
+func pre_greeter_setup()
+    out("FF FF 4D 12 03 01 01 05 07");                      // request base to display the greeter_setup screen
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: request_info
+// Tell base to display the Wentworth contact and software version info
+//
+//---------------------------------------------------------------------
+//
+func request_info()
+    out("FF FF 4D 12 02 02 00 02 ");                        // tell base we want to display the Wentworth info
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: pre_register_main
+// Tell base to clear macros before displaying register_main
+//
+//---------------------------------------------------------------------
+//
+func pre_register_main()
+    out("FF FF 4D 12 03 01 01 03 05");                      // request base to display the register_main screen
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: pre_tools
+// Tell base to clear macros before displaying tools
+//
+//---------------------------------------------------------------------
+//
+func pre_tools()
+    out("FF FF 4D 12 03 01 01 02 04");                      // request base to display the tools screen
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: volume_indicator
+// Display the volume indicator
+//
+//---------------------------------------------------------------------
+//
+func volume_indicator()
+    if (e4 == 1)                                            // Display the volume indicator based on e4 (Volume Mode)
+        xi(13, 13, 292, 194);                               // Display daytime settings
+    else if (e4 == 0)
+        xi(14, 14, 292, 194);                               // Display nighttime setting
+    endif
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: hand_button_press
+//  Update System Mode button
+//  System mode is e1:
+//  1 = Hands Free = button 5
+//  2 = Push To Talk = button 6
+//  3 = Auto Hands Free = button 7
+//  4 = Speed Team = button 8
+//
+//---------------------------------------------------------------------
+//
+func hand_button_press()
+    switch (e1)
+        case 1:
+            bd(5, 386, 4, 1, "", 0, 0, 5, 5);
+            break;
+        case 2:
+            bd(6, 386, 4, 1, "", 0, 0, 6, 6);
+            break;
+        case 3:
+            bd(7, 386, 4, 1, "", 0, 0, 7, 7);
+            break;
+        case 4:
+            bd(8, 386, 4, 1, "", 0, 0, 8, 8);
+            break;
+    endswitch
+endfunc
+
+//---------------------------------------------------------------------
+// MACRO: Setup System Mode button
+//  System mode is e1:
+//  1 = Hands Free = button 5
+//  2 = Push To Talk = button 6
+//  3 = Auto Hands Free = button 7
+//  4 = Speed Team = button 8
+//
+//  changes system mode to next mode
+//---------------------------------------------------------------------
+//
+func update_system_mode()
+    switch (e1)
+        case 1:
+            e1 := 2;                                        // change from Hands Free Mode to Push To Talk Mode
+            img_Disable(hndl, 5);
+            out("FF FF 4D 12 03 08 01 03 0C");              // tell the base to go to Push To Talk Mode
+            break;
+        case 2:
+            e1 := 3;                                        // change from Auto Hands Free Mode to Auto Hands Free Mode
+            img_Disable(hndl, 6);
+            out("FF FF 4D 12 03 08 01 04 0D");              // tell the base to go to Auto Hands Free Mode
+            break;
+        case 3:
+            e1 := 4;                                        // change from Push To Talk Mode to Speed Team Mode
+            img_Disable(hndl, 7);
+            out("FF FF 4D 12 03 08 01 05 0E");              // tell the base to go to Speed Team Mode
+            break;
+        case 4:
+            e1 := 1;                                        // change from Speed Team Mode to Hands Free Mode
+            img_Disable(hndl, 8);
+            out("FF FF 4D 12 03 08 01 02 0B");              // tell the base to go to Hands Free Mode
+            break;
+    endswitch
+    hand_button_press();
+endfunc
+
+func clock()
+    txt_FontID(FONT3);                                      // select custom font
+    txt_Width(2);                                           // font multiplier - not necessary if we get custom fonts working
+    txt_Height(2);                                          // font multiplier - not necessary if we get custom fonts working
+    txt_Bold(0);
+    txt_Opacity(1);                                         // opaque - Don't draw background pixels
+    txt_BGcolour(0x001F);                                   // 0x001F == BLUE
+    txt_FGcolour(0xFFE0);                                   // yellow
+    gfx_MoveTo(15, 215);
+    print([STR]param2, ":", [STR]param3);                   // display the 24-hour time
+
+    txt_FontID(FONT4);                                      // select custom font
+    txt_Width(1);                                           // font multiplier - not necessary if we get custom fonts working
+    txt_Height(1);                                          // font multiplier - not necessary if we get custom fonts working
+    txt_Bold(0);
+    gfx_MoveTo(15, 245);
+    print([STR]param4);                                     // display the day
+endfunc
+
+func setup_comm_port()
+    setbaud(BAUD_115200);
+    // RX
+    iCharCounter := 0;                                      // init the char counter
+    pDECTBuffer := str_Ptr(DECTBuffer);                     // init the pointer to DECTBuffer
+    com_Init(combuf, (BUFSIZE * 2), 0);                     // start up the comm port circular buffer with no qualifier so constantly receive chars
+endfunc
+
+////////////////////////////////
+// process serial port traffic
+//
+func updateDECTBuffer(var ch)
+    var n, p;
+    if (ch == CR)                                           // CR is the response command; if the buffer needs saving, do something with it HERE
+        iCharCounter := 0;                                  // iCharCounter is reset to 0
+        parseDECTBuffer();
+        processDECTCommand();                               // Call function to process response in DECTBuffer
+
+        p := str_Ptr(DECTBuffer);
+        for(n := 0; n < BUFSIZE; n++)
+            str_PutByte(p++, 0);                            // fill string with 0
+        next
+    else
+        if (iCharCounter > (BUFSIZE * 2)) iCharCounter--;   // Protect from overflow
+        str_PutByte(pDECTBuffer + iCharCounter++, ch);      // ch is placed into DECTBuffer[iCharCounter]
+    endif
+endfunc
+
+////////////////////////////////
+// parse the command from the DECT and pass it along
+//
+func processDECTCommand()
+    var result;
+
+    p  := str_Ptr(CMD);
+    p1 := str_Ptr(param1);
+
+    switch
+        case (str_MatchI(&p, "m"))
+            switch
+                case (str_MatchI(&p1, "startup1"))
+                    startup1();                             // initialize first 10 display variables
+                    break;
+                case (str_MatchI(&p1, "startup2"))
+                    startup2();                             // initialize remaining 2 display variables
+                    break;
+                case (str_MatchI(&p1, "clock"))
+                    clock();                                // display 24-hour time on main screen
+                    break;
+                case (str_MatchI(&p1, "show_help_main"))
+                    show_help_main();                       // display help for the main screen
+                    break;
+                case (str_MatchI(&p1, "lane_1"))
+                    lane_1();                               // refresh lane_a icon appropriately based on e2
+                    break;
+                case (str_MatchI(&p1, "show_help_main"))
+                    show_help_main();                       // display help for the main screen
+                    break;
+                case (str_MatchI(&p1, "greeter_setup:screen0"))
+                    result := file_Run("greeter.4XE", 0);   // run the greeter screen program with no parameters
+                    repeat
+                        if (result == 1)
+                            result := file_Run("msg1.4XE", 0);      // run the message1 screen program with no parameters
+                        else if (result == 2)
+                            result := file_Run("msg2.4XE", 0);      // run the message2 screen program with no parameters
+                        else if (result == 3)
+                            result := file_Run("greeter.4XE", 0);   // run the greeter screen program with no parameters
+                        endif
+                    until (result == 0);
+                    hndl := file_LoadImageControl("main.dat", "main.gci", 1);           // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+                    reach_main();                           // CP: should be "pre_main();" for greeter/timer use, but can't get it to work ????
+                    break;
+                case (str_MatchI(&p1, "show_greeter_promo"))// display the Greeter Promo screen until display is upgraded to display greeter setup
+                    show_greeter_promo();
+                    break;
+                case (str_MatchI(&p1, "volume_indicator:lbl_1"))
+                    e4 := 1;
+                    volume_indicator();                     // refresh volume indicator icon appropriately based on e4
+                    break;
+                case (str_MatchI(&p1, "volume_indicator:lbl_0"))
+                    e4 := 0;
+                    volume_indicator();                     // refresh volume indicator icon appropriately based on e4
+                    break;
+                case (str_MatchI(&p1, "show_wentworth:single"))
+                    show_wentworth(0);                      // display WT info screen
+                    break;
+                case (str_MatchI(&p1, "show_wentworth:dual"))
+                    show_wentworth(1);                      // display WT info screen
+                    break;
+                case (str_MatchI(&p1, "thumbs_dn"))
+                    xi(22, 22, 72, 146);                    // PIN was entered incorrectly, display thumbs down
+                    break;
+                case (str_MatchI(&p1, "back_key"))
+                    draw_keypad();                          // refresh
+                    pin_index := 57;                        // reset index to start
+                    out("FF FF 4D 12 02 07 00 07");         // reset PIN digit index
+                    break;
+                case (str_MatchI(&p1, "register_main"))
+                    file_Run("register.4XE", 0);            // run the registration screen program with no parameters
+                    hndl := file_LoadImageControl("main.dat", "main.gci", 1);           // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+                    reach_main();                           // CP: should be "pre_main();" for greeter/timer use, but can't get it to work ????
+                    break;
+                case (str_MatchI(&p1, "tools"))
+                    repeat
+                        result := file_Run("tools.4XE", 0);         // run the tools screen program with no parameters
+                        if (result == 1)
+                            result := file_Run("volume.4XE", 0);    // run the set volume screen program with no parameters
+                        else if (result == 2)
+                            result := file_Run("clock.4XE", 0);     // run the set clock screen program with no parameters
+                        else if (result == 3)
+                            result := file_Run("newpin.4XE", 0);    // run the set new pin screen program with no parameters
+                        else if (result == 5)
+                            result := file_Run("night.4XE", 0);     // run the set night volume time screen program with no parameters
+                        endif
+                    until (result == 0);
+                    hndl := file_LoadImageControl("main.dat", "main.gci", 1);           // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+                    reach_main();                           // CP: should be "pre_main();" for greeter/timer use, but can't get it to work ????
+                    break;
+                case (str_MatchI(&p1, "main"))              // this case has to be AFTER anything else with "main" in it so it doesn't trigger falsely
+                    if (help == 1)
+                        return_to_main := 1;                // set flag to display the main screen
+                    else
+                        reach_main();                       // display the main screen
+                    endif
+                    break;
+                case (str_MatchI(&p1, "show_wentworth_debug"))
+                    result := file_Run("install.4XE", 0);                       // run the wentworth debug screen program with no parameters
+                    hndl := file_LoadImageControl("main.dat", "main.gci", 1);   // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+                    reach_main();                                               // CP: should be "pre_main();" for greeter/timer use, but can't get it to work ????
+                    break;
+            endswitch
+            break;
+        case (str_MatchI(&p, "set"))
+            set();                                          // set specific variable
+            break;
+        case (str_MatchI(&p, "r"))                          // draw a blue rectangle to erase thumbs down
+            if (str_MatchI(&p1, "72")) gfx_RectangleFilled(72, 146, 132, 206, 0x001F);
+            break;
+        case (str_MatchI(&p, "bb"))                         // handle default beep length ?
+        case (str_MatchI(&p, "bv"))                         // handle default beep loudness ?
+            break;                                          // skip these commands for now ...
+        case (str_MatchI(&p, "t"))                          // add "SpeedThru ..." label
+            if (str_MatchI(&p1, "SpeedThru"))
+                if (str_MatchI(&p1, "EXP"))
+                    txt_MoveCursor(7, 11);
+                else
+                    txt_MoveCursor(7, 13);
+                endif
+                print([STR]param1);
+            endif
+            break;
+    endswitch
+
+endfunc
+
+func parseDECTBuffer()
+    var buffer[BUFSIZE];                                    // BUFSIZE character buffer for a source string
+    var n;                                                  // general purpose counter
+    var strFound;                                           // flag tracking whether or not a command was parsed
+    var p, p1, p_cnt;                                       // temp ptrs, temp pointer counter
+    var char;                                               // character holder
+
+    p := str_Ptr(buffer);
+    for(n := 0; n < BUFSIZE; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+
+    to(buffer); print([STR]DECTBuffer);                     // save a local copy of the DECTBuffer
+    p := str_Ptr(CMD);
+    for(n := 0; n < CMDLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param1);
+    for(n := 0; n < P1LEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param2);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param3);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param4);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param5);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param6);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param7);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param8);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param9);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param10);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param11);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+
+    strFound := 0;                                          // init
+    p := str_Ptr(buffer);                                   // re-init pointer to buffer
+    p_cnt := str_Ptr(buffer);                               // re-init pointer to buffer; used as moving index
+
+    if (strlen(buffer) == 0) goto done_parsing;             // no need to parse an empty string
+
+    // looking for CMD
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, it was all whitespace
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of CMD
+    p1 := str_Ptr(CMD);                                     // init p1 pointer to CMD string
+    str_PutByte(p1++, char);
+    while (str_GetC(&p_cnt, &char))                         // pull the next char off of buffer[p_cnt]
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param1
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char)) break;                          // skip any leading whitespace
+    wend
+    if (char == QUOTE)
+        strFound := 1;
+        while (str_GetC(&p_cnt, &char))
+            if (!isspace(char) && (char != QUOTE)) break;   // skip leading quoted whitespace
+        wend
+    endif
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param1
+    p1 := str_Ptr(param1);
+    str_PutByte(p1++, char);
+    // get the rest of param1
+    while (str_GetC(&p_cnt, &char))
+        if (strFound)
+            if (char == QUOTE) break;                       // reached the end of the quoted string
+        else
+            if (isspace(char) || (char == QUOTE)) break;    // reached the end of the non-whitespace
+        endif
+        str_PutByte(p1++, char);
+    wend
+    if (strFound)                                           // strip off any trailing whitespace
+        p1--;
+        str_GetC(&p1, &char);
+        while (isspace(char))
+            str_PutByte(--p1, 0);
+            p1--;
+            str_GetC(&p1, &char);
+        wend
+    endif
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param2
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param2
+    p1 := str_Ptr(param2);
+    str_PutByte(p1++, char);
+    // get the rest of param2
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param3
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param3
+    p1 := str_Ptr(param3);
+    str_PutByte(p1++, char);
+    // get the rest of param3
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param4
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param4
+    p1 := str_Ptr(param4);
+    str_PutByte(p1++, char);
+    // get the rest of param4
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param5
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param5
+    p1 := str_Ptr(param5);
+    str_PutByte(p1++, char);
+    // get the rest of param5
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param6
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param6
+    p1 := str_Ptr(param6);
+    str_PutByte(p1++, char);
+    // get the rest of param6
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param7
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param7
+    p1 := str_Ptr(param7);
+    str_PutByte(p1++, char);
+    // get the rest of param7
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param8
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param8
+    p1 := str_Ptr(param8);
+    str_PutByte(p1++, char);
+    // get the rest of param8
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param9
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param9
+    p1 := str_Ptr(param9);
+    str_PutByte(p1++, char);
+    // get the rest of param9
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param10
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param10
+    p1 := str_Ptr(param10);
+    str_PutByte(p1++, char);
+    // get the rest of param10
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param11
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param11
+    p1 := str_Ptr(param11);
+    str_PutByte(p1++, char);
+    // get the rest of param11
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    done_parsing:
+
+endfunc
+

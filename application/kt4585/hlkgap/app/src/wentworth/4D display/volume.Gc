@@ -1,0 +1,138 @@
+// Image - "017_home.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 017_home.bmp(x, y);
+#constant 017_home.bmp    $media_SetSector(0x0000, 0x0000); media_Image
+
+// Image - "099_inboundvol.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 099_inboundvol.bmp(x, y);
+#constant 099_inboundvol.bmp    $media_SetSector(0x0000, 0x0008); media_Image
+
+// Image - "100_inboundvol_press.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 100_inboundvol_press.bmp(x, y);
+#constant 100_inboundvol_press.bmp    $media_SetSector(0x0000, 0x0033); media_Image
+
+// Image - "026_yellownumberbx.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 026_yellownumberbx.bmp(x, y);
+#constant 026_yellownumberbx.bmp    $media_SetSector(0x0000, 0x005E); media_Image
+
+// Image - "028_greennumberbx_press.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 028_greennumberbx_press.bmp(x, y);
+#constant 028_greennumberbx_press.bmp    $media_SetSector(0x0000, 0x0066); media_Image
+
+// Image - "072_grillspeaker.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 072_grillspeaker.bmp(x, y);
+#constant 072_grillspeaker.bmp    $media_SetSector(0x0000, 0x006E); media_Image
+
+// Image - "073_grillspeaker_press.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 073_grillspeaker_press.bmp(x, y);
+#constant 073_grillspeaker_press.bmp    $media_SetSector(0x0000, 0x0099); media_Image
+
+// Image - "026_yellownumberbx.bmp2" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 026_yellownumberbx.bmp2(x, y);
+#constant 026_yellownumberbx.bmp2    $media_SetSector(0x0000, 0x00C4); media_Image
+
+// Image - "028_greennumberbx_press.bmp2" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 028_greennumberbx_press.bmp2(x, y);
+#constant 028_greennumberbx_press.bmp2    $media_SetSector(0x0000, 0x00CC); media_Image
+
+// Image - "074_dayvolume.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 074_dayvolume.bmp(x, y);
+#constant 074_dayvolume.bmp    $media_SetSector(0x0000, 0x00D4); media_Image
+
+// Image - "075_dayvolume_press.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 075_dayvolume_press.bmp(x, y);
+#constant 075_dayvolume_press.bmp    $media_SetSector(0x0000, 0x00FF); media_Image
+
+// Image - "026_yellownumberbx.bmp3" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 026_yellownumberbx.bmp3(x, y);
+#constant 026_yellownumberbx.bmp3    $media_SetSector(0x0000, 0x012A); media_Image
+
+// Image - "028_greennumberbx_press.bmp3" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 028_greennumberbx_press.bmp3(x, y);
+#constant 028_greennumberbx_press.bmp3    $media_SetSector(0x0000, 0x0132); media_Image
+
+// Image - "076_nightvolume.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 076_nightvolume.bmp(x, y);
+#constant 076_nightvolume.bmp    $media_SetSector(0x0000, 0x013A); media_Image
+
+// Image - "077_nightvolume_press.bmp" Size 242x45
+// Width  = 242
+// Height = 45
+// Usage: 077_nightvolume_press.bmp(x, y);
+#constant 077_nightvolume_press.bmp    $media_SetSector(0x0000, 0x0165); media_Image
+
+// Image - "026_yellownumberbx.bmp4" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 026_yellownumberbx.bmp4(x, y);
+#constant 026_yellownumberbx.bmp4    $media_SetSector(0x0000, 0x0190); media_Image
+
+// Image - "028_greennumberbx_press.bmp4" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 028_greennumberbx_press.bmp4(x, y);
+#constant 028_greennumberbx_press.bmp4    $media_SetSector(0x0000, 0x0198); media_Image
+
+// Image - "023_arrowup.bmp" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 023_arrowup.bmp(x, y);
+#constant 023_arrowup.bmp    $media_SetSector(0x0000, 0x01A0); media_Image
+
+// Image - "024_arrowdown.bmp" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 024_arrowdown.bmp(x, y);
+#constant 024_arrowdown.bmp    $media_SetSector(0x0000, 0x01AC); media_Image
+
+// Image - "012_question.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 012_question.bmp(x, y);
+#constant 012_question.bmp    $media_SetSector(0x0000, 0x01B8); media_Image
+
+// Image - "086_toolsback.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 086_toolsback.bmp(x, y);
+#constant 086_toolsback.bmp    $media_SetSector(0x0000, 0x01C0); media_Image
+
+// Image - "037_HELPvolume.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 037_HELPvolume.bmp(x, y);
+#constant 037_HELPvolume.bmp    $media_SetSector(0x0000, 0x01C8); media_Image
+
+// Image - "078_setvolbanner.bmp" Size 480x45
+// Width  = 480
+// Height = 45
+// Usage: 078_setvolbanner.bmp(x, y);
+#constant 078_setvolbanner.bmp    $media_SetSector(0x0000, 0x03C7); media_Image
+

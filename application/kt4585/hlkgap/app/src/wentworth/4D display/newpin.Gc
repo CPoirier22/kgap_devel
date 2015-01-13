@@ -1,0 +1,162 @@
+// Image - "017_home.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 017_home.bmp(x, y);
+#constant 017_home.bmp    $media_SetSector(0x0000, 0x0000); media_Image
+
+// Image - "084_changePINbanner.bmp" Size 480x45
+// Width  = 480
+// Height = 45
+// Usage: 084_changePINbanner.bmp(x, y);
+#constant 084_changePINbanner.bmp    $media_SetSector(0x0000, 0x0008); media_Image
+
+// Image - "034_PWenterbx.bmp" Size 132x45
+// Width  = 132
+// Height = 45
+// Usage: 034_PWenterbx.bmp(x, y);
+#constant 034_PWenterbx.bmp    $media_SetSector(0x0000, 0x005D); media_Image
+
+// Image - "032_PWgraynumberbx.bmp" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp(x, y);
+#constant 032_PWgraynumberbx.bmp    $media_SetSector(0x0000, 0x0075); media_Image
+
+// Image - "032_PWgraynumberbx.bmp2" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp2(x, y);
+#constant 032_PWgraynumberbx.bmp2    $media_SetSector(0x0000, 0x007B); media_Image
+
+// Image - "032_PWgraynumberbx.bmp3" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp3(x, y);
+#constant 032_PWgraynumberbx.bmp3    $media_SetSector(0x0000, 0x0081); media_Image
+
+// Image - "032_PWgraynumberbx.bmp4" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp4(x, y);
+#constant 032_PWgraynumberbx.bmp4    $media_SetSector(0x0000, 0x0087); media_Image
+
+// Image - "085_reenterPINbx.bmp" Size 132x45
+// Width  = 132
+// Height = 45
+// Usage: 085_reenterPINbx.bmp(x, y);
+#constant 085_reenterPINbx.bmp    $media_SetSector(0x0000, 0x008D); media_Image
+
+// Image - "032_PWgraynumberbx.bmp5" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp5(x, y);
+#constant 032_PWgraynumberbx.bmp5    $media_SetSector(0x0000, 0x00A5); media_Image
+
+// Image - "032_PWgraynumberbx.bmp6" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp6(x, y);
+#constant 032_PWgraynumberbx.bmp6    $media_SetSector(0x0000, 0x00AB); media_Image
+
+// Image - "032_PWgraynumberbx.bmp7" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp7(x, y);
+#constant 032_PWgraynumberbx.bmp7    $media_SetSector(0x0000, 0x00B1); media_Image
+
+// Image - "032_PWgraynumberbx.bmp52" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp52(x, y);
+#constant 032_PWgraynumberbx.bmp52    $media_SetSector(0x0000, 0x00B7); media_Image
+
+// Image - "030_lrgnumberbx.bmp" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp(x, y);
+#constant 030_lrgnumberbx.bmp    $media_SetSector(0x0000, 0x00BD); media_Image
+
+// Image - "030_lrgnumberbx.bmp2" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp2(x, y);
+#constant 030_lrgnumberbx.bmp2    $media_SetSector(0x0000, 0x00C9); media_Image
+
+// Image - "030_lrgnumberbx.bmp3" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp3(x, y);
+#constant 030_lrgnumberbx.bmp3    $media_SetSector(0x0000, 0x00D5); media_Image
+
+// Image - "030_lrgnumberbx.bmp4" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp4(x, y);
+#constant 030_lrgnumberbx.bmp4    $media_SetSector(0x0000, 0x00E1); media_Image
+
+// Image - "030_lrgnumberbx.bmp5" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp5(x, y);
+#constant 030_lrgnumberbx.bmp5    $media_SetSector(0x0000, 0x00ED); media_Image
+
+// Image - "030_lrgnumberbx.bmp6" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp6(x, y);
+#constant 030_lrgnumberbx.bmp6    $media_SetSector(0x0000, 0x00F9); media_Image
+
+// Image - "030_lrgnumberbx.bmp7" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp7(x, y);
+#constant 030_lrgnumberbx.bmp7    $media_SetSector(0x0000, 0x0105); media_Image
+
+// Image - "030_lrgnumberbx.bmp8" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp8(x, y);
+#constant 030_lrgnumberbx.bmp8    $media_SetSector(0x0000, 0x0111); media_Image
+
+// Image - "030_lrgnumberbx.bmp9" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp9(x, y);
+#constant 030_lrgnumberbx.bmp9    $media_SetSector(0x0000, 0x011D); media_Image
+
+// Image - "030_lrgnumberbx.bmp10" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp10(x, y);
+#constant 030_lrgnumberbx.bmp10    $media_SetSector(0x0000, 0x0129); media_Image
+
+// Image - "080_arrowleftsmall.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 080_arrowleftsmall.bmp(x, y);
+#constant 080_arrowleftsmall.bmp    $media_SetSector(0x0000, 0x0135); media_Image
+
+// Image - "012_question.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 012_question.bmp(x, y);
+#constant 012_question.bmp    $media_SetSector(0x0000, 0x013D); media_Image
+
+// Image - "086_toolsback.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 086_toolsback.bmp(x, y);
+#constant 086_toolsback.bmp    $media_SetSector(0x0000, 0x0145); media_Image
+
+// Image - "045_HELPnewpin.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 045_HELPnewpin.bmp(x, y);
+#constant 045_HELPnewpin.bmp    $media_SetSector(0x0000, 0x014D); media_Image
+
+// Image - "015_thumbsdown.bmp" Size 60x60
+// Width  = 60
+// Height = 60
+// Usage: 015_thumbsdown.bmp(x, y);
+#constant 015_thumbsdown.bmp    $media_SetSector(0x0000, 0x034C); media_Image
+

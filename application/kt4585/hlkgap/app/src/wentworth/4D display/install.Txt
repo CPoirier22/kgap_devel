@@ -1,0 +1,411 @@
+=====================================================
+SGC (Serial Graphics Controller) PLATFORM OUTPUT FILE
+=====================================================
+
+*******************************************************
+* This build option is not applicable to Goldelox SGC *
+*******************************************************
+
+---------------------------------------------------------------------------------------
+File "017_home.bmp" (017_home.bmp)
+Sector Address 0x000000
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00000000)
+
+---------------------------------------------------------------------------------------
+File "026_yellownumberbx.bmp" (026_yellownumberbx.bmp)
+Sector Address 0x000008
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00001000)
+
+---------------------------------------------------------------------------------------
+File "028_greennumberbx_press.bmp" (028_greennumberbx_press.bmp)
+Sector Address 0x000010
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00002000)
+
+---------------------------------------------------------------------------------------
+File "026_yellownumberbx.bmp" (026_yellownumberbx.bmp2)
+Sector Address 0x000018
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00003000)
+
+---------------------------------------------------------------------------------------
+File "028_greennumberbx_press.bmp" (028_greennumberbx_press.bmp2)
+Sector Address 0x000020
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00004000)
+
+---------------------------------------------------------------------------------------
+File "026_yellownumberbx.bmp" (026_yellownumberbx.bmp3)
+Sector Address 0x000028
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00005000)
+
+---------------------------------------------------------------------------------------
+File "028_greennumberbx_press.bmp" (028_greennumberbx_press.bmp3)
+Sector Address 0x000030
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00006000)
+
+---------------------------------------------------------------------------------------
+File "043_record.bmp" (043_record.bmp)
+Sector Address 0x000038
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00007000)
+
+---------------------------------------------------------------------------------------
+File "049_record_press.bmp" (049_record_press.bmp)
+Sector Address 0x000042
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x84, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00008400)
+
+---------------------------------------------------------------------------------------
+File "043_record.bmp" (043_record.bmp2)
+Sector Address 0x00004C
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x98, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00009800)
+
+---------------------------------------------------------------------------------------
+File "049_record_press.bmp" (049_record_press.bmp2)
+Sector Address 0x000056
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAC, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0000AC00)
+
+---------------------------------------------------------------------------------------
+File "043_record.bmp" (043_record.bmp3)
+Sector Address 0x000060
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0000C000)
+
+---------------------------------------------------------------------------------------
+File "049_record_press.bmp" (049_record_press.bmp3)
+Sector Address 0x00006A
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xD4, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0000D400)
+
+---------------------------------------------------------------------------------------
+File "097_play.bmp" (097_play.bmp)
+Sector Address 0x000074
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0000E800)
+
+---------------------------------------------------------------------------------------
+File "098_play_press.bmp" (098_play_press.bmp)
+Sector Address 0x00007E
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFC, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0000FC00)
+
+---------------------------------------------------------------------------------------
+File "081_PINrequiredbanner.bmp" (081_PINrequiredbanner.bmp)
+Sector Address 0x000088
+X = 0 Y = 0 Width = 480 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x10, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00011000)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp)
+Sector Address 0x0000DD
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xBA, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0001BA00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp)
+Sector Address 0x0000E3
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xC6, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0001C600)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp2)
+Sector Address 0x0000EF
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xDE, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0001DE00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp3)
+Sector Address 0x0000FB
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xF6, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0001F600)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp4)
+Sector Address 0x000107
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0E, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00020E00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp5)
+Sector Address 0x000113
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x26, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00022600)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp6)
+Sector Address 0x00011F
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x3E, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00023E00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp7)
+Sector Address 0x00012B
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x56, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00025600)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp8)
+Sector Address 0x000137
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x6E, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00026E00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp9)
+Sector Address 0x000143
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x86, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00028600)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp10)
+Sector Address 0x00014F
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x9E, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x00029E00)
+
+---------------------------------------------------------------------------------------
+File "080_arrowleftsmall.bmp" (080_arrowleftsmall.bmp)
+Sector Address 0x00015B
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xB6, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0002B600)
+
+---------------------------------------------------------------------------------------
+File "012_question.bmp" (012_question.bmp)
+Sector Address 0x000163
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xC6, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0002C600)
+
+---------------------------------------------------------------------------------------
+File "064_HELPpin.bmp" (064_HELPpin.bmp)
+Sector Address 0x00016B
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xD6, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0002D600)
+
+---------------------------------------------------------------------------------------
+File "015_thumbsdown.bmp" (015_thumbsdown.bmp)
+Sector Address 0x00036A
+X = 0 Y = 0 Width = 60 Height = 60 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "install.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xD4, 0x00
+4DSL command:
+FATImage("install.Gci", 0, 0, 0x0006D400)
+

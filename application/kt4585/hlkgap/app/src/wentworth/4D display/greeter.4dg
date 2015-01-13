@@ -1,0 +1,767 @@
+#platform "uLCD-43PT"
+
+var DisplayFont;
+var hndl;                                                   // Global Touch variable
+var next_screen;                                            // flag for returning to next screen
+var enabled, day, editting;
+var last_string[20];
+
+#CONST
+    CR              13
+    QUOTE           34
+    BUFSIZE         80 // Max 128 chars    was 64, increased to 80 to eliminate buffer overrun on long DECT messages
+    CMDLEN          8
+    P1LEN           30
+    PXLEN           17
+#END
+
+// 4D "released" button data ("pressed" buttons are btn + 1)
+//             (REACH button number * 2) + 8 == "released" 4D button number
+//             (REACH button number * 2) + 9 == "pressed" 4D button number
+#DATA
+//               btn   X    Y   w   h  btn   X    Y    w   h  btn   X    Y   w   h  btn   X    Y   w   h  btn   X    Y   w   h
+    word buttons   8,   6,  56, 35, 50, 10,  41,  56, 140, 25, 12,  41,  81, 70, 25, 14, 111,  81, 70, 25, 16, 181,  56, 50, 50,
+                  18,   6, 110, 35, 50, 20,  41, 110, 140, 25, 22,  41, 135, 70, 25, 24, 111, 135, 70, 25, 26, 181, 110, 50, 50,
+                  28,   6, 164, 35, 50, 30,  41, 164, 140, 25, 32,  41, 189, 70, 25, 34, 111, 189, 70, 25, 36, 181, 164, 50, 50,
+                  38,   6, 218, 35, 50, 40,  41, 218, 140, 25, 42,  41, 243, 70, 25, 44, 111, 243, 70, 25, 46, 181, 218, 50, 50,
+                  48, 250,  56, 35, 50, 50, 285,  56, 140, 25, 52, 285,  81, 70, 25, 54, 355,  81, 70, 25, 56, 425,  56, 50, 50,
+                  58, 250, 110, 35, 50, 60, 285, 110, 140, 25, 62, 285, 135, 70, 25, 64, 355, 135, 70, 25, 66, 425, 110, 50, 50,
+                  68, 250, 164, 35, 50, 70, 285, 164, 140, 25, 72, 285, 189, 70, 25, 74, 355, 189, 70, 25, 76, 425, 164, 50, 50
+#END
+
+var combuf[BUFSIZE * 2];                                    // comm port circular buffer
+var iCharCounter;                                           // used to count chars as they're read into DECTBuffer
+var DECTBuffer[BUFSIZE];                                    // used to save DECT string once \r is received into combuf
+var pDECTBuffer;                                            // pointer to DECTBuffer
+var CMD[CMDLEN], param1[P1LEN], param2[PXLEN];              // buffers for DECT commands and parameters
+
+func main()                                                 // no args = fn.4XE , with args = fn.4FN
+    next_screen := 99;                                      // 0:Home, 1:Message1, 2:Message2, 3:Greeter
+    enabled := 1;                                           // 0:disabled, 1:enabled
+    day := 0;                                               // 0:M-T, 1:F, 2:Sat, 3:Sun
+    editting := 0;                                          // 0:no edits being made, 1:edits being made
+
+    DisplayFont := FONT2;                                   // globalize the display font
+    txt_Set(FONT_ID, DisplayFont);                          // we can use FONT4 inherited from the parent program
+
+txt_MoveCursor(10, 20);
+//print("HEAP: ", mem_Heap());
+//pause(2000);
+
+//txt_MoveCursor(8, 2);
+//txt_Opacity(1);
+//txt_FGcolour(0xFFE0);
+//print("                                  ");
+//txt_MoveCursor(8, 2);
+//print("enabled == 1");
+
+    hndl := file_LoadImageControl("greeter.Dat", "greeter.Gci", 1);         // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+    if (hndl == 0)
+        repeat
+            txt_MoveCursor(10, 20);
+            txt_FGcolour(0xFFE0);
+            print("LoadImageControl failed ");
+            pause(200);
+            gfx_Cls();
+            pause(200);
+            hndl := file_LoadImageControl("greeter.Dat", "greeter.Gci", 1); // 4D Index = reach display index - 1 (4d starts at 0 instead of reach at 1)
+        until(hndl);
+    endif
+
+    iCharCounter := 0;                                      // init the char counter
+    pDECTBuffer := str_Ptr(DECTBuffer);                     // init the pointer to DECTBuffer
+    com_Init(combuf, (BUFSIZE * 2), 0);                     // start up the comm port circular buffer with no qualifier so constantly receive chars
+
+    greeter_msg_repeater();
+
+    mem_Free(hndl);
+
+    return next_screen;
+endfunc
+
+func reset_display()
+    gfx_BGcolour(0x001F);                                   // 0x001F == BLUE
+    gfx_Cls();
+    gfx_Set(SCREEN_MODE, LANDSCAPE_R);
+    img_Disable(hndl, ALL);
+    img_SetAttributes(hndl, ALL, I_TOUCH_DISABLE);          // set to disable touch, only need to do this once
+
+    txt_FontID(DisplayFont);                                // select custom font
+    txt_Width(2);                                           // font multiplier - not necessary if we get custom fonts working
+    txt_Height(2);                                          // font multiplier - not necessary if we get custom fonts working
+    txt_Bold(0);
+    txt_Opacity(0);                                         // Don't draw background pixels
+    txt_FGcolour(0);                                        // black
+endfunc
+
+//---------------------------------------------------------------------
+//  This sends out strings on COM1.  Needs to be hex values separated by spaces - so replace \x with a space from Reach code
+//  Initially tried blocking code, but this spit out extra values based on the buffer size
+//  So buffer would have to be dynamically scaled.  This is a brute force technique, seems to work OK
+//
+//---------------------------------------------------------------------
+//
+func out(var out_string)
+    var l;                                                  // string pointer
+    var m;                                                  // counter
+    var hex_codes[30];                                      // array for our results
+    var out_p;                                              // string buffer
+
+    m := 0;
+    out_p := str_Ptr(out_string);                           // raise a string pointer so we can use it
+
+    while(str_GetHexW(&out_p, &hex_codes[m++]) != 0);       // scan through and pull out all of the hex numbers put in array
+
+    for (l := 0; l < (m - 1); l++)                          // loop through and send out serial port
+        serout(hex_codes[l]);                               // send out hex data
+    next
+endfunc
+
+//---------------------------------------------------------------------
+// This macro re-creates the reach button define macro
+// n is a don't care, global var hndl covers this
+// xy is location, type to be used later, text0 is a don't care
+// bmp0 is the primary image, bmp1 needs to be handled tbd
+//
+//---------------------------------------------------------------------
+//
+func bd(var n, var x, var y, var type, var text0, var bmp0, var bmp1)
+//////////
+// CP: just to eliminate "notices" during compile from unused variables:
+n := 0;
+type := 0;
+text0 := 0;
+bmp1 := 0;
+//////////
+    img_Enable(hndl, bmp0);                                 // enable button
+    img_SetPosition(hndl, bmp0, x, y);
+    img_Show(hndl, bmp0);                                   // show button, only do this once
+endfunc
+
+//---------------------------------------------------------------------
+// This macro re-creates the reach button define macro
+// n is a don't care, global var hndl covers this
+// xy is location, type to be used later, text0 is a don't care
+// bmp0 is the primary image, bmp1 needs to be handled tbd
+// keypad number box is 55x55,characters are 28x24, manually calced center offset
+//
+//---------------------------------------------------------------------
+//
+func bdc(var n, var x, var y, var font, var text0, var bmp0, var bmp1, var sizex, var sizey)
+
+//////////
+// CP: just to eliminate "notices" during compile from unused variables:
+bmp1 := 0;
+//////////
+    img_Enable(hndl, bmp0);                                 // enable button
+    img_SetPosition(hndl, bmp0, x, y);
+    img_Show(hndl, bmp0);                                   // show button, only do this once
+
+    txt_FontID(font);                                       // select custom font
+    if ((n > 2) && (n < 8))                                 // double the font for the "title" and "other screen" buttons
+        txt_Width(2);
+        txt_Height(2);
+    else                                                    // leave the font at original size for all the feature buttons
+        txt_Width(1);
+        txt_Height(1);
+    endif
+    txt_Bold(0);
+    txt_Opacity(0);                                         // draw background pixels
+    txt_FGcolour(0);                                        // black
+
+    gfx_MoveTo(x + ((sizex - strwidth(text0)) / 2), y + ((sizey - strheight()) / 2));   // strheight() uses previous strwidth calc
+    print([STR]text0);
+endfunc
+
+//---------------------------------------------------------------------
+// Shows help for greeter or message repeater screen
+//
+//---------------------------------------------------------------------
+//
+func show_help()
+    var state;
+
+    img_Disable(hndl, ALL);                                 // Disable all objects
+    bd(87, 0, 0, 1, "", 87, 87);                            // Display the greeter help screen
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+    until (state == TOUCH_PRESSED);                         // return when screen is pressed anywhere
+endfunc
+
+//---------------------------------------------------------------------
+// Enables buttons after pressing or releasing the Greeter enable button
+//
+//---------------------------------------------------------------------
+//
+func enable_disable()
+    if (enabled)
+        img_Enable(hndl, ALL);                              // Enable all buttons and disable the "hidden" buttons
+        out("FF FF 4D 12 02 50 00 50");                     // tell base we're displaying the greeter screen
+        img_Disable(hndl, 1);                               // Disable the "Greeter is OFF" button
+        img_Disable(hndl, 3);                               // Disable the "Message 1" button
+        img_Disable(hndl, 4);                               // Disable the "Message 2" button
+        img_Disable(hndl, 5);                               // Disable the "Grtr" button
+        img_Disable(hndl, ((day * 2) + 78));                // Disable the released "day" button
+        img_Disable(hndl, 87);                              // Disable the greeter help screen
+        img_Disable(hndl, 88);                              // Disable the message 1 help screen
+        img_Disable(hndl, 89);                              // Disable the message 2 help screen
+    else
+        img_Disable(hndl, ALL);                             // Disable all buttons except these three
+        img_Enable(hndl, 1);                                // Enable "Greeter is OFF" button to allow turning on greeter
+        img_Enable(hndl, 86);                               // Enable "Help" button
+        img_Enable(hndl, 0);                                // Enable "Home" button
+    endif
+endfunc
+
+func screen_setup()
+    reset_display();
+
+    bd(0, 430, 222, 1, "", 0, 0);                           // Display the "Home" button
+    img_ClearAttributes(hndl, 0, I_TOUCH_DISABLE);          // set to enable touch
+    touch_Set(TOUCH_ENABLE);                                // enable the touch screen
+
+    if (enabled)
+        bd(2, 0, 0, 1, "", 2, 2);                           // Display the "Greeter is ON" button
+    else
+        bd(1, 0, 0, 1, "", 1, 1);                           // Display the "Greeter is OFF" button
+    endif
+    bdc(6, 287, 10, FONT1, "Msg 1", 6, 6, 70, 25);          // Display the "Msg 1" button
+    bdc(7, 367, 10, FONT1, "Msg 2", 7, 7, 70, 25);          // Display the "Msg 2" button
+
+    bd(78, 240, 222, 1, "", 78, 78);                        // Display the released "M-T" button
+    bd(80, 285, 222, 1, "", 80, 80);                        // Display the released "F" button
+    bd(82, 315, 222, 1, "", 82, 82);                        // Display the released "S" button
+    bd(84, 345, 222, 1, "", 84, 84);                        // Display the released "S" button
+    img_Disable(hndl, ((day * 2) + 78));                    // Disable the released "day" button
+    if (day == 0)
+        bd(79, 240, 222, 1, "", 79, 79);                    // Display the pressed "M-T" button
+    else if (day == 1)
+        bd(81, 285, 222, 1, "", 81, 81);                    // Display the pressed "F" button
+    else if (day == 2)
+        bd(83, 315, 222, 1, "", 83, 83);                    // Display the pressed "S" button
+    else
+        bd(85, 345, 222, 1, "", 85, 85);                    // Display the pressed "S" button
+    endif
+
+    bd(86, 380, 222, 1, "", 86, 86);                        // Display the "Help" question button
+
+    enable_disable();
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: msg_cmds_on
+// Set up the Play, Record, and Stop buttons for greets
+//
+//---------------------------------------------------------------------
+//
+func msg_cmds_on()
+    gfx_RectangleFilled(242, 0, 479, 50, 0x001F);           // draw blue square for control area
+    bd(92, 266, 0, 1, "", 92, 92);                          // Display "Play" key
+    bd(90, 327, 0, 1, "", 90, 90);                          // Display "Record" key
+    bd(94, 388, 0, 1, "", 94, 94);                          // Display "Stop" key
+    img_Disable(hndl, 94);                                  // disable the Stop button until Play or Record is pressed
+    img_Disable(hndl, 6);                                   // clear the message 1 setup button
+    img_Disable(hndl, 7);                                   // clear the message 2 setup button
+    editting := 1;
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: msg_names_on
+// Set up the name selection buttons for greets
+//
+//---------------------------------------------------------------------
+//
+func msg_names_on()
+    gfx_RectangleFilled(242, 0, 479, 50, 0x001F);           // draw blue square for control area
+    bd(95, 284, 0, 1, "", 95, 95);                          // Display "Left" key
+    bd(96, 376, 0, 1, "", 96, 96);                          // Display "Right" key
+    img_Disable(hndl, 6);                                   // clear the message 1 setup button
+    img_Disable(hndl, 7);                                   // clear the message 2 setup button
+    editting := 1;
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: msg_times_on
+// Set up the time selection buttons for greets
+//
+//---------------------------------------------------------------------
+//
+func msg_times_on()
+    gfx_RectangleFilled(242, 0, 479, 50, 0x001F);           // draw blue square for control area
+    bd(97, 284, 0, 1, "", 97, 97);                          // Display "Up" key
+    bd(98, 376, 0, 1, "", 98, 98);                          // Display "Down" key
+    img_Disable(hndl, 6);                                   // clear the message 1 setup button
+    img_Disable(hndl, 7);                                   // clear the message 2 setup button
+    editting := 1;
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: clr_ctrls
+// Clear the Play, Record, Stop, Left, Right, Up, and Down buttons
+//
+//---------------------------------------------------------------------
+//
+func clr_ctrls()
+    gfx_RectangleFilled(242, 0, 479, 50, 0x001F);           // draw blue square for control area
+    img_Disable(hndl, 90);                                  // disable Record button
+    img_Disable(hndl, 91);                                  // disable pressed Record button
+    img_Disable(hndl, 92);                                  // disable Play button
+    img_Disable(hndl, 93);                                  // disable pressed Play button
+    img_Disable(hndl, 94);                                  // disable Stop button
+    img_Disable(hndl, 95);                                  // disable Left button
+    img_Disable(hndl, 96);                                  // disable Right button
+    img_Disable(hndl, 97);                                  // disable Up button
+    img_Disable(hndl, 98);                                  // disable Down button
+    bdc(6, 287, 10, FONT1, "Msg 1", 6, 6, 70, 25);          // Display the "Msg 1" button
+    bdc(7, 367, 10, FONT1, "Msg 2", 7, 7, 70, 25);          // Display the "Msg 2" button
+    editting := 0;
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: greeter_msg_repeater
+// For setting up greeter and message repeater
+//
+//---------------------------------------------------------------------
+//
+func greeter_msg_repeater()
+    var nn, state, buffer[35];
+    var ch;
+
+    screen_setup();
+
+    nn := 99;
+
+    repeat
+        state := touch_Get(TOUCH_STATUS);                   // save touchscreen status
+        if(state ==  TOUCH_PRESSED)
+            nn := img_Touched(hndl, -1);                    // scan image list, looking for a touch
+            switch
+            case ((!editting) && (nn == 0))                 // "Home" pressed
+                next_screen := 0;
+                break;
+            case (nn == 1)                                  // "Greeter OFF" released
+                img_Disable(hndl, ALL);                     // disable current button
+                bd(2, 0, 0, 1, "", 2, 2);                   // Display the "Greeter is ON" button
+                out("FF FF 4D 12 05 18 03 09 00 00 24");    // released - enable greeter (set to ON)
+                enabled := 1;
+                enable_disable();
+                break;
+            case ((!editting) && (nn == 2))                 // "Greeter ON" pressed
+                img_Disable(hndl, ALL);                     // disable current button
+                bd(1, 0, 0, 1, "", 1, 1);                   // Display the "Greeter is OFF" button
+                out("FF FF 4D 12 05 18 03 09 00 01 25");    // pressed - disable greeter (set to OFF)
+                enabled := 0;
+                enable_disable();
+                break;
+            case (nn == 6)                                  // "Msg 1" pressed
+                next_screen := 1;
+                break;
+            case (nn == 7)                                  // "Msg 2" pressed
+                next_screen := 2;
+                break;
+
+            case ((!editting) && (day == 0) && (nn == 8 || nn == 18 || nn == 28 || nn == 38 || nn == 48 || nn == 58 || nn == 68))                           // greet record (OFF -> ON)
+                img_Disable(hndl, nn);                                                                                                                      // disable current button
+                msg_cmds_on();
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn + 2) / 10), " 00 01 ", [HEX2](24 + 03 + ((nn + 2) / 10) + 00 + 01));                        // greet record pushed
+                out(buffer);
+                to(buffer); print("G", ((nn + 2) / 10));
+                bdc((nn + 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), DisplayFont, buffer, (nn + 1), (nn + 1), 35, 50);       // display the pushed button
+                break;
+            case (nn == 9 || nn == 19 || nn == 29 || nn == 39 || nn == 49 || nn == 59 || nn == 69)                                                          // greet record (ON -> OFF)
+                img_Disable(hndl, nn);                                                                                                                      // disable the current button
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn + 1) / 10), " 00 00 ", [HEX2](24 + 03 + ((nn + 1) / 10) + 00 + 00));                        // greet record released
+                out(buffer);
+                to(buffer); print("G", ((nn + 1) / 10));
+                bdc((nn - 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), DisplayFont, buffer, (nn - 1), (nn - 1), 35, 50);       // display the released button
+                clr_ctrls();
+                break;
+
+            case ((!editting) &&  (day == 0) && (nn == 10 || nn == 20 || nn == 30 || nn == 40 || nn == 50 || nn == 60 || nn == 70))                         // greet name pressed
+                img_Disable(hndl, nn);                                                                                                                      // disable current button
+                msg_names_on();
+                to(buffer); print("FF FF 4D 12 05 18 03 ", (nn / 10), " 01 01 ", [HEX2](24 + 03 + (nn / 10) + 01 + 01));                                    // greet name pushed
+                out(buffer);
+                out("FF FF 4D 12 03 1A 01 00 1B");                                                                                                          // send a quick left and then a right
+                out("FF FF 4D 12 03 1A 01 01 1C");
+                break;
+            case (nn == 11 || nn == 21 || nn == 31 || nn == 41 || nn == 51 || nn == 61 || nn == 71)                                                         // greet name released
+                img_Disable(hndl, nn);                                                                                                                      // disable the current button
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn - 1) / 10), " 01 00 ", [HEX2](24 + 03 + ((nn - 1) / 10) + 01 + 00));                        // greet name released
+                out(buffer);
+                bdc((nn - 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), DisplayFont, last_string, (nn - 1), (nn - 1), 140, 25); // display the released button
+                clr_ctrls();
+                break;
+
+            case ((!editting) && (nn == 12 || nn == 22 || nn == 32 || nn == 42 || nn == 52 || nn == 62 || nn == 72))                                        // greet start time pressed
+                img_Disable(hndl, nn);                                                                                                                      // disable current button
+                msg_times_on();
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn - 2) / 10), " 02 01 ", [HEX2](24 + 03 + ((nn - 2) / 10) + 02 + 01));                        // greet start time pushed
+                out(buffer);
+                out("FF FF 4D 12 03 1B 01 00 1C");                                                                                                          // send a quick decrement and then an increment
+                out("FF FF 4D 12 03 1B 01 01 1D");
+                break;
+            case (nn == 13 || nn == 23 || nn == 33 || nn == 43 || nn == 53 || nn == 63 || nn == 73)                                                         // greet start time released
+                img_Disable(hndl, nn);                                                                                                                      // disable the current button
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn - 3) / 10), " 02 00 ", [HEX2](24 + 03 + ((nn - 3) / 10) + 02 + 00));                        // greet start time released
+                out(buffer);
+                bdc((nn - 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), DisplayFont, last_string, (nn - 1), (nn - 1), 70, 25);  // display the released button
+                clr_ctrls();
+                break;
+
+            case ((!editting) && (nn == 14 || nn == 24 || nn == 34 || nn == 44 || nn == 54 || nn == 64 || nn == 74))                                        // greet stop time pressed
+                img_Disable(hndl, nn);                                                                                                                      // disable current button
+                msg_times_on();
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn - 4) / 10), " 03 01 ", [HEX2](24 + 03 + ((nn - 4) / 10) + 03 + 01));                        // greet stop time pushed
+                out(buffer);
+                out("FF FF 4D 12 03 1B 01 00 1C");                                                                                                          // send a quick decrement and then an increment
+                out("FF FF 4D 12 03 1B 01 01 1D");
+                break;
+            case (nn == 15 || nn == 25 || nn == 35 || nn == 45 || nn == 55 || nn == 65 || nn == 75)                                                         // greet stop time released
+                img_Disable(hndl, nn);                                                                                                                      // disable the current button
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn - 5) / 10), " 03 00 ", [HEX2](24 + 03 + ((nn - 5) / 10) + 03 + 00));                        // greet stop time released
+                out(buffer);
+                bdc((nn - 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), DisplayFont, last_string, (nn - 1), (nn - 1), 70, 25);  // display the released button
+                clr_ctrls();
+                break;
+
+            case ((!editting) && (nn == 16 || nn == 26 || nn == 36 || nn == 46 || nn == 56 || nn == 66 || nn == 76))                                        // message (OFF -> ON)
+                img_Disable(hndl, nn);                                                                                                                      // disable current button
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn - 6) / 10), " 04 01 ", [HEX2](24 + 03 + ((nn - 6) / 10) + 04 + 01));                        // greet enable pushed
+                out(buffer);
+                bd((nn + 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), 1, "", (nn + 1), (nn + 1));                              // Display the "ON" button
+                break;
+            case ((!editting) && (nn == 17 || nn == 27 || nn == 37 || nn == 47 || nn == 57 || nn == 67 || nn == 77))                                        // message (ON -> OFF)
+                img_Disable(hndl, nn);                                                                                                                      // disable current button
+                to(buffer); print("FF FF 4D 12 05 18 03 ", ((nn - 7) / 10) , " 04 00 ", [HEX2](24 + 03 + ((nn - 6) / 10) + 04 + 00));                       // greet enable released
+                out(buffer);
+                bd((nn - 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), 1, "", (nn - 1), (nn - 1));                              // Display the "OFF" button
+                break;
+
+            case ((!editting) && (nn == 78 || nn == 80 || nn == 82 || nn == 84))                                                                            // schedule day button pressed
+                img_Disable(hndl, nn);                                                                                                                      // disable current button
+                img_SetAttributes(hndl, ALL, I_TOUCH_DISABLE);                                                                                              // set to disable touch while refreshing screen
+                bd((nn + 1), img_GetWord(hndl, nn, IMAGE_XPOS), img_GetWord(hndl, nn, IMAGE_YPOS), 1, "", (nn + 1), (nn + 1));                              // press the current schedule button
+                day := (day * 2) + 78;                                                                                                                      // convert previous day to button number
+                bd(day, img_GetWord(hndl, day, IMAGE_XPOS), img_GetWord(hndl, day, IMAGE_YPOS), 1, "", day, day);                                           // release the previous schedule button
+                day := (nn / 2) - 39;                                                                                                                       // convert button number to day
+                to(buffer); print("FF FF 4D 12 05 18 03 08 ", day, " 01 ", [HEX2](24 + 03 + 08 + day + 01));                                                // tell base schedule day button pressed
+                out(buffer);
+                break;
+
+            case (nn == 79 || nn == 81 || nn == 83 || nn == 85) // pressed day button pressed, do nothing
+                break;
+
+            case (nn == 92)                                 // Play button pressed
+                img_Disable(hndl, nn);                      // disable current button
+                img_Disable(hndl, 90);                      // disable Record button
+                out("FF FF 4D 12 03 19 01 01 1B");          // send Play cmd
+                bd(93, 266, 0, 1, "", 93, 93);              // display the pressed Play button
+                img_Enable(hndl, 94);                       // enable Stop button
+                break;
+            case (nn == 90)                                 // Record button pressed
+                img_Disable(hndl, nn);                      // disable current button
+                img_Disable(hndl, 92);                      // disable Play button
+                out("FF FF 4D 12 03 19 01 02 1C");          // send Record cmd
+                bd(91, 327, 0, 1, "", 91, 91);              // display the pressed Record button
+                img_Enable(hndl, 94);                       // enable Stop button
+                break;
+            case (nn == 94)                                 // Stop button pressed
+                img_Disable(hndl, nn);                      // disable current button
+                img_Disable(hndl, 93);                      // disable pressed Play button
+                img_Disable(hndl, 91);                      // disable pressed Record button
+                out("FF FF 4D 12 03 19 01 03 1D");          // send Stop cmd
+                bd(92, 266, 0, 1, "", 92, 92);              // display the Play button
+                bd(90, 327, 0, 1, "", 90, 90);              // display the Record button
+                break;
+
+            case (nn == 95)                                 // previous name pressed
+                out("FF FF 4D 12 03 1A 01 00 1B");          // send previous
+                break;
+            case (nn == 96)                                 // next name pressed
+                out("FF FF 4D 12 03 1A 01 01 1C");          // send next
+                break;
+
+            case (nn == 97)                                 // increment time pressed
+                out("FF FF 4D 12 03 1B 01 01 1D");          // send increment
+                break;
+            case (nn == 98)                                 // decrement time pressed
+                out("FF FF 4D 12 03 1B 01 00 1C");          // send decrement
+                break;
+
+            case ((!editting) && (nn == 86))                // "Help" pressed
+                show_help();                                // goto the help screen
+                day := 0;                                   // always start on M-T screen
+                screen_setup();                             // refresh screen buttons
+                out("FF FF 4D 12 02 50 00 50");             // tell base which screen we're displaying
+                break;
+            endswitch
+        endif
+
+        // check for anything from DECT
+        if (com_Count() > 0)
+            while (com_Count() > 0)
+                // Absolute non blocking code if the outside while is not present
+                ch := serin();
+                if (ch != -1)
+                    updateDECTBuffer(ch);
+                endif
+            wend
+        endif
+
+    until (next_screen < 99);
+
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: ssb
+//  press or release button
+//---------------------------------------------------------------------------------------
+//
+func ssb()
+    var index, pressed, btn, col, row;
+    var p1, p2;
+    p1 := str_Ptr(param1);
+    p2 := str_Ptr(param2);
+
+    if (str_FindI(&p2, "0"))                                // "released" button
+        pressed := 0;
+    else if (str_FindI(&p2, "1"))                           // "pressed" button
+        pressed := 1;
+    else
+        goto finished;
+    endif
+
+    if (str_FindI(&p1, "35"))                               // special case of greeter on/off button
+        if (pressed)
+            enabled := 0;
+        else
+            enabled := 1;
+        endif
+        bd((enabled + 1), 0, 0, 1, "", (enabled + 1), (enabled + 1));   // display the "Greeter is OFF/ON" button
+        enable_disable();                                   // refresh buttons
+
+    else if (str_FindI(&p1, "43"))                          // special case of Play button
+        img_Disable(hndl, 93);                              // disable current button
+        bd(92, 266, 0, 1, "", 92, 92);                      // display "Play" key
+        img_Enable(hndl, 90);                               // enable Record button
+        img_Disable(hndl, 94);                              // disable Stop button
+
+    else if (str_FindI(&p1, "44"))                          // special case of Record button
+        img_Disable(hndl, 91);                              // disable current button
+        bd(90, 327, 0, 1, "", 90, 90);                      // display "Record" key
+        img_Enable(hndl, 92);                               // enable Play button
+        img_Disable(hndl, 94);                              // disable Stop button
+
+    else
+        str_GetW(&p1, &index);                              // get REACH button number
+        index := index * 5;                                 // adjust for index into 4D button array
+        btn := buttons[index];                              // get 4D button number
+        if (pressed) btn := btn + 1;                        // adjust for pressed button
+
+        col := buttons[index + 1];                          // button x location
+        row := buttons[index + 2];                          // button y location
+
+        bd(btn, col, row, 1, "", btn, btn);                 // display appropriate pressed/released button
+    endif
+
+    finished:
+endfunc
+
+//---------------------------------------------------------------------------------------
+// MACRO: greet_button
+// For greet setup display.
+//  fills in a particular greet button with the appropriate text label
+//  base calls macro greet_button:lbl_n_x `0`
+//  lbl_0 = button pressed/down
+//  lbl_1 = button released/up
+//     x  : button number (0-34)
+//    `0` : text to display on button
+//---------------------------------------------------------------------------------------
+//
+func greet_button()
+    var index, pressed;
+    var btn, col, row, sizex, sizey;                        // button number and size
+    var p1;
+    p1 := str_Ptr(param1);
+
+    if (str_MatchI(&p1, "lbl_0_"))                          // "released" button
+        pressed := 0;
+        str_GetW(&p1, &index);                              // grab REACH button number
+    else if (str_MatchI(&p1, "lbl_1_"))                     // "pressed" button
+        pressed := 1;
+        str_GetW(&p1, &index);                              // grab REACH button number
+    else
+        goto finished;
+    endif
+
+    index := index * 5;                                     // adjust for index into 4D button array
+    btn := buttons[index];                                  // get 4D button number
+    if (pressed) btn := btn + 1;                            // adjust for pressed button
+
+    col := buttons[index + 1];                              // button x location
+    row := buttons[index + 2];                              // button y location
+    sizex := buttons[index + 3];                            // button width
+    sizey := buttons[index + 4];                            // button heigth
+
+    to(last_string); print([STR]param2);
+    bdc(btn, col, row, DisplayFont, last_string, btn, btn, sizex, sizey);
+
+    finished:
+endfunc
+
+////////////////////////////////
+// process serial port traffic
+//
+func updateDECTBuffer(var ch)
+    var n, p;
+    if (ch == CR)                                           // CR is the response command; if the buffer needs saving, do something with it HERE
+        iCharCounter := 0;                                  // iCharCounter is reset to 0
+        parseDECTBuffer();
+        processDECTCommand();                               // Call function to process response in DECTBuffer
+
+        p := str_Ptr(DECTBuffer);
+        for(n := 0; n < BUFSIZE; n++)
+            str_PutByte(p++, 0);                            // fill string with 0
+        next
+    else
+        if (iCharCounter > (BUFSIZE * 2)) iCharCounter--;   // Protect from overflow
+        str_PutByte(pDECTBuffer + iCharCounter++, ch);      // ch is placed into DECTBuffer[iCharCounter]
+    endif
+endfunc
+
+////////////////////////////////
+// parse the command from the DECT and pass it along
+//
+func processDECTCommand()
+    var p, p1;
+
+    p  := str_Ptr(CMD);
+    p1 := str_Ptr(param1);
+
+    switch
+        case (str_MatchI(&p, "m"))
+            switch
+                case (str_MatchI(&p1, "greet_button"))
+                    greet_button();
+                    break;
+                case (str_MatchI(&p1, "main"))              // this case has to be AFTER anything else with "main" in it so it doesn't trigger falsely
+                    next_screen := 0;                       // set flag to return to the main screen
+                    break;
+            endswitch
+            break;
+        case (str_MatchI(&p, "ssb"))
+            ssb();
+            break;
+        case (str_MatchI(&p, "touch"))
+            if (str_MatchI(&p1, "on")) img_ClearAttributes(hndl, ALL, I_TOUCH_DISABLE);
+            break;
+    endswitch
+endfunc
+
+func parseDECTBuffer()
+    var buffer[BUFSIZE];                                    // BUFSIZE character buffer for a source string
+    var n;                                                  // general purpose counter
+    var strFound;                                           // flag tracking whether or not a quoted string is being parsed
+    var p, p1, p_cnt;                                       // temp ptrs, temp pointer counter
+    var char;                                               // character holder
+
+    p := str_Ptr(buffer);
+    for(n := 0; n < BUFSIZE; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+
+    to(buffer); print([STR]DECTBuffer);                     // save a local copy of the DECTBuffer
+    p := str_Ptr(CMD);
+    for(n := 0; n < CMDLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param1);
+    for(n := 0; n < P1LEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+    p := str_Ptr(param2);
+    for(n := 0; n < PXLEN; n++)
+        str_PutByte(p++, 0);                                // fill string with 0
+    next
+
+    strFound := 0;                                          // init
+    p := str_Ptr(buffer);                                   // re-init pointer to buffer
+    p_cnt := str_Ptr(buffer);                               // re-init pointer to buffer; used as moving index
+
+    if (strlen(buffer) == 0) goto done_parsing;             // no need to parse an empty string
+
+    // looking for CMD
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, it was all whitespace
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of CMD
+    p1 := str_Ptr(CMD);                                     // init p1 pointer to CMD string
+    str_PutByte(p1++, char);
+    while (str_GetC(&p_cnt, &char))                         // pull the next char off of buffer[p_cnt]
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param1
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char) && (char != QUOTE)) break;       // skip any leading whitespace or "
+    wend
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param1
+    p1 := str_Ptr(param1);
+    str_PutByte(p1++, char);
+    // get the rest of param1
+    while (str_GetC(&p_cnt, &char))
+        if (isspace(char) || (char == QUOTE)) break;
+        str_PutByte(p1++, char);
+    wend
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    // looking for param2
+    while (str_GetC(&p_cnt, &char))
+        if (!isspace(char)) break;                          // skip any leading whitespace
+    wend
+    if (char == QUOTE)
+        strFound := 1;
+        while (str_GetC(&p_cnt, &char))
+            if (!isspace(char) && (char != QUOTE)) break;   // skip leading quoted whitespace
+        wend
+    endif
+    p_cnt--;                                                // if we've reached the end of the string and the last char is whitespace, we're done
+    if (str_GetC(&p_cnt, &char) && (isspace(char) || (char == QUOTE))) goto done_parsing;
+    // this is the first char of param2
+    p1 := str_Ptr(param2);
+    str_PutByte(p1++, char);
+    // get the rest of param2
+    while (str_GetC(&p_cnt, &char))
+        if (strFound)
+            if (char == QUOTE) break;                       // reached the end of the quoted string
+        else
+            if (isspace(char) || (char == QUOTE)) break;    // reached the end of the non-whitespace
+        endif
+        str_PutByte(p1++, char);
+    wend
+    if (strFound)                                           // strip off any trailing whitespace
+        p1--;
+        str_GetC(&p1, &char);
+        while (isspace(char))
+            str_PutByte(--p1, 0);
+            p1--;
+            str_GetC(&p1, &char);
+        wend
+    endif
+    if (!str_GetC(&p_cnt, &char)) goto done_parsing;        // if we've reached the end of the string, we're done
+    p_cnt--;
+
+    done_parsing:
+endfunc
+
+

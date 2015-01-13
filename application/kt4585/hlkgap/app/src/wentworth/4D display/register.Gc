@@ -1,0 +1,264 @@
+// Image - "017_home.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 017_home.bmp(x, y);
+#constant 017_home.bmp    $media_SetSector(0x0000, 0x0000); media_Image
+
+// Image - "041_Headsetregister.bmp" Size 160x50
+// Width  = 160
+// Height = 50
+// Usage: 041_Headsetregister.bmp(x, y);
+#constant 041_Headsetregister.bmp    $media_SetSector(0x0000, 0x0008); media_Image
+
+// Image - "047_Headsetregister_press.bmp" Size 160x50
+// Width  = 160
+// Height = 50
+// Usage: 047_Headsetregister_press.bmp(x, y);
+#constant 047_Headsetregister_press.bmp    $media_SetSector(0x0000, 0x0028); media_Image
+
+// Image - "042_Headsetdelete.bmp" Size 160x50
+// Width  = 160
+// Height = 50
+// Usage: 042_Headsetdelete.bmp(x, y);
+#constant 042_Headsetdelete.bmp    $media_SetSector(0x0000, 0x0048); media_Image
+
+// Image - "102_headsetlistenonly.bmp" Size 160x50
+// Width  = 160
+// Height = 50
+// Usage: 102_headsetlistenonly.bmp(x, y);
+#constant 102_headsetlistenonly.bmp    $media_SetSector(0x0000, 0x0068); media_Image
+
+// Image - "048_HELPregistration.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 048_HELPregistration.bmp(x, y);
+#constant 048_HELPregistration.bmp    $media_SetSector(0x0000, 0x0088); media_Image
+
+// Image - "012_question.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 012_question.bmp(x, y);
+#constant 012_question.bmp    $media_SetSector(0x0000, 0x0287); media_Image
+
+// Image - "040_Headsetbxgray.bmp" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp(x, y);
+#constant 040_Headsetbxgray.bmp    $media_SetSector(0x0000, 0x028F); media_Image
+
+// Image - "040_Headsetbxgray.bmp2" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp2(x, y);
+#constant 040_Headsetbxgray.bmp2    $media_SetSector(0x0000, 0x02A9); media_Image
+
+// Image - "040_Headsetbxgray.bmp3" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp3(x, y);
+#constant 040_Headsetbxgray.bmp3    $media_SetSector(0x0000, 0x02C3); media_Image
+
+// Image - "040_Headsetbxgray.bmp4" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp4(x, y);
+#constant 040_Headsetbxgray.bmp4    $media_SetSector(0x0000, 0x02DD); media_Image
+
+// Image - "040_Headsetbxgray.bmp5" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp5(x, y);
+#constant 040_Headsetbxgray.bmp5    $media_SetSector(0x0000, 0x02F7); media_Image
+
+// Image - "040_Headsetbxgray.bmp6" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp6(x, y);
+#constant 040_Headsetbxgray.bmp6    $media_SetSector(0x0000, 0x0311); media_Image
+
+// Image - "040_Headsetbxgray.bmp7" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp7(x, y);
+#constant 040_Headsetbxgray.bmp7    $media_SetSector(0x0000, 0x032B); media_Image
+
+// Image - "040_Headsetbxgray.bmp8" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp8(x, y);
+#constant 040_Headsetbxgray.bmp8    $media_SetSector(0x0000, 0x0345); media_Image
+
+// Image - "040_Headsetbxgray.bmp9" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp9(x, y);
+#constant 040_Headsetbxgray.bmp9    $media_SetSector(0x0000, 0x035F); media_Image
+
+// Image - "040_Headsetbxgray.bmp10" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 040_Headsetbxgray.bmp10(x, y);
+#constant 040_Headsetbxgray.bmp10    $media_SetSector(0x0000, 0x0379); media_Image
+
+// Image - "039_Headsetbxgreen.bmp" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp(x, y);
+#constant 039_Headsetbxgreen.bmp    $media_SetSector(0x0000, 0x0393); media_Image
+
+// Image - "039_Headsetbxgreen.bmp2" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp2(x, y);
+#constant 039_Headsetbxgreen.bmp2    $media_SetSector(0x0000, 0x03AD); media_Image
+
+// Image - "039_Headsetbxgreen.bmp3" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp3(x, y);
+#constant 039_Headsetbxgreen.bmp3    $media_SetSector(0x0000, 0x03C7); media_Image
+
+// Image - "039_Headsetbxgreen.bmp4" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp4(x, y);
+#constant 039_Headsetbxgreen.bmp4    $media_SetSector(0x0000, 0x03E1); media_Image
+
+// Image - "039_Headsetbxgreen.bmp5" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp5(x, y);
+#constant 039_Headsetbxgreen.bmp5    $media_SetSector(0x0000, 0x03FB); media_Image
+
+// Image - "039_Headsetbxgreen.bmp6" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp6(x, y);
+#constant 039_Headsetbxgreen.bmp6    $media_SetSector(0x0000, 0x0415); media_Image
+
+// Image - "039_Headsetbxgreen.bmp7" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp7(x, y);
+#constant 039_Headsetbxgreen.bmp7    $media_SetSector(0x0000, 0x042F); media_Image
+
+// Image - "039_Headsetbxgreen.bmp8" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp8(x, y);
+#constant 039_Headsetbxgreen.bmp8    $media_SetSector(0x0000, 0x0449); media_Image
+
+// Image - "039_Headsetbxgreen.bmp9" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp9(x, y);
+#constant 039_Headsetbxgreen.bmp9    $media_SetSector(0x0000, 0x0463); media_Image
+
+// Image - "039_Headsetbxgreen.bmp10" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 039_Headsetbxgreen.bmp10(x, y);
+#constant 039_Headsetbxgreen.bmp10    $media_SetSector(0x0000, 0x047D); media_Image
+
+// Image - "038_Headsetbxred.bmp" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp(x, y);
+#constant 038_Headsetbxred.bmp    $media_SetSector(0x0000, 0x0497); media_Image
+
+// Image - "038_Headsetbxred.bmp2" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp2(x, y);
+#constant 038_Headsetbxred.bmp2    $media_SetSector(0x0000, 0x04B1); media_Image
+
+// Image - "038_Headsetbxred.bmp3" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp3(x, y);
+#constant 038_Headsetbxred.bmp3    $media_SetSector(0x0000, 0x04CB); media_Image
+
+// Image - "038_Headsetbxred.bmp4" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp4(x, y);
+#constant 038_Headsetbxred.bmp4    $media_SetSector(0x0000, 0x04E5); media_Image
+
+// Image - "038_Headsetbxred.bmp5" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp5(x, y);
+#constant 038_Headsetbxred.bmp5    $media_SetSector(0x0000, 0x04FF); media_Image
+
+// Image - "038_Headsetbxred.bmp6" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp6(x, y);
+#constant 038_Headsetbxred.bmp6    $media_SetSector(0x0000, 0x0519); media_Image
+
+// Image - "038_Headsetbxred.bmp7" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp7(x, y);
+#constant 038_Headsetbxred.bmp7    $media_SetSector(0x0000, 0x0533); media_Image
+
+// Image - "038_Headsetbxred.bmp8" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp8(x, y);
+#constant 038_Headsetbxred.bmp8    $media_SetSector(0x0000, 0x054D); media_Image
+
+// Image - "038_Headsetbxred.bmp9" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp9(x, y);
+#constant 038_Headsetbxred.bmp9    $media_SetSector(0x0000, 0x0567); media_Image
+
+// Image - "038_Headsetbxred.bmp10" Size 160x40
+// Width  = 160
+// Height = 40
+// Usage: 038_Headsetbxred.bmp10(x, y);
+#constant 038_Headsetbxred.bmp10    $media_SetSector(0x0000, 0x0581); media_Image
+
+// Image - "013_messagebar.bmp" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp(x, y);
+#constant 013_messagebar.bmp    $media_SetSector(0x0000, 0x059B); media_Image
+
+// Image - "013_messagebar.bmp2" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp2(x, y);
+#constant 013_messagebar.bmp2    $media_SetSector(0x0000, 0x05A9); media_Image
+
+// Image - "013_messagebar.bmp3" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp3(x, y);
+#constant 013_messagebar.bmp3    $media_SetSector(0x0000, 0x05B7); media_Image
+
+// Image - "013_messagebar.bmp4" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp4(x, y);
+#constant 013_messagebar.bmp4    $media_SetSector(0x0000, 0x05C5); media_Image
+
+// Image - "013_messagebar.bmp5" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp5(x, y);
+#constant 013_messagebar.bmp5    $media_SetSector(0x0000, 0x05D3); media_Image
+
+// Image - "013_messagebar.bmp6" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp6(x, y);
+#constant 013_messagebar.bmp6    $media_SetSector(0x0000, 0x05E1); media_Image
+
+// Image - "013_messagebar.bmp7" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp7(x, y);
+#constant 013_messagebar.bmp7    $media_SetSector(0x0000, 0x05EF); media_Image
+

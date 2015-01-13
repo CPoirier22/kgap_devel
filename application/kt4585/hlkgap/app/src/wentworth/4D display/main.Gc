@@ -1,0 +1,144 @@
+// Image - "051_headsettext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 051_headsettext.bmp(x, y);
+#constant 051_headsettext.bmp    $media_SetSector(0x0000, 0x0000); media_Image
+
+// Image - "103_greetertext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 103_greetertext.bmp(x, y);
+#constant 103_greetertext.bmp    $media_SetSector(0x0000, 0x0022); media_Image
+
+// Image - "059_unlocktext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 059_unlocktext.bmp(x, y);
+#constant 059_unlocktext.bmp    $media_SetSector(0x0000, 0x0044); media_Image
+
+// Image - "053_locktext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 053_locktext.bmp(x, y);
+#constant 053_locktext.bmp    $media_SetSector(0x0000, 0x0066); media_Image
+
+// Image - "052_toolstext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 052_toolstext.bmp(x, y);
+#constant 052_toolstext.bmp    $media_SetSector(0x0000, 0x0088); media_Image
+
+// Image - "057_handtext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 057_handtext.bmp(x, y);
+#constant 057_handtext.bmp    $media_SetSector(0x0000, 0x00AA); media_Image
+
+// Image - "101_pushtotalk.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 101_pushtotalk.bmp(x, y);
+#constant 101_pushtotalk.bmp    $media_SetSector(0x0000, 0x00CC); media_Image
+
+// Image - "058_autohandstext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 058_autohandstext.bmp(x, y);
+#constant 058_autohandstext.bmp    $media_SetSector(0x0000, 0x00EE); media_Image
+
+// Image - "056_speedteamtext.bmp" Size 79x109
+// Width  = 79
+// Height = 109
+// Usage: 056_speedteamtext.bmp(x, y);
+#constant 056_speedteamtext.bmp    $media_SetSector(0x0000, 0x0110); media_Image
+
+// Image - "022_WTlogo.bmp" Size 236x69
+// Width  = 236
+// Height = 69
+// Usage: 022_WTlogo.bmp(x, y);
+#constant 022_WTlogo.bmp    $media_SetSector(0x0000, 0x0132); media_Image
+
+// Image - "027_WTmaininfo.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 027_WTmaininfo.bmp(x, y);
+#constant 027_WTmaininfo.bmp    $media_SetSector(0x0000, 0x0172); media_Image
+
+// Image - "093_carpresent_blank.bmp" Size 50x70
+// Width  = 50
+// Height = 70
+// Usage: 093_carpresent_blank.bmp(x, y);
+#constant 093_carpresent_blank.bmp    $media_SetSector(0x0000, 0x0371); media_Image
+
+// Image - "021_carpresent.bmp" Size 50x70
+// Width  = 50
+// Height = 70
+// Usage: 021_carpresent.bmp(x, y);
+#constant 021_carpresent.bmp    $media_SetSector(0x0000, 0x037F); media_Image
+
+// Image - "062_sunstatus.bmp" Size 50x70
+// Width  = 50
+// Height = 70
+// Usage: 062_sunstatus.bmp(x, y);
+#constant 062_sunstatus.bmp    $media_SetSector(0x0000, 0x038D); media_Image
+
+// Image - "063_moonstatus.bmp" Size 50x70
+// Width  = 50
+// Height = 70
+// Usage: 063_moonstatus.bmp(x, y);
+#constant 063_moonstatus.bmp    $media_SetSector(0x0000, 0x039B); media_Image
+
+// Image - "012_question.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 012_question.bmp(x, y);
+#constant 012_question.bmp    $media_SetSector(0x0000, 0x03A9); media_Image
+
+// Image - "082_HELPhome.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 082_HELPhome.bmp(x, y);
+#constant 082_HELPhome.bmp    $media_SetSector(0x0000, 0x03B1); media_Image
+
+// Image - "017_home.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 017_home.bmp(x, y);
+#constant 017_home.bmp    $media_SetSector(0x0000, 0x05B0); media_Image
+
+// Image - "081_PINrequiredbanner.bmp" Size 480x45
+// Width  = 480
+// Height = 45
+// Usage: 081_PINrequiredbanner.bmp(x, y);
+#constant 081_PINrequiredbanner.bmp    $media_SetSector(0x0000, 0x05B8); media_Image
+
+// Image - "032_PWgraynumberbx.bmp" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp(x, y);
+#constant 032_PWgraynumberbx.bmp    $media_SetSector(0x0000, 0x060D); media_Image
+
+// Image - "030_lrgnumberbx.bmp" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp(x, y);
+#constant 030_lrgnumberbx.bmp    $media_SetSector(0x0000, 0x0613); media_Image
+
+// Image - "080_arrowleftsmall.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 080_arrowleftsmall.bmp(x, y);
+#constant 080_arrowleftsmall.bmp    $media_SetSector(0x0000, 0x061F); media_Image
+
+// Image - "015_thumbsdown.bmp" Size 60x60
+// Width  = 60
+// Height = 60
+// Usage: 015_thumbsdown.bmp(x, y);
+#constant 015_thumbsdown.bmp    $media_SetSector(0x0000, 0x0627); media_Image
+
+// Image - "064_HELPpin.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 064_HELPpin.bmp(x, y);
+#constant 064_HELPpin.bmp    $media_SetSector(0x0000, 0x0636); media_Image
+

@@ -1,0 +1,48 @@
+// Image - "017_home.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 017_home.bmp(x, y);
+#constant 017_home.bmp    $media_SetSector(0x0000, 0x0000); media_Image
+
+// Image - "065_setvolume.bmp" Size 98x151
+// Width  = 98
+// Height = 151
+// Usage: 065_setvolume.bmp(x, y);
+#constant 065_setvolume.bmp    $media_SetSector(0x0000, 0x0008); media_Image
+
+// Image - "066_setclock.bmp" Size 98x151
+// Width  = 98
+// Height = 151
+// Usage: 066_setclock.bmp(x, y);
+#constant 066_setclock.bmp    $media_SetSector(0x0000, 0x0042); media_Image
+
+// Image - "067_setPIN.bmp" Size 98x151
+// Width  = 98
+// Height = 151
+// Usage: 067_setPIN.bmp(x, y);
+#constant 067_setPIN.bmp    $media_SetSector(0x0000, 0x007C); media_Image
+
+// Image - "068_setlane.bmp" Size 212x94
+// Width  = 212
+// Height = 94
+// Usage: 068_setlane.bmp(x, y);
+#constant 068_setlane.bmp    $media_SetSector(0x0000, 0x00B6); media_Image
+
+// Image - "069_setnightvol.bmp" Size 98x151
+// Width  = 98
+// Height = 151
+// Usage: 069_setnightvol.bmp(x, y);
+#constant 069_setnightvol.bmp    $media_SetSector(0x0000, 0x0104); media_Image
+
+// Image - "012_question.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 012_question.bmp(x, y);
+#constant 012_question.bmp    $media_SetSector(0x0000, 0x013E); media_Image
+
+// Image - "046_HELPsettings.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 046_HELPsettings.bmp(x, y);
+#constant 046_HELPsettings.bmp    $media_SetSector(0x0000, 0x0146); media_Image
+

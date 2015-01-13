@@ -1,0 +1,126 @@
+// Image - "017_home.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 017_home.bmp(x, y);
+#constant 017_home.bmp    $media_SetSector(0x0000, 0x0000); media_Image
+
+// Image - "079_setclockbanner.bmp" Size 480x45
+// Width  = 480
+// Height = 45
+// Usage: 079_setclockbanner.bmp(x, y);
+#constant 079_setclockbanner.bmp    $media_SetSector(0x0000, 0x0008); media_Image
+
+// Image - "019_scroll_l.bmp" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 019_scroll_l.bmp(x, y);
+#constant 019_scroll_l.bmp    $media_SetSector(0x0000, 0x005D); media_Image
+
+// Image - "013_messagebar.bmp" Size 140x25
+// Width  = 140
+// Height = 25
+// Usage: 013_messagebar.bmp(x, y);
+#constant 013_messagebar.bmp    $media_SetSector(0x0000, 0x0067); media_Image
+
+// Image - "020_scroll_r.bmp" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 020_scroll_r.bmp(x, y);
+#constant 020_scroll_r.bmp    $media_SetSector(0x0000, 0x0075); media_Image
+
+// Image - "029_dot.bmp" Size 12x14
+// Width  = 12
+// Height = 14
+// Usage: 029_dot.bmp(x, y);
+#constant 029_dot.bmp    $media_SetSector(0x0000, 0x007F); media_Image
+
+// Image - "023_arrowup.bmp" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 023_arrowup.bmp(x, y);
+#constant 023_arrowup.bmp    $media_SetSector(0x0000, 0x0080); media_Image
+
+// Image - "030_lrgnumberbx.bmp" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp(x, y);
+#constant 030_lrgnumberbx.bmp    $media_SetSector(0x0000, 0x008C); media_Image
+
+// Image - "024_arrowdown.bmp" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 024_arrowdown.bmp(x, y);
+#constant 024_arrowdown.bmp    $media_SetSector(0x0000, 0x0098); media_Image
+
+// Image - "023_arrowup.bmp2" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 023_arrowup.bmp2(x, y);
+#constant 023_arrowup.bmp2    $media_SetSector(0x0000, 0x00A4); media_Image
+
+// Image - "030_lrgnumberbx.bmp2" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp2(x, y);
+#constant 030_lrgnumberbx.bmp2    $media_SetSector(0x0000, 0x00B0); media_Image
+
+// Image - "024_arrowdown.bmp2" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 024_arrowdown.bmp2(x, y);
+#constant 024_arrowdown.bmp2    $media_SetSector(0x0000, 0x00BC); media_Image
+
+// Image - "023_arrowup.bmp3" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 023_arrowup.bmp3(x, y);
+#constant 023_arrowup.bmp3    $media_SetSector(0x0000, 0x00C8); media_Image
+
+// Image - "030_lrgnumberbx.bmp3" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp3(x, y);
+#constant 030_lrgnumberbx.bmp3    $media_SetSector(0x0000, 0x00D4); media_Image
+
+// Image - "024_arrowdown.bmp3" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 024_arrowdown.bmp3(x, y);
+#constant 024_arrowdown.bmp3    $media_SetSector(0x0000, 0x00E0); media_Image
+
+// Image - "023_arrowup.bmp4" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 023_arrowup.bmp4(x, y);
+#constant 023_arrowup.bmp4    $media_SetSector(0x0000, 0x00EC); media_Image
+
+// Image - "030_lrgnumberbx.bmp4" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp4(x, y);
+#constant 030_lrgnumberbx.bmp4    $media_SetSector(0x0000, 0x00F8); media_Image
+
+// Image - "024_arrowdown.bmp4" Size 60x50
+// Width  = 60
+// Height = 50
+// Usage: 024_arrowdown.bmp4(x, y);
+#constant 024_arrowdown.bmp4    $media_SetSector(0x0000, 0x0104); media_Image
+
+// Image - "012_question.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 012_question.bmp(x, y);
+#constant 012_question.bmp    $media_SetSector(0x0000, 0x0110); media_Image
+
+// Image - "086_toolsback.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 086_toolsback.bmp(x, y);
+#constant 086_toolsback.bmp    $media_SetSector(0x0000, 0x0118); media_Image
+
+// Image - "044_HELPclock.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 044_HELPclock.bmp(x, y);
+#constant 044_HELPclock.bmp    $media_SetSector(0x0000, 0x0120); media_Image
+

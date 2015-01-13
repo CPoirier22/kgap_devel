@@ -1,0 +1,1295 @@
+=====================================================
+SGC (Serial Graphics Controller) PLATFORM OUTPUT FILE
+=====================================================
+
+*******************************************************
+* This build option is not applicable to Goldelox SGC *
+*******************************************************
+
+---------------------------------------------------------------------------------------
+File "017_home.bmp" (017_home.bmp)
+Sector Address 0x000000
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00000000)
+
+---------------------------------------------------------------------------------------
+File "025_greeterbanner_press.bmp" (025_greeterbanner_press.bmp)
+Sector Address 0x000008
+X = 0 Y = 0 Width = 240 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00001000)
+
+---------------------------------------------------------------------------------------
+File "005_greeterbanner.bmp" (005_greeterbanner.bmp)
+Sector Address 0x000033
+X = 0 Y = 0 Width = 240 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x66, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00006600)
+
+---------------------------------------------------------------------------------------
+File "104_blankbanner.bmp" (104_blankbanner.bmp)
+Sector Address 0x00005E
+X = 0 Y = 0 Width = 240 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBC, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0000BC00)
+
+---------------------------------------------------------------------------------------
+File "104_blankbanner.bmp" (104_blankbanner.bmp2)
+Sector Address 0x000089
+X = 0 Y = 0 Width = 240 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x12, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00011200)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp)
+Sector Address 0x0000B4
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x68, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00016800)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp2)
+Sector Address 0x0000BB
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x76, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00017600)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp3)
+Sector Address 0x0000C2
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x84, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00018400)
+
+---------------------------------------------------------------------------------------
+File "001_msgnumber.bmp" (001_msgnumber.bmp)
+Sector Address 0x0000C9
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x92, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00019200)
+
+---------------------------------------------------------------------------------------
+File "002_msgnumber_press.bmp" (002_msgnumber_press.bmp)
+Sector Address 0x0000D0
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xA0, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0001A000)
+
+---------------------------------------------------------------------------------------
+File "013_messagebar.bmp" (013_messagebar.bmp)
+Sector Address 0x0000D7
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xAE, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0001AE00)
+
+---------------------------------------------------------------------------------------
+File "014_messagebar_press.bmp" (014_messagebar_press.bmp)
+Sector Address 0x0000E5
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xCA, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0001CA00)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp4)
+Sector Address 0x0000F3
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xE6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0001E600)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp)
+Sector Address 0x0000FA
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xF4, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0001F400)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp5)
+Sector Address 0x000101
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x02, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00020200)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp2)
+Sector Address 0x000108
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x10, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00021000)
+
+---------------------------------------------------------------------------------------
+File "004_off.bmp" (004_off.bmp)
+Sector Address 0x00010F
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x1E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00021E00)
+
+---------------------------------------------------------------------------------------
+File "003_on.bmp" (003_on.bmp)
+Sector Address 0x000119
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x32, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00023200)
+
+---------------------------------------------------------------------------------------
+File "001_msgnumber.bmp" (001_msgnumber.bmp2)
+Sector Address 0x000123
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x46, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00024600)
+
+---------------------------------------------------------------------------------------
+File "002_msgnumber_press.bmp" (002_msgnumber_press.bmp2)
+Sector Address 0x00012A
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x54, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00025400)
+
+---------------------------------------------------------------------------------------
+File "013_messagebar.bmp" (013_messagebar.bmp2)
+Sector Address 0x000131
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x62, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00026200)
+
+---------------------------------------------------------------------------------------
+File "014_messagebar_press.bmp" (014_messagebar_press.bmp2)
+Sector Address 0x00013F
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x7E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00027E00)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp6)
+Sector Address 0x00014D
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x9A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00029A00)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp3)
+Sector Address 0x000154
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xA8, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0002A800)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp7)
+Sector Address 0x00015B
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xB6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0002B600)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp4)
+Sector Address 0x000162
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xC4, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0002C400)
+
+---------------------------------------------------------------------------------------
+File "004_off.bmp" (004_off.bmp2)
+Sector Address 0x000169
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xD2, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0002D200)
+
+---------------------------------------------------------------------------------------
+File "003_on.bmp" (003_on.bmp2)
+Sector Address 0x000173
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xE6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0002E600)
+
+---------------------------------------------------------------------------------------
+File "001_msgnumber.bmp" (001_msgnumber.bmp3)
+Sector Address 0x00017D
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xFA, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0002FA00)
+
+---------------------------------------------------------------------------------------
+File "002_msgnumber_press.bmp" (002_msgnumber_press.bmp3)
+Sector Address 0x000184
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x08, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00030800)
+
+---------------------------------------------------------------------------------------
+File "013_messagebar.bmp" (013_messagebar.bmp3)
+Sector Address 0x00018B
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x16, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00031600)
+
+---------------------------------------------------------------------------------------
+File "014_messagebar_press.bmp" (014_messagebar_press.bmp3)
+Sector Address 0x000199
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x32, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00033200)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp8)
+Sector Address 0x0001A7
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x4E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00034E00)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp5)
+Sector Address 0x0001AE
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x5C, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00035C00)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp9)
+Sector Address 0x0001B5
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x6A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00036A00)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp6)
+Sector Address 0x0001BC
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x78, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00037800)
+
+---------------------------------------------------------------------------------------
+File "004_off.bmp" (004_off.bmp3)
+Sector Address 0x0001C3
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x86, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00038600)
+
+---------------------------------------------------------------------------------------
+File "003_on.bmp" (003_on.bmp3)
+Sector Address 0x0001CD
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x9A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00039A00)
+
+---------------------------------------------------------------------------------------
+File "001_msgnumber.bmp" (001_msgnumber.bmp4)
+Sector Address 0x0001D7
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xAE, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0003AE00)
+
+---------------------------------------------------------------------------------------
+File "002_msgnumber_press.bmp" (002_msgnumber_press.bmp4)
+Sector Address 0x0001DE
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xBC, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0003BC00)
+
+---------------------------------------------------------------------------------------
+File "013_messagebar.bmp" (013_messagebar.bmp4)
+Sector Address 0x0001E5
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xCA, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0003CA00)
+
+---------------------------------------------------------------------------------------
+File "014_messagebar_press.bmp" (014_messagebar_press.bmp4)
+Sector Address 0x0001F3
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xE6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0003E600)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp10)
+Sector Address 0x000201
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x02, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00040200)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp7)
+Sector Address 0x000208
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x10, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00041000)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp11)
+Sector Address 0x00020F
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x1E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00041E00)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp8)
+Sector Address 0x000216
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x2C, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00042C00)
+
+---------------------------------------------------------------------------------------
+File "004_off.bmp" (004_off.bmp4)
+Sector Address 0x00021D
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x3A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00043A00)
+
+---------------------------------------------------------------------------------------
+File "003_on.bmp" (003_on.bmp4)
+Sector Address 0x000227
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x4E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00044E00)
+
+---------------------------------------------------------------------------------------
+File "001_msgnumber.bmp" (001_msgnumber.bmp5)
+Sector Address 0x000231
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x62, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00046200)
+
+---------------------------------------------------------------------------------------
+File "002_msgnumber_press.bmp" (002_msgnumber_press.bmp5)
+Sector Address 0x000238
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x70, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00047000)
+
+---------------------------------------------------------------------------------------
+File "013_messagebar.bmp" (013_messagebar.bmp5)
+Sector Address 0x00023F
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x7E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00047E00)
+
+---------------------------------------------------------------------------------------
+File "014_messagebar_press.bmp" (014_messagebar_press.bmp5)
+Sector Address 0x00024D
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x9A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00049A00)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp12)
+Sector Address 0x00025B
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xB6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0004B600)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp9)
+Sector Address 0x000262
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xC4, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0004C400)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp13)
+Sector Address 0x000269
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xD2, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0004D200)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp10)
+Sector Address 0x000270
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xE0, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0004E000)
+
+---------------------------------------------------------------------------------------
+File "004_off.bmp" (004_off.bmp5)
+Sector Address 0x000277
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0xEE, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0004EE00)
+
+---------------------------------------------------------------------------------------
+File "003_on.bmp" (003_on.bmp5)
+Sector Address 0x000281
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x02, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00050200)
+
+---------------------------------------------------------------------------------------
+File "001_msgnumber.bmp" (001_msgnumber.bmp6)
+Sector Address 0x00028B
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x16, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00051600)
+
+---------------------------------------------------------------------------------------
+File "002_msgnumber_press.bmp" (002_msgnumber_press.bmp6)
+Sector Address 0x000292
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x24, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00052400)
+
+---------------------------------------------------------------------------------------
+File "013_messagebar.bmp" (013_messagebar.bmp6)
+Sector Address 0x000299
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x32, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00053200)
+
+---------------------------------------------------------------------------------------
+File "014_messagebar_press.bmp" (014_messagebar_press.bmp6)
+Sector Address 0x0002A7
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x4E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00054E00)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp14)
+Sector Address 0x0002B5
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x6A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00056A00)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp11)
+Sector Address 0x0002BC
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x78, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00057800)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp15)
+Sector Address 0x0002C3
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x86, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00058600)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp12)
+Sector Address 0x0002CA
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x94, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00059400)
+
+---------------------------------------------------------------------------------------
+File "004_off.bmp" (004_off.bmp6)
+Sector Address 0x0002D1
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xA2, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0005A200)
+
+---------------------------------------------------------------------------------------
+File "003_on.bmp" (003_on.bmp6)
+Sector Address 0x0002DB
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xB6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0005B600)
+
+---------------------------------------------------------------------------------------
+File "001_msgnumber.bmp" (001_msgnumber.bmp7)
+Sector Address 0x0002E5
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xCA, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0005CA00)
+
+---------------------------------------------------------------------------------------
+File "002_msgnumber_press.bmp" (002_msgnumber_press.bmp7)
+Sector Address 0x0002EC
+X = 0 Y = 0 Width = 35 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xD8, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0005D800)
+
+---------------------------------------------------------------------------------------
+File "013_messagebar.bmp" (013_messagebar.bmp7)
+Sector Address 0x0002F3
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0xE6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0005E600)
+
+---------------------------------------------------------------------------------------
+File "014_messagebar_press.bmp" (014_messagebar_press.bmp7)
+Sector Address 0x000301
+X = 0 Y = 0 Width = 140 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x02, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00060200)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp16)
+Sector Address 0x00030F
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x1E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00061E00)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp13)
+Sector Address 0x000316
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x2C, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00062C00)
+
+---------------------------------------------------------------------------------------
+File "016_timebar.bmp" (016_timebar.bmp17)
+Sector Address 0x00031D
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x3A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00063A00)
+
+---------------------------------------------------------------------------------------
+File "018_timebar_press.bmp" (018_timebar_press.bmp14)
+Sector Address 0x000324
+X = 0 Y = 0 Width = 70 Height = 25 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x48, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00064800)
+
+---------------------------------------------------------------------------------------
+File "004_off.bmp" (004_off.bmp7)
+Sector Address 0x00032B
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x56, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00065600)
+
+---------------------------------------------------------------------------------------
+File "003_on.bmp" (003_on.bmp7)
+Sector Address 0x000335
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x6A, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00066A00)
+
+---------------------------------------------------------------------------------------
+File "010_monthr.bmp" (010_monthr.bmp)
+Sector Address 0x00033F
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x7E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00067E00)
+
+---------------------------------------------------------------------------------------
+File "011_monthr_press.bmp" (011_monthr_press.bmp)
+Sector Address 0x000347
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x8E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00068E00)
+
+---------------------------------------------------------------------------------------
+File "008_fri.bmp" (008_fri.bmp)
+Sector Address 0x00034F
+X = 0 Y = 0 Width = 30 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x9E, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00069E00)
+
+---------------------------------------------------------------------------------------
+File "009_fri_press.bmp" (009_fri_press.bmp)
+Sector Address 0x000355
+X = 0 Y = 0 Width = 30 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xAA, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0006AA00)
+
+---------------------------------------------------------------------------------------
+File "006_satsun.bmp" (006_satsun.bmp)
+Sector Address 0x00035B
+X = 0 Y = 0 Width = 30 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xB6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0006B600)
+
+---------------------------------------------------------------------------------------
+File "007_satsun_press.bmp" (007_satsun_press.bmp)
+Sector Address 0x000361
+X = 0 Y = 0 Width = 30 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xC2, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0006C200)
+
+---------------------------------------------------------------------------------------
+File "006_satsun.bmp" (006_satsun.bmp2)
+Sector Address 0x000367
+X = 0 Y = 0 Width = 30 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xCE, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0006CE00)
+
+---------------------------------------------------------------------------------------
+File "007_satsun_press.bmp" (007_satsun_press.bmp2)
+Sector Address 0x00036D
+X = 0 Y = 0 Width = 30 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xDA, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0006DA00)
+
+---------------------------------------------------------------------------------------
+File "012_question.bmp" (012_question.bmp)
+Sector Address 0x000373
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xE6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0006E600)
+
+---------------------------------------------------------------------------------------
+File "031_HELPgreeter.bmp" (031_HELPgreeter.bmp)
+Sector Address 0x00037B
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xF6, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0006F600)
+
+---------------------------------------------------------------------------------------
+File "105_HELPmessage1.bmp" (105_HELPmessage1.bmp)
+Sector Address 0x00057A
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0xF4, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x000AF400)
+
+---------------------------------------------------------------------------------------
+File "106_HELPmessage2.bmp" (106_HELPmessage2.bmp)
+Sector Address 0x000779
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0E, 0xF2, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x000EF200)
+
+---------------------------------------------------------------------------------------
+File "043_record.bmp" (043_record.bmp)
+Sector Address 0x000978
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0xF0, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x0012F000)
+
+---------------------------------------------------------------------------------------
+File "049_record_press.bmp" (049_record_press.bmp)
+Sector Address 0x000982
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x04, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00130400)
+
+---------------------------------------------------------------------------------------
+File "097_play.bmp" (097_play.bmp)
+Sector Address 0x00098C
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x18, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00131800)
+
+---------------------------------------------------------------------------------------
+File "098_play_press.bmp" (098_play_press.bmp)
+Sector Address 0x000996
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x2C, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00132C00)
+
+---------------------------------------------------------------------------------------
+File "061_stop.bmp" (061_stop.bmp)
+Sector Address 0x0009A0
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x40, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00134000)
+
+---------------------------------------------------------------------------------------
+File "019_scroll_l.bmp" (019_scroll_l.bmp)
+Sector Address 0x0009AA
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x54, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00135400)
+
+---------------------------------------------------------------------------------------
+File "020_scroll_r.bmp" (020_scroll_r.bmp)
+Sector Address 0x0009B4
+X = 0 Y = 0 Width = 50 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x68, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00136800)
+
+---------------------------------------------------------------------------------------
+File "023_arrowup.bmp" (023_arrowup.bmp)
+Sector Address 0x0009BE
+X = 0 Y = 0 Width = 60 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x7C, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00137C00)
+
+---------------------------------------------------------------------------------------
+File "024_arrowdown.bmp" (024_arrowdown.bmp)
+Sector Address 0x0009CA
+X = 0 Y = 0 Width = 60 Height = 50 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "greeter.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13, 0x94, 0x00
+4DSL command:
+FATImage("greeter.Gci", 0, 0, 0x00139400)
+

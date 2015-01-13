@@ -1,0 +1,186 @@
+// Image - "017_home.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 017_home.bmp(x, y);
+#constant 017_home.bmp    $media_SetSector(0x0000, 0x0000); media_Image
+
+// Image - "026_yellownumberbx.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 026_yellownumberbx.bmp(x, y);
+#constant 026_yellownumberbx.bmp    $media_SetSector(0x0000, 0x0008); media_Image
+
+// Image - "028_greennumberbx_press.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 028_greennumberbx_press.bmp(x, y);
+#constant 028_greennumberbx_press.bmp    $media_SetSector(0x0000, 0x0010); media_Image
+
+// Image - "026_yellownumberbx.bmp2" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 026_yellownumberbx.bmp2(x, y);
+#constant 026_yellownumberbx.bmp2    $media_SetSector(0x0000, 0x0018); media_Image
+
+// Image - "028_greennumberbx_press.bmp2" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 028_greennumberbx_press.bmp2(x, y);
+#constant 028_greennumberbx_press.bmp2    $media_SetSector(0x0000, 0x0020); media_Image
+
+// Image - "026_yellownumberbx.bmp3" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 026_yellownumberbx.bmp3(x, y);
+#constant 026_yellownumberbx.bmp3    $media_SetSector(0x0000, 0x0028); media_Image
+
+// Image - "028_greennumberbx_press.bmp3" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 028_greennumberbx_press.bmp3(x, y);
+#constant 028_greennumberbx_press.bmp3    $media_SetSector(0x0000, 0x0030); media_Image
+
+// Image - "043_record.bmp" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 043_record.bmp(x, y);
+#constant 043_record.bmp    $media_SetSector(0x0000, 0x0038); media_Image
+
+// Image - "049_record_press.bmp" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 049_record_press.bmp(x, y);
+#constant 049_record_press.bmp    $media_SetSector(0x0000, 0x0042); media_Image
+
+// Image - "043_record.bmp2" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 043_record.bmp2(x, y);
+#constant 043_record.bmp2    $media_SetSector(0x0000, 0x004C); media_Image
+
+// Image - "049_record_press.bmp2" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 049_record_press.bmp2(x, y);
+#constant 049_record_press.bmp2    $media_SetSector(0x0000, 0x0056); media_Image
+
+// Image - "043_record.bmp3" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 043_record.bmp3(x, y);
+#constant 043_record.bmp3    $media_SetSector(0x0000, 0x0060); media_Image
+
+// Image - "049_record_press.bmp3" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 049_record_press.bmp3(x, y);
+#constant 049_record_press.bmp3    $media_SetSector(0x0000, 0x006A); media_Image
+
+// Image - "097_play.bmp" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 097_play.bmp(x, y);
+#constant 097_play.bmp    $media_SetSector(0x0000, 0x0074); media_Image
+
+// Image - "098_play_press.bmp" Size 50x50
+// Width  = 50
+// Height = 50
+// Usage: 098_play_press.bmp(x, y);
+#constant 098_play_press.bmp    $media_SetSector(0x0000, 0x007E); media_Image
+
+// Image - "081_PINrequiredbanner.bmp" Size 480x45
+// Width  = 480
+// Height = 45
+// Usage: 081_PINrequiredbanner.bmp(x, y);
+#constant 081_PINrequiredbanner.bmp    $media_SetSector(0x0000, 0x0088); media_Image
+
+// Image - "032_PWgraynumberbx.bmp" Size 33x42
+// Width  = 33
+// Height = 42
+// Usage: 032_PWgraynumberbx.bmp(x, y);
+#constant 032_PWgraynumberbx.bmp    $media_SetSector(0x0000, 0x00DD); media_Image
+
+// Image - "030_lrgnumberbx.bmp" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp(x, y);
+#constant 030_lrgnumberbx.bmp    $media_SetSector(0x0000, 0x00E3); media_Image
+
+// Image - "030_lrgnumberbx.bmp2" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp2(x, y);
+#constant 030_lrgnumberbx.bmp2    $media_SetSector(0x0000, 0x00EF); media_Image
+
+// Image - "030_lrgnumberbx.bmp3" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp3(x, y);
+#constant 030_lrgnumberbx.bmp3    $media_SetSector(0x0000, 0x00FB); media_Image
+
+// Image - "030_lrgnumberbx.bmp4" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp4(x, y);
+#constant 030_lrgnumberbx.bmp4    $media_SetSector(0x0000, 0x0107); media_Image
+
+// Image - "030_lrgnumberbx.bmp5" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp5(x, y);
+#constant 030_lrgnumberbx.bmp5    $media_SetSector(0x0000, 0x0113); media_Image
+
+// Image - "030_lrgnumberbx.bmp6" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp6(x, y);
+#constant 030_lrgnumberbx.bmp6    $media_SetSector(0x0000, 0x011F); media_Image
+
+// Image - "030_lrgnumberbx.bmp7" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp7(x, y);
+#constant 030_lrgnumberbx.bmp7    $media_SetSector(0x0000, 0x012B); media_Image
+
+// Image - "030_lrgnumberbx.bmp8" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp8(x, y);
+#constant 030_lrgnumberbx.bmp8    $media_SetSector(0x0000, 0x0137); media_Image
+
+// Image - "030_lrgnumberbx.bmp9" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp9(x, y);
+#constant 030_lrgnumberbx.bmp9    $media_SetSector(0x0000, 0x0143); media_Image
+
+// Image - "030_lrgnumberbx.bmp10" Size 55x55
+// Width  = 55
+// Height = 55
+// Usage: 030_lrgnumberbx.bmp10(x, y);
+#constant 030_lrgnumberbx.bmp10    $media_SetSector(0x0000, 0x014F); media_Image
+
+// Image - "080_arrowleftsmall.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 080_arrowleftsmall.bmp(x, y);
+#constant 080_arrowleftsmall.bmp    $media_SetSector(0x0000, 0x015B); media_Image
+
+// Image - "012_question.bmp" Size 45x45
+// Width  = 45
+// Height = 45
+// Usage: 012_question.bmp(x, y);
+#constant 012_question.bmp    $media_SetSector(0x0000, 0x0163); media_Image
+
+// Image - "064_HELPpin.bmp" Size 480x272
+// Width  = 480
+// Height = 272
+// Usage: 064_HELPpin.bmp(x, y);
+#constant 064_HELPpin.bmp    $media_SetSector(0x0000, 0x016B); media_Image
+
+// Image - "015_thumbsdown.bmp" Size 60x60
+// Width  = 60
+// Height = 60
+// Usage: 015_thumbsdown.bmp(x, y);
+#constant 015_thumbsdown.bmp    $media_SetSector(0x0000, 0x036A); media_Image
+

@@ -1,0 +1,320 @@
+=====================================================
+SGC (Serial Graphics Controller) PLATFORM OUTPUT FILE
+=====================================================
+
+*******************************************************
+* This build option is not applicable to Goldelox SGC *
+*******************************************************
+
+---------------------------------------------------------------------------------------
+File "051_headsettext.bmp" (051_headsettext.bmp)
+Sector Address 0x000000
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00000000)
+
+---------------------------------------------------------------------------------------
+File "103_greetertext.bmp" (103_greetertext.bmp)
+Sector Address 0x000022
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x44, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00004400)
+
+---------------------------------------------------------------------------------------
+File "059_unlocktext.bmp" (059_unlocktext.bmp)
+Sector Address 0x000044
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x88, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00008800)
+
+---------------------------------------------------------------------------------------
+File "053_locktext.bmp" (053_locktext.bmp)
+Sector Address 0x000066
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xCC, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x0000CC00)
+
+---------------------------------------------------------------------------------------
+File "052_toolstext.bmp" (052_toolstext.bmp)
+Sector Address 0x000088
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x10, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00011000)
+
+---------------------------------------------------------------------------------------
+File "057_handtext.bmp" (057_handtext.bmp)
+Sector Address 0x0000AA
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x54, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00015400)
+
+---------------------------------------------------------------------------------------
+File "101_pushtotalk.bmp" (101_pushtotalk.bmp)
+Sector Address 0x0000CC
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x98, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00019800)
+
+---------------------------------------------------------------------------------------
+File "058_autohandstext.bmp" (058_autohandstext.bmp)
+Sector Address 0x0000EE
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xDC, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x0001DC00)
+
+---------------------------------------------------------------------------------------
+File "056_speedteamtext.bmp" (056_speedteamtext.bmp)
+Sector Address 0x000110
+X = 0 Y = 0 Width = 79 Height = 109 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x20, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00022000)
+
+---------------------------------------------------------------------------------------
+File "022_WTlogo.bmp" (022_WTlogo.bmp)
+Sector Address 0x000132
+X = 0 Y = 0 Width = 236 Height = 69 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x64, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00026400)
+
+---------------------------------------------------------------------------------------
+File "027_WTmaininfo.bmp" (027_WTmaininfo.bmp)
+Sector Address 0x000172
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xE4, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x0002E400)
+
+---------------------------------------------------------------------------------------
+File "093_carpresent_blank.bmp" (093_carpresent_blank.bmp)
+Sector Address 0x000371
+X = 0 Y = 0 Width = 50 Height = 70 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xE2, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x0006E200)
+
+---------------------------------------------------------------------------------------
+File "021_carpresent.bmp" (021_carpresent.bmp)
+Sector Address 0x00037F
+X = 0 Y = 0 Width = 50 Height = 70 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0xFE, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x0006FE00)
+
+---------------------------------------------------------------------------------------
+File "062_sunstatus.bmp" (062_sunstatus.bmp)
+Sector Address 0x00038D
+X = 0 Y = 0 Width = 50 Height = 70 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x1A, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00071A00)
+
+---------------------------------------------------------------------------------------
+File "063_moonstatus.bmp" (063_moonstatus.bmp)
+Sector Address 0x00039B
+X = 0 Y = 0 Width = 50 Height = 70 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x36, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00073600)
+
+---------------------------------------------------------------------------------------
+File "012_question.bmp" (012_question.bmp)
+Sector Address 0x0003A9
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x52, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00075200)
+
+---------------------------------------------------------------------------------------
+File "082_HELPhome.bmp" (082_HELPhome.bmp)
+Sector Address 0x0003B1
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x62, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x00076200)
+
+---------------------------------------------------------------------------------------
+File "017_home.bmp" (017_home.bmp)
+Sector Address 0x0005B0
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0B, 0x60, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x000B6000)
+
+---------------------------------------------------------------------------------------
+File "081_PINrequiredbanner.bmp" (081_PINrequiredbanner.bmp)
+Sector Address 0x0005B8
+X = 0 Y = 0 Width = 480 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0B, 0x70, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x000B7000)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp)
+Sector Address 0x00060D
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x1A, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x000C1A00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp)
+Sector Address 0x000613
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x26, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x000C2600)
+
+---------------------------------------------------------------------------------------
+File "080_arrowleftsmall.bmp" (080_arrowleftsmall.bmp)
+Sector Address 0x00061F
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x3E, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x000C3E00)
+
+---------------------------------------------------------------------------------------
+File "015_thumbsdown.bmp" (015_thumbsdown.bmp)
+Sector Address 0x000627
+X = 0 Y = 0 Width = 60 Height = 60 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x4E, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x000C4E00)
+
+---------------------------------------------------------------------------------------
+File "064_HELPpin.bmp" (064_HELPpin.bmp)
+Sector Address 0x000636
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "main.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x6C, 0x00
+4DSL command:
+FATImage("main.Gci", 0, 0, 0x000C6C00)
+

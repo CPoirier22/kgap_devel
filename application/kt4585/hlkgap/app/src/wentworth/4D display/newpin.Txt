@@ -1,0 +1,359 @@
+=====================================================
+SGC (Serial Graphics Controller) PLATFORM OUTPUT FILE
+=====================================================
+
+*******************************************************
+* This build option is not applicable to Goldelox SGC *
+*******************************************************
+
+---------------------------------------------------------------------------------------
+File "017_home.bmp" (017_home.bmp)
+Sector Address 0x000000
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00000000)
+
+---------------------------------------------------------------------------------------
+File "084_changePINbanner.bmp" (084_changePINbanner.bmp)
+Sector Address 0x000008
+X = 0 Y = 0 Width = 480 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00001000)
+
+---------------------------------------------------------------------------------------
+File "034_PWenterbx.bmp" (034_PWenterbx.bmp)
+Sector Address 0x00005D
+X = 0 Y = 0 Width = 132 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBA, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x0000BA00)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp)
+Sector Address 0x000075
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xEA, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x0000EA00)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp2)
+Sector Address 0x00007B
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF6, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x0000F600)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp3)
+Sector Address 0x000081
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00010200)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp4)
+Sector Address 0x000087
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x0E, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00010E00)
+
+---------------------------------------------------------------------------------------
+File "085_reenterPINbx.bmp" (085_reenterPINbx.bmp)
+Sector Address 0x00008D
+X = 0 Y = 0 Width = 132 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x1A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00011A00)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp5)
+Sector Address 0x0000A5
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x4A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00014A00)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp6)
+Sector Address 0x0000AB
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x56, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00015600)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp7)
+Sector Address 0x0000B1
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x62, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00016200)
+
+---------------------------------------------------------------------------------------
+File "032_PWgraynumberbx.bmp" (032_PWgraynumberbx.bmp52)
+Sector Address 0x0000B7
+X = 0 Y = 0 Width = 33 Height = 42 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x6E, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00016E00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp)
+Sector Address 0x0000BD
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x7A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00017A00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp2)
+Sector Address 0x0000C9
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x92, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00019200)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp3)
+Sector Address 0x0000D5
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xAA, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x0001AA00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp4)
+Sector Address 0x0000E1
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xC2, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x0001C200)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp5)
+Sector Address 0x0000ED
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xDA, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x0001DA00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp6)
+Sector Address 0x0000F9
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xF2, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x0001F200)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp7)
+Sector Address 0x000105
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00020A00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp8)
+Sector Address 0x000111
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x22, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00022200)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp9)
+Sector Address 0x00011D
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x3A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00023A00)
+
+---------------------------------------------------------------------------------------
+File "030_lrgnumberbx.bmp" (030_lrgnumberbx.bmp10)
+Sector Address 0x000129
+X = 0 Y = 0 Width = 55 Height = 55 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x52, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00025200)
+
+---------------------------------------------------------------------------------------
+File "080_arrowleftsmall.bmp" (080_arrowleftsmall.bmp)
+Sector Address 0x000135
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x6A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00026A00)
+
+---------------------------------------------------------------------------------------
+File "012_question.bmp" (012_question.bmp)
+Sector Address 0x00013D
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x7A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00027A00)
+
+---------------------------------------------------------------------------------------
+File "086_toolsback.bmp" (086_toolsback.bmp)
+Sector Address 0x000145
+X = 0 Y = 0 Width = 45 Height = 45 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x8A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00028A00)
+
+---------------------------------------------------------------------------------------
+File "045_HELPnewpin.bmp" (045_HELPnewpin.bmp)
+Sector Address 0x00014D
+X = 0 Y = 0 Width = 480 Height = 272 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x9A, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00029A00)
+
+---------------------------------------------------------------------------------------
+File "015_thumbsdown.bmp" (015_thumbsdown.bmp)
+Sector Address 0x00034C
+X = 0 Y = 0 Width = 60 Height = 60 Bits = 16
+
+Display Image from Memory Card (Serial Command):
+Syntax:
+@, m, "Filename", terminator, x, y, imagePos(xhi) imagePos(hi), imagePos(mid), imagePos(lo)
+Picaso Data:
+0x40, 0x6D, "newpin.Gci", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x98, 0x00
+4DSL command:
+FATImage("newpin.Gci", 0, 0, 0x00069800)
+
