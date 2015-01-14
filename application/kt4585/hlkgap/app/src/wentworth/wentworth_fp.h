@@ -254,6 +254,7 @@ typedef struct
 	WORD PowerOnCountB;
 	BOOLEAN ReceivingGreetData, GreeterScreenB;
 	UByte GreeterInstalledB, GreetData_i, GreetData_ii;
+	UByte UsingWirelessPost;
 
 	// these things need to be saved in EEPROM
 	//	WORD FW_REV_MAJOR & FW_REV_MINOR								// 2

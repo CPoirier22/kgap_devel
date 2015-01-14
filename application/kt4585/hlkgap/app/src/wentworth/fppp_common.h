@@ -29,7 +29,7 @@
 
 #define FW_REV_MAJOR	2
 #define FW_REV_MINOR	0
-#define FW_REV_STR 	"WT FW 2.0-AL *** support for dual bases; EXP & dual lane systems *** "
+#define FW_REV_STR 	"WT FW 2.0-AL *** support for dual bases (STX & dual lane systems) and wireless order post *** "
 // max length ==>   "___________________________________________________________________________________________________"
 
 //#define ENABLE_CHANNEL_MESSAGES
@@ -40,7 +40,7 @@ extern UByte WENTWORTHTASK;
 extern UByte WENTWORTHTASKTIMER;
 
 // FIRST_ACTION byte in PP EEPROM
-#define EE_FIRST_ACTION			0x02E8	// used for toggling test mode of headset (0x22 = test mode, 0xFF = production)
+#define EE_FIRST_ACTION			0x02E8	// used for toggling test mode of headset (0x22 = test mode, 0xFF = production, 0x44 = wireless post)
 
 // this is located in the EE_FREE2 area of EEPROM (0x021D / 541 bytes available)
 #define EE_WTDATA				0x03E3	// beginning of WT data area
@@ -69,7 +69,7 @@ extern UByte WENTWORTHTASKTIMER;
 #define EE_WT_GREET_AUTH_CODE	0x04BE	// 4
 #define EE_WT_POWER_ON_COUNT	0x04C2	// 2
 #define EE_WT_ALANGO_STATE		0x04C4	// 1	(0 = MA-11/profile 0, 1 = MA-10/profile 1)
-#define EE_WT_MENU_CONFIG		0x04C5	// 1	(0 = single menu ONLY; 1 = single menu EXP; 2 = parallel menus 1OT; 3 = tandem menus 1OT; 4 = parallel menus 2OT, 5 = tandem menus 2OT)
+#define EE_WT_MENU_CONFIG		0x04C5	// 1	(0 = single menu ONLY; 1 = single menu STX; 2 = parallel menus 1OT; 3 = tandem menus 1OT; 4 = parallel menus 2OT, 5 = tandem menus 2OT)
 #define EE_WT_DUAL_BASE			0x04C6	// 1	(0 = no dual base; 1 = MENU A; 2 = MENU B)
 										//====> 29 + 63 + 126 + 10 = 228 bytes
 
@@ -88,6 +88,8 @@ extern UByte WENTWORTHTASKTIMER;
 #define READ_EEPROM_HEX_ARI		0x1B
 #define LISTEN_ONLY_MODE_CMD	0x1C
 #define CAL_PP_CMD				0x1D
+#define VEHICLE_DETECT_CMD		0x1E
+#define WIRELESS_POST_CMD		0x1F
 #define CONF_FROM_BS			0x80
 #define WRITE_WT_DEBUG_EEPROM	0x81
 #define READ_WTDATA_EEPROM		0x82
@@ -155,6 +157,11 @@ typedef struct
   WORD PPOffset; 		// 0/3 is negative, 1/4 is reset, 2/5 is positive
 } SetPPOffsetStruct;
 
+typedef struct
+{
+  WORD VDinfo; 			// 0x00io is no vehicle, 0x01io is vehicle present, 0x02io is volume setting (io is inbound/outbound volumes)
+} SetVehicleDetectStruct;
+
 typedef union
 {
   SetMicMuteStruct SetMicMute;
@@ -166,6 +173,7 @@ typedef union
   SetConfStruct SetConf;
   SetOrderTakerStruct SetOrderTaker;
   SetPPOffsetStruct SetPPOffset;
+  SetVehicleDetectStruct SetVehicleDetect;
 } SubType;
 
 typedef struct

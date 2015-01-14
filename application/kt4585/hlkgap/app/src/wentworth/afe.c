@@ -243,12 +243,6 @@ void AFEDisconnectAudioPathPP(void)
 	p_summator->in1_atten = 0x0000;										// multiply with 0 -> no signal to summator on in1_ptr
 }
 
-void AFEReenableVoice(void)
-{
-	PrintStatus(0,"AFEReenableVoice");
-	p_summator->in1_atten = 0x7FFF;										// multiply with 1.00 for 0dB -> enable signal to summator on in1_ptr
-}
-
 void AFEConnectAudioPathPP(void)
 {
 	p_summator->in1_atten = 0x7FFF;										// multiply with 1.00 -> enable signal to summator on in1_ptr

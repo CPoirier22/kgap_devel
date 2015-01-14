@@ -122,6 +122,8 @@ void check_external_relay_pin(void)
 void ServiceVehicleDetect(BOOLEAN VehicleIsPresent);
 void check_VD_pins(void)
 {
+	if ((base_station).UsingWirelessPost)
+		return;																	// stop checking VD 3V pin
 	if (!(base_station).VehicleDetectIsActive && (~P1_DATA_REG & Px_1_DATA))
 		ServiceVehicleDetect(TRUE);												// VD 3V fired
 	else if ((base_station).VehicleDetectIsActive && (P1_DATA_REG & Px_1_DATA))
@@ -143,7 +145,7 @@ void ServiceVehicleDetect(BOOLEAN VehicleIsPresent)
 		(base_station).CarIsWaiting = TRUE;
 		for (i = 0; i < MAX_Allowed_Users; i++)
 		{
-			// if any headset is on from before vehicle detect, now it is off
+			// if any headset MIC is on from before vehicle detect, now it is off
 			if (((base_station).HeadsetIsOn[i]) && ((base_station).MicIsOn[i]))
 				(base_station).MicIsOn[i] = FALSE;
 		}
@@ -1347,12 +1349,12 @@ static void StartPCM()
 		// so start PCM bus as slave for board to board communication
 		PrintStatus(0, "*** Starting PCM as SLAVE for FP #1 - menu A Base");
 
-		P2_DIR_REG &= ~Px_5_DIR;					// enable PCM_FSC as an input w/no pull resistor
-		P2_DIR_REG |=  Px_4_DIR;					// enable PCM_DO as an output
-		P2_DIR_REG &= ~Px_3_DIR;					// enable PCM_DI as an input w/no pull resistor
-		P2_DIR_REG &= ~Px_2_DIR;					// enable PCM_CLK as an input w/no pull resistor
+		P2_DIR_REG &= ~Px_5_DIR;				// enable PCM_FSC as an input w/no pull resistor
+		P2_DIR_REG |=  Px_4_DIR;				// enable PCM_DO as an output
+		P2_DIR_REG &= ~Px_3_DIR;				// enable PCM_DI as an input w/no pull resistor
+		P2_DIR_REG &= ~Px_2_DIR;				// enable PCM_CLK as an input w/no pull resistor
 
-		CLK_CODEC_REG = 0x0000;						// disable all clocks
+		CLK_CODEC_REG = 0x0000;					// disable all clocks
 	}
 	else
 	{
@@ -1360,12 +1362,12 @@ static void StartPCM()
 		// so start PCM bus as master for board to board communication
 		PrintStatus(0, "*** Starting PCM as MASTER for FP #2 - menu B Base");
 
-		P2_DIR_REG |=  Px_5_DIR;					// enable PCM_FSC as an output
-		P2_DIR_REG |=  Px_4_DIR;					// enable PCM_DO  as an output
-		P2_DIR_REG &= ~Px_3_DIR;					// enable PCM_DI  as an input w/no pull resistor
-		P2_DIR_REG |=  Px_2_DIR;					// enable PCM_CLK as an output
+		P2_DIR_REG |=  Px_5_DIR;				// enable PCM_FSC as an output
+		P2_DIR_REG |=  Px_4_DIR;				// enable PCM_DO  as an output
+		P2_DIR_REG &= ~Px_3_DIR;				// enable PCM_DI  as an input w/no pull resistor
+		P2_DIR_REG |=  Px_2_DIR;				// enable PCM_CLK as an output
 
-		CLK_CODEC_REG = 0x4000;						// disable all clocks except 1.152MHz PCM clock (CLK_PCM_EN)
+		CLK_CODEC_REG = 0x4000;					// disable all clocks except 1.152MHz PCM clock (CLK_PCM_EN)
 	}
 
 	P2_MODE_REG &= ~(P2_5_MODE | P2_4_MODE | P2_3_MODE | P2_2_MODE);	// clear all the bits in question first
@@ -1542,7 +1544,7 @@ static void ConfigureBaseStationVariables()
 	(base_station).PowerOnCountB = 1;
 	(base_station).AlangoProfile1 = FALSE;								// 0: MA-11 is profile 0, 1: MA-10 is profile 1
 	(base_station).AlangoProfile1B = FALSE;
-	(base_station).MenuConfig = 0;										// 0: single menu ONLY, 1: single menu EXP, 2: parallel menus 1OT, 3: tandem menus 1OT, 4: parallel menus 2OT, 5: tandem menus 2OT
+	(base_station).MenuConfig = 0;										// 0: single menu ONLY, 1: single menu STX, 2: parallel menus 1OT, 3: tandem menus 1OT, 4: parallel menus 2OT, 5: tandem menus 2OT
 	(base_station).DualBase = 0;										// 0: single base - menu A, 1: dual base - menu A, 2: dual base - menu B
 	(base_station).IsUS = TRUE;
 	(base_station).ReceivingGreetData = FALSE;
@@ -1550,6 +1552,7 @@ static void ConfigureBaseStationVariables()
 	(base_station).GreeterInstalledB = 2;								// 0 - Greeter B not installed, 1 - Greeter B installed, 2 - Greeter B status unknown
 	(base_station).GreetData_i = 0;
 	(base_station).GreetData_ii = 0;
+	(base_station).UsingWirelessPost = 0;
 }
 
 void InitWentworth_fp(void)

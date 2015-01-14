@@ -1,3 +1,4 @@
+#include "../../../../../include/os/include/os_timer.h"
 #include "../../../../api/include/pp/pp_subscription_callback.h"
 #include "../../../../api/include/pp/pp_subscription_functions.h"
 #include "../../../../api/include/common/common_general_functions.h"
@@ -21,6 +22,8 @@
 
 extern UByte WENTWORTHTASKTIMER;
 extern UByte OTTIMERSEQTASK1TIMER;
+extern UByte PPWATCHDOGTASKTIMER;
+extern UByte PPVEHICLEDETECTTASKTIMER;
 
 static UByte info_cnt = 0;
 
@@ -32,6 +35,8 @@ extern void AFEDisableMicPathPP(void);
 extern void SendPageCmd(unsigned char value);
 extern void SendMicMuteCmd(unsigned char value);
 extern void CheckCallControlPP(UByte key_pressed);
+extern int InitWirelessPost(void);
+extern void SetLSRGain(unsigned int vol_val);
 
 void pp_common_playsound_ack(UByte status)
 {
@@ -108,9 +113,10 @@ static char * overlapNumber = "7";
 extern UByte bearerptrace;
 extern int tonegenerator_running;
 extern unsigned char base_locked;
-
-extern void RequestSystemMode(void);
 extern UByte get_locked_channel(void);
+
+void RequestSystemMode(void);
+void SendWirelessPostCmd(void);
 
 UByte pp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte dataLength)
 {
@@ -131,6 +137,12 @@ PrintStatus(0, "######## requesting SYSTEM MODE and starting 0x16 timer from pp_
 	{
 	  // just let timer expire since we know we have a system mode now
 PrintStatus(0, "@@@@@@@ let 0x16 timer expire");
+	  if (headset.WirelessPost)
+	  {
+		SendWirelessPostCmd();									// tell base we're up and running
+		AFEDisconnectAudioPathPP();								// shut off wireless post speaker
+		AFEDisableMicPathPP();									// shut off wireless post mic
+	  }
 	}
   }
   else if (subEvent == 0x21)
@@ -273,6 +285,7 @@ PrintStatus(0, "@@@@@@@ let 0x16 timer expire");
 	    break;
 	  }
 	}
+	if (!headset.WirelessPost)
 	  general_startTimer(0, TOGGLE_TB_FAIL_LED, NULL, 0, 100);
   }
 #ifdef ENABLE_CHANNEL_MESSAGES
@@ -353,9 +366,36 @@ void SendPageCmd(unsigned char value)
   pp_msf_send_ppstatus_ind(WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
 }
 
+void SendWirelessPostCmd(void)
+{
+  WWMSFVal.SubStatusType = WIRELESS_POST_CMD; 		// Command
+  WWMSFVal.Sub.SetVehicleDetect.VDinfo = 0;
+  pp_msf_send_ppstatus_ind(WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
+}
+
+void SendVehicleDetectCmd(unsigned char value)
+{
+  WWMSFVal.SubStatusType = VEHICLE_DETECT_CMD; 		// Command
+  WWMSFVal.Sub.SetVehicleDetect.VDinfo = value;  	// VD command: 0 is no vehicle, 1 is vehicle present
+  pp_msf_send_ppstatus_ind(WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
+  if (value)
+  {
+	MENU_SPKR_AMP_ON;								// turn on wireless post speaker
+	AFEConnectAudioPathPP();						// open wireless post speaker
+	AFEEnableMicPathPP();							// open wireless post mic
+  }
+  else
+  {
+	MENU_SPKR_AMP_OFF;								// turn off wireless post speaker
+	AFEDisconnectAudioPathPP();						// close wireless post speaker
+	AFEDisableMicPathPP();							// close wireless post mic
+  }
+}
+
 void HandlePacketFromFP(UByte * data, UByte data_length)
 {
   WWMSF *WWMSFptr = (WWMSF *) data; 				// typecast to known structure
+
   switch (WWMSFptr->SubStatusType) 					// Which command?
   {
     case CONF_FROM_BS:
@@ -422,6 +462,12 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
 		  }
 		  break;
 		case 11:											// CAR_WAITING_CMD - LANE A + BEEP
+		  if (headset.WirelessPost)
+		  {
+			AFEConnectAudioPathPP();						// open wireless post speaker
+			AFEEnableMicPathPP();							// open wireless post mic
+			return;
+		  }
 		  if (headset.MenuA)
 		  {
 			headset.CarAtOrderPost = TRUE;
@@ -769,6 +815,25 @@ void HandlePacketFromFP(UByte * data, UByte data_length)
 	  }
 	  general_eeprom_write_req(EE_FREE2, data, 4, 0);
 	  break;
+	case WIRELESS_POST_CMD:
+	  AFESetCodecMicGain((WWMSFptr->Sub.SetVehicleDetect.VDinfo & 0x00F0) >> 4);
+	  SetLSRGain(WWMSFptr->Sub.SetVehicleDetect.VDinfo & 0x000F);
+	  switch ((WWMSFptr->Sub.SetVehicleDetect.VDinfo & 0x0F00) >> 8)
+	  {
+	    case 0:
+		  MENU_SPKR_AMP_OFF;								// turn off wireless post speaker
+		  AFEDisconnectAudioPathPP();						// close wireless post speaker
+		  AFEDisableMicPathPP();							// close wireless post mic
+		  break;
+	    case 1:
+		  MENU_SPKR_AMP_ON;									// turn on wireless post speaker
+		  AFEConnectAudioPathPP();							// open wireless post speaker
+		  AFEEnableMicPathPP();								// open wireless post mic
+		  break;
+	    case 2:
+	      break;
+	  }
+	  break;
     default:
       break;
   }
@@ -780,13 +845,14 @@ void pp_msf_ppstatus_req_received(UByte statusType, UByte * data, UByte data_len
   char * tmpPtr;
   tmpPtr = StringPrint(StatusString, "ppstatus_req_received. Status: ");
   tmpPtr = StrPrintHexByte(tmpPtr, statusType);
-  tmpPtr = StringPrint(tmpPtr, " Length: ");
+  tmpPtr = StringPrint(tmpPtr, " Length: 0x");
   tmpPtr = StrPrintHexByte(tmpPtr, data_length);
-  tmpPtr = StringPrint(tmpPtr, " Data:");
+  tmpPtr = StringPrint(tmpPtr, ", Data: 0x");
   for (i = 0; i < data_length; i++)
   {
     tmpPtr = StrPrintHexByte(tmpPtr, data[i]);
-    tmpPtr = StringPrint(tmpPtr, ",");
+    if (i < data_length)
+      tmpPtr = StringPrint(tmpPtr, ", 0x");
   }
   PrintStatus(0, StatusString);
 
@@ -892,6 +958,53 @@ void pp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
       enableAudio();
       gdsp_BC5SpeakerPath(0x10);
     }
+    else if (WENTWORTHeepromData.action_after_logon == 0x44)
+    {
+      PrintStatus(0, "--- WIRELESS POST MODE ---");
+      headset.WirelessPost = TRUE;
+	  general_startTimer(0, 0x24, NULL, 0, 50);			// start headset registration
+
+	  // DECT P1[3] -> BC5_RESETN						O-HI
+	  // DECT P1[5] -> BC5 PIO6							O-HI  (LO = profile 0; HI = profile 1)
+
+	  // set P1[5,3] to be driven by P1_OUT_DATA_REG[5,3]
+	  P1_MODE_REG &= ~(P1_5_MODE | P1_3_MODE);
+	  // set P1[5,3] as outputs
+	  P1_DIR_REG &= ~(Px_5_DIR | Px_3_DIR);
+	  P1_DIR_REG |= (Px_5_DIR | Px_3_DIR);
+	  // set P1[3] to be driven HI
+	  P1_SET_DATA_REG = Px_3_SET;						// drive BC5 RESETN high to bring BC5 up
+
+	  // set LED1 to be driven 1x VBAT
+	  CP_CTRL_REG |= CP_FORCE_MODE;
+	  // set LED1 to be driven by CP_CTRL_REG[CP_LEVEL1]
+	  CP_CTRL_REG &= ~(CP_PWM1);
+	  // set LED1 to be driven 4.0V
+	  CP_CTRL_REG &= ~(CP_LEVEL1 | CP_EN);				// clear CP_LEVEL1 and CP_EN first
+	  CP_CTRL_REG |= (0x0009);							// drive SHUTDOWN_AMP_MENU_N high; HI to enable, LO to disable
+
+	  MENU_SPKR_AMP_OFF;								// use MENU_SPKR_AMP_ON/OFF to control speaker output on/off; initially off
+	  AFEDisconnectAudioPathPP();						// close wireless post speaker
+	  AFEDisableMicPathPP();							// close wireless post mic
+
+	  // P1[1]	Input-PU				MENU_VEHICLE_3 (3V signal from loop detector)
+	  // set P1[1] to be driven by P1_OUT_DATA_REG[1]
+	  P1_MODE_REG &= ~(P1_1_MODE);
+	  // set P1[1] as an input with pull-up resistor
+	  P1_DIR_REG &= ~(Px_1_DIR);
+	  P1_DIR_REG |= (0x0004);
+
+	  if (InitWirelessPost() == GDSP_SUCCESS)
+		PrintStatus(0, "Wireless Post setup SUCCESS");
+	  else
+		PrintStatus(0, "Wireless Post setup FAILURE");
+
+
+      OSStartTimer(PPVEHICLEDETECTTASKTIMER, 20);		// 20 x 10ms = 200ms for checking vehicle detector
+    }
+
+    if (!headset.WirelessPost)
+	  StopTimer(PPWATCHDOGTASKTIMER);
 
     /* Print */
     tmp = StringPrint(tmp, "ARI Received: ");

@@ -54,6 +54,7 @@ static char * sound_src = 0;
 static int initialized = 0;
 void StartDSP();
 static void StopDSP();
+static void UpdateWirelessPostMixers(void);
 
 /*================================== TYPES ===================================*/
 typedef enum
@@ -241,6 +242,9 @@ void MuteBy()
 	p_dynmixer9->weights[5] =  ((base_station).LaneForChannel[5] != (base_station).DualBase ? (base_station).CurrentInboundVolumeMixerAtten : 0x0000);
   }
 
+  if ((base_station).UsingWirelessPost)
+	UpdateWirelessPostMixers();
+
   muteController = 0xAAAA; // make MAC layer unmute if speechbuffer CRC is ok, else always mute e.g. reverse burden of audio ok proof
 }
 
@@ -348,6 +352,8 @@ void PlayFinished(void)
   PrintStatus(0,"PlaybackPP finished");
 }
 
+// 0 to 15  where 0 is 0dB and 15 is +30dB
+// MIC gain == 0 + (value * 2)
 void SetMicGain(unsigned char value)
 {
   char *ptr;
@@ -861,18 +867,27 @@ void DSPSignalHandlerPP(SignalType *signal)
       SignalType *s;
       NewSignal(sizeof(SignalType), (void**) &s);
       SendSignal(s, DSP_PROCESS_ID, STARTDSP_EVENT, 0);
-      StartCODEC(AMP_LSR);							// PP uses only the LSR amp, MIC comes from BC5 via PCM bus
-      SetLSRGain(7);								// set up LSR gain
+      if (headset.WirelessPost)
+      {
+    	StartCODEC(AMP_LSR | AMP_MIC);											// using both the LSR and MIC amps
+    	AFESetCodecMicGain(0);													// 0dB to +30dB range in 2dB steps (0x00 = 0 x 2 = 0dB)
+    	CODEC_LSR_REG = (0 << 6) | (2 << 3) | (2 << 0);							// +2dB to -12dB range in 2dB steps (1 = +2 - (1 x 2) = 0dB); LSRN LSRP differential
+      }
+      else
+      {
+        StartCODEC(AMP_LSR);													// PP uses only the LSR amp, MIC comes from BC5 via PCM bus
+        SetLSRGain(7);															// set up LSR gain
+      }
 
-      // CRP: using this as a "delayed" area to do start up stuff ...
+	  // CRP: using this as a "delayed" area to do start up stuff ...
 
-	  P2_SET_DATA_REG = Px_7_SET;					// set DECT P2[7] to be driven HI (BC5 RESETN) to bring BC5 up
+	  P2_SET_DATA_REG = Px_7_SET;												// set DECT P2[7] to be driven HI (BC5 RESETN) to bring BC5 up
       PrintStatus(0, "**** DSPSignalHandler: BC5 RESETN is HI");
 
-      general_eeprom_read_req(0x00, 5, 0);			// once we're connected to the base, read this PP IPEI
+      general_eeprom_read_req(0x00, 5, 0);										// once we're connected to the base, read this PP IPEI
       PrintStatus(0, "RED");
       TurnOnRedLED;
-      OSStartTimer(DIAGTIMERSEQTASK1TIMER, 75);		// wait to make sure DSP is started
+      OSStartTimer(DIAGTIMERSEQTASK1TIMER, 75);									// wait to make sure DSP is started
     }
       break;
     case STARTDSP_EVENT:
@@ -1004,4 +1019,88 @@ void common_playsound(UByte sound_to_play)
 
 void wavPlayer(void)
 {
+}
+
+// manage mixers for wireless post systems
+void UpdateWirelessPostMixers(void)
+{
+	PMIDType pmid;
+    PPID2PMID((PMIDType *) pmid, (base_station).UsingWirelessPost - 1);		// this gives us the channel the wireless post is using
+
+//char *tmp;
+//tmp = StringPrint(StatusString, "wireless post is channel[");
+//tmp = StrPrintDecByte(tmp, getSpeechBufferIndex(pmid) >> 1);
+//tmp = StringPrint(tmp, "]; HS page modes: [");
+//tmp = StrPrintDecByte(tmp, (base_station).PageMode[0]);
+//tmp = StringPrint(tmp, "/");
+//tmp = StrPrintDecByte(tmp, (base_station).PageMode[1]);
+//tmp = StringPrint(tmp, "/");
+//tmp = StrPrintDecByte(tmp, (base_station).PageMode[2]);
+//tmp = StringPrint(tmp, "/");
+//tmp = StrPrintDecByte(tmp, (base_station).PageMode[3]);
+//tmp = StringPrint(tmp, "/");
+//tmp = StrPrintDecByte(tmp, (base_station).PageMode[4]);
+//tmp = StringPrint(tmp, "/");
+//tmp = StrPrintDecByte(tmp, (base_station).PageMode[5]);
+//tmp = StringPrint(tmp, "] ");
+//PrintStatus(0, StatusString);
+
+	// mute any PAGE inputs into the wireless post mixer
+    switch (getSpeechBufferIndex(pmid) >> 1)
+	{
+		case 0:
+//PrintStatus(0, "mixer0");
+			// wireless post is on channel 0 so update mixer0
+			p_dynmixer0->weights[0] = (base_station).PageMode[1] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer0->weights[1] = (base_station).PageMode[2] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer0->weights[2] = (base_station).PageMode[3] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer0->weights[3] = (base_station).PageMode[4] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer0->weights[4] = (base_station).PageMode[5] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			break;
+		case 1:
+//PrintStatus(0, "mixer1");
+			// wireless post is on channel 1 so update mixer1
+			p_dynmixer1->weights[0] = (base_station).PageMode[0] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer1->weights[1] = (base_station).PageMode[2] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer1->weights[2] = (base_station).PageMode[3] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer1->weights[3] = (base_station).PageMode[4] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer1->weights[4] = (base_station).PageMode[5] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			break;
+		case 2:
+//PrintStatus(0, "mixer2");
+			// wireless post is on channel 2 so update mixer2
+			p_dynmixer2->weights[0] = (base_station).PageMode[0] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer2->weights[1] = (base_station).PageMode[1] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer2->weights[2] = (base_station).PageMode[3] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer2->weights[3] = (base_station).PageMode[4] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer2->weights[4] = (base_station).PageMode[5] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			break;
+		case 3:
+//PrintStatus(0, "mixer3");
+			// wireless post is on channel 3 so update mixer3
+			p_dynmixer3->weights[0] = (base_station).PageMode[0] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer3->weights[1] = (base_station).PageMode[1] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer3->weights[2] = (base_station).PageMode[2] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer3->weights[3] = (base_station).PageMode[4] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer3->weights[4] = (base_station).PageMode[5] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			break;
+		case 4:
+//PrintStatus(0, "mixer4");
+			// wireless post is on channel 4 so update mixer4
+			p_dynmixer4->weights[0] = (base_station).PageMode[0] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer4->weights[1] = (base_station).PageMode[1] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer4->weights[2] = (base_station).PageMode[2] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer4->weights[3] = (base_station).PageMode[3] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer4->weights[4] = (base_station).PageMode[5] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			break;
+		case 5:
+//PrintStatus(0, "mixer5");
+			// wireless post is on channel 5 so update mixer5
+			p_dynmixer5->weights[0] = (base_station).PageMode[0] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer5->weights[1] = (base_station).PageMode[1] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer5->weights[2] = (base_station).PageMode[2] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer5->weights[3] = (base_station).PageMode[3] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			p_dynmixer5->weights[4] = (base_station).PageMode[4] ? 0x0000 : (base_station).CurrentInboundVolumeMixerAtten;
+			break;
+	}
 }

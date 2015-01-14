@@ -181,3 +181,19 @@ int reinit_tonegenerator_pp(void)
   result &= GdspInitFunctionBlock((const unsigned short*)&law2lin,(unsigned short*)p_law2lin);
   return result;
 }
+
+// Wireless Post configuration
+int InitWirelessPost(void)
+{
+  BYTE result = GDSP_SUCCESS;
+
+  GdspConnect(&(p_gain_spkr_pp->in_ptr), &(p_gain_decoder_pp->out));					// bypass PCM for decoder->CODEC_LSR path
+
+  result &= GdspAdd((const unsigned long*)&gendspcodecsource_code,sizeof(gendspcodecsource_code)/4,(unsigned short**)&p_gendspcodecsource,sizeof(gdsp_codecsource)/2,DSP1_8KHZ);
+  result &= GdspInitFunctionBlock((const unsigned short*)&gendspcodecsource,(unsigned short*)p_gendspcodecsource);
+  result &= GdspStart((unsigned short*)p_gendspcodecsource);							// MIC in from AFE
+
+  GdspConnect(&(p_gain_encoder_pp->in_ptr), &(p_gendspcodecsource->codecdatainsrc));	// connect the CODEC_MIC to the gain_encoder_pp
+
+  return result;
+}

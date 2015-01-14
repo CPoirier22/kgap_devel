@@ -97,7 +97,7 @@ typedef struct
 	char SerialNumber[17];
 	UByte SystemMode;
 	UByte TouchBoardStatus, TouchBoardFail, TouchBoardCode;
-	BOOLEAN IsInTestMode;
+	BOOLEAN IsInTestMode, WirelessPost, VehicleDetectIsActive;
 #ifdef ENABLE_CHANNEL_MESSAGES
 	UByte ChannelInfo, LEDCount;
 #endif
@@ -129,6 +129,15 @@ extern wt_headset headset;
 // we have to bit-bang the SPI_EN signal to the touch board
 #define SPI_EN_HI					P0_SET_DATA_REG = Px_4_SET
 #define SPI_EN_LO					P0_RESET_DATA_REG = Px_4_RESET
+
+// Wireless Post support
+// CP_EN = controls the SHUTDOWN_AMP_MENU_N and GREET audio path
+#define MENU_SPKR_AMP_OFF			CP_CTRL_REG &= ~(CP_EN)				// clear CP_EN to turn CP_VOUT1 off; enables GREET audio path in to DECT MICP/N
+#define MENU_SPKR_AMP_ON			CP_CTRL_REG |= (0x0001)				// enable CP_EN to turn only CP_VOUT1 on; enables BC5 audio path in to DECT MICP/N
+// P2[1] is	Output-DIO for TBD (clock to watchdog timer chip)
+#define SET_CLOCK_HI				P2_SET_DATA_REG = Px_1_SET
+#define SET_CLOCK_LO				P2_RESET_DATA_REG = Px_1_RESET
+
 
 void InitWentworth_pp(void);
 

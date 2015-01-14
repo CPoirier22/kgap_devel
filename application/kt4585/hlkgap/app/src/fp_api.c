@@ -35,6 +35,7 @@ extern void RunGreetClock(UByte greet_cmd, UByte greet_selection);
 extern void ConnectPCM(void);
 extern void SendPCMCommand(WORD cmd);
 extern void WTInfoDebugScreen();
+extern void ServiceVehicleDetect(BOOLEAN VehicleIsPresent);
 
 #ifdef ENABLE_TONEGEN
 UByte enable_tonegenerator_for_test=0;
@@ -88,6 +89,7 @@ void voice_callConnected(PPIDType called, PPIDType caller)
 
 extern void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length);
 
+// this runs whenever a PP is powered off
 void voice_callDisconnected(PPIDType disconnectedUser, PPIDType wasConnectedTo,UByte reason)
 {
 	_sprintf_(StatusString,"wasconnectedto: %x",wasConnectedTo);
@@ -137,6 +139,16 @@ void voice_callDisconnected(PPIDType disconnectedUser, PPIDType wasConnectedTo,U
 		(base_station).OrderTakerID = 0xFF;
     if ((base_station).DualBase)
    		SendPCMCommand(PP_ON_ind + (disconnectedUser << 4) + 0);
+    if ((disconnectedUser + 1) == (base_station).UsingWirelessPost)
+    {
+    	(base_station).UsingWirelessPost = 0;
+    	p_dynmixer0->weights[6] = MIC_A_ATTEN;
+    	p_dynmixer1->weights[6] = MIC_A_ATTEN;
+    	p_dynmixer2->weights[6] = MIC_A_ATTEN;
+    	p_dynmixer3->weights[6] = MIC_A_ATTEN;
+    	p_dynmixer4->weights[6] = MIC_A_ATTEN;
+    	p_dynmixer5->weights[6] = MIC_A_ATTEN;
+    }
 }
 
 void msf_releaseIndReceived(PPIDType user, UByte releaseReason)
@@ -239,6 +251,7 @@ void msf_outgMessageIndReceived(PPIDType user, UByte setupSpec2, UByte setupSpec
 void BroadcastBlinkLED(unsigned char value);
 void BroadcastSystemModeState(PPIDType user);
 void BroadcastOrderTaker(PPIDType user, unsigned char value);
+void BroadcastWirelessPostCmd(PPIDType user, WORD cmd);
 void UpdateDualMenuMixers();
 void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
 {
@@ -304,15 +317,22 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
 		// if no other headset MICs are on and no vehicle is detected, turn off menu board MIC
 		if (OkToTurnMicOff && !(base_station).VehicleDetectIsActive)
 		{
-		  AFEDisablePostMicPath();								// disable DECT MIC input
-		  GRILL_SPEAKER_OFF;									// mute the grill speaker
-		  MENU_SPKR_AMP_OFF;									// mute post speaker (enables GREET audio path in to DECT MICP/N)
+		  if (!(base_station).UsingWirelessPost)
+		  {
+		    AFEDisablePostMicPath();							// disable DECT MIC input
+		    GRILL_SPEAKER_OFF;									// mute the grill speaker
+		    MENU_SPKR_AMP_OFF;									// mute post speaker (enables GREET audio path in to DECT MICP/N)
+		  }
+		  else
+		  {
+			BroadcastWirelessPostCmd((base_station).UsingWirelessPost - 1, 0x0000 + ((base_station).InboundVol << 4) + (base_station).CurrentOutboundVolume);
+		  }
 		  if (((base_station).DisplayScreen == GREETER_SETUP) ||
 			  ((base_station).DisplayScreen == MESSAGE_SETUP1) ||
 			  ((base_station).DisplayScreen == MESSAGE_SETUP2))	// configure post mic/speaker for greeter recording
 		  {
-			RefreshOutboundVolume(3);							// temporarily "normalize" for recording level
-			AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);		// temporarily set inbound for playback comfort
+		    RefreshOutboundVolume(3);							// temporarily "normalize" for recording level
+		    AFESetGainInboundVolumeFP(GREET_COMFORT_VOL);		// temporarily set inbound for playback comfort
 		  }
 		  if ((base_station).SystemMode == SPEED_TEAM)
 			PlayQueuedMessage();								// play any waiting alert or reminder
@@ -373,12 +393,19 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
     	{
 		  AFESetGainInboundVolumeFP(NORMAL_INBOUND);
 		  RefreshOutboundVolume((base_station).DayTime ? (base_station).PostSpeakerVolumeDay : (base_station).PostSpeakerVolumeNight);
-    	  MENU_SPKR_AMP_ON;										// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
-    	  if ((base_station).GrillSpeakerVolume)
-    		GRILL_SPEAKER_ON;									// turn on grill speaker
-    	  if (!(base_station).VehicleDetectIsActive)
-    		usec_pause(35000);									// to avoid pop when opening post mic
-		  AFEEnablePostMicPath();								// enable DECT MIC input since a headset MIC is on
+		  if (!(base_station).UsingWirelessPost)
+		  {
+    	    MENU_SPKR_AMP_ON;									// make sure post speaker is on (enables BC5 audio path in to DECT MICP/N)
+    	    if ((base_station).GrillSpeakerVolume)
+    		  GRILL_SPEAKER_ON;									// turn on grill speaker
+    	    if (!(base_station).VehicleDetectIsActive)
+    		  usec_pause(35000);								// to avoid pop when opening post mic
+    	    AFEEnablePostMicPath();								// enable DECT MIC input since a headset MIC is on
+		  }
+		  else
+		  {
+			BroadcastWirelessPostCmd((base_station).UsingWirelessPost - 1, 0x0100 + ((base_station).InboundVol << 4) + (base_station).CurrentOutboundVolume);
+		  }
     	}
     	PPID2PMID((PMIDType *) pmid, user);
   		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = MIXER6_ATTEN;	// make sure channel to menu board speaker is on
@@ -413,14 +440,24 @@ void HandlePacketFromPP(PPIDType user, UByte * data, UByte data_length)
       PPID2PMID((PMIDType *) pmid, user);
       req = WWMSFptr->Sub.SetPage.Page & 0x000F;
       (base_station).PageMode[(getSpeechBufferIndex(pmid) >> 1)] = req;
-
       // if running a dual base system and this headset is registered to this base, update the mixer
 	  if ((base_station).DualBase)
-		// process dual base page request
-		UpdateDualMenuMixers();
+		UpdateDualMenuMixers();									// process dual base page request
 	  else
-	  	// 1 is open to page, 0 is mute
-		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = req ? 0x0000 : MIXER6_ATTEN;
+		p_dynmixer6->weights[(getSpeechBufferIndex(pmid) >> 1)] = req ? 0x0000 : MIXER6_ATTEN;	// 1 is open to page, 0 is mute
+      break;
+    case VEHICLE_DETECT_CMD:
+      ServiceVehicleDetect(WWMSFptr->Sub.SetVehicleDetect.VDinfo);
+      break;
+    case WIRELESS_POST_CMD:
+      (base_station).UsingWirelessPost = user + 1;						// increment by 1 to use as a zero/non-zero flag
+      general_startTimer(user, WIRELESS_POST_CMD, NULL, 0, 500);		// wireless post seems to need long delay before receiving
+      p_dynmixer0->weights[6] = 0x0000;
+      p_dynmixer1->weights[6] = 0x0000;
+      p_dynmixer2->weights[6] = 0x0000;
+      p_dynmixer3->weights[6] = 0x0000;
+      p_dynmixer4->weights[6] = 0x0000;
+      p_dynmixer5->weights[6] = 0x0000;
       break;
     default:
       break;
@@ -489,6 +526,13 @@ void BroadcastCalOffset(PPIDType user, unsigned char offset)
 	WWMSFVal.SubStatusType = CAL_PP_CMD;
 	WWMSFVal.Sub.SetPPOffset.PPOffset = offset;
 	general_startTimer(user, CAL_PP_CMD, (UByte *)&WWMSFVal, sizeof(WWMSFVal), 50);
+}
+
+void BroadcastWirelessPostCmd(PPIDType user, WORD cmd)
+{
+	WWMSFVal.SubStatusType = WIRELESS_POST_CMD;
+	WWMSFVal.Sub.SetVehicleDetect.VDinfo = cmd;
+    msf_send_ppstatusReq(user, WENTWORTH_PACKET_ID, (UByte *)&WWMSFVal, sizeof(WWMSFVal));
 }
 
 // manage mixers for dual menu systems
@@ -994,6 +1038,10 @@ UByte fp_general_timeout(PPIDType user, UByte subEvent, UByte * dataPtr, UByte d
 	{
 	  WTInfoDebugScreen();
 	}
+	else if (subEvent == WIRELESS_POST_CMD)
+	{
+      BroadcastWirelessPostCmd((base_station).UsingWirelessPost - 1, 0x0200 + ((base_station).InboundVol << 4) + (base_station).CurrentOutboundVolume);
+	}
 	else
 	{
 	  return 0;
@@ -1224,13 +1272,13 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 		{
 			PrintStatus(0, "Production - dual base - menu A");
 			if ((base_station).MenuConfig == 0)
-				(base_station).MenuConfig = 1;				// single Menu EXP
+				(base_station).MenuConfig = 1;				// single Menu STX
 		}
 		else if ((base_station).DualBase == DUAL_BASE_MENU_B)
 		{
 			PrintStatus(0, "Production - dual base - menu B");
 			if ((base_station).MenuConfig == 0)
-				(base_station).MenuConfig = 1;				// single Menu EXP
+				(base_station).MenuConfig = 1;				// single Menu STX
 		}
 		else
 		{

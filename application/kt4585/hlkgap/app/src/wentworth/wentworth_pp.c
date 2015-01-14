@@ -63,6 +63,10 @@ UByte PPTIMERSEQTASK1;
 UByte PPTIMERSEQTASK1TIMER;
 UByte PPTOUCHTIMERSEQTASK1;
 UByte PPTOUCHTIMERSEQTASK1TIMER;
+UByte PPWATCHDOGTASK;
+UByte PPWATCHDOGTASKTIMER;
+UByte PPVEHICLEDETECTTASK;
+UByte PPVEHICLEDETECTTASKTIMER;
 
 wt_headset headset;
 
@@ -70,6 +74,7 @@ extern void PlayFinished(void);
 extern void PlaySoundPP(unsigned char index);
 extern void CheckVolumeControlPP(UByte);
 extern void CheckCallControlPP(UByte);
+extern void SendVehicleDetectCmd(unsigned char value);
 extern void SendPageCmd(unsigned char value);
 extern void SendMicMuteCmd(unsigned char value);
 extern void CheckPageControlPP(UByte);
@@ -528,6 +533,8 @@ static void pptimerseqtask1(MailType * MailPtr)
       OSStartTimer(PPTIMERSEQTASK1TIMER, 3000); 				// 3000 x 10ms = 30s
       break;
     case TIMEOUT:
+      if (headset.WirelessPost)
+    	break;
 	  BAT_CTRL2_REG |= NTC_DISABLE;
 	  ADC_CLEAR_INT_REG = 0;
 	  ADC_CTRL_REG |= 0x10; /* ADC_IN_3_0 = 0010b = ADC2 input) */
@@ -622,6 +629,48 @@ static void pptouchtimerseqtask1(MailType * MailPtr)
   }
 }
 
+// task timer to run clock for external watchdog when PP being used as wireless post
+static void watchdogtasktimerpp(MailType * MailPtr)
+{
+	switch (MailPtr->Primitive)
+	{
+		case INITTASK:
+    		SET_CLOCK_HI;
+			OSStartTimer(PPWATCHDOGTASKTIMER, 100); 			// 100 x 10ms = 1s pause before toggling P2[1]
+			break;
+		case TIMEOUT:
+			if (P2_DATA_REG & Px_1_DATA)
+				SET_CLOCK_LO;
+			else
+				SET_CLOCK_HI;
+			OSStartTimer(PPWATCHDOGTASKTIMER, 100); 			// 100 x 10ms = 1s pause before toggling P2[1]
+			break;
+	}
+}
+
+// timer for checking vehicle detect when PP being used as a wireless post
+static void vehicledetecttasktimerpp(MailType * MailPtr)
+{
+	switch (MailPtr->Primitive)
+	{
+		case INITTASK:
+			break;
+		case TIMEOUT:
+			if (!headset.VehicleDetectIsActive && (~P1_DATA_REG & Px_1_DATA))
+			{
+				headset.VehicleDetectIsActive = TRUE;
+				SendVehicleDetectCmd(TRUE);						// VD 3V fired
+			}
+			else if (headset.VehicleDetectIsActive && (P1_DATA_REG & Px_1_DATA))
+			{
+				headset.VehicleDetectIsActive = FALSE;
+				SendVehicleDetectCmd(FALSE);					// VD 3V released
+			}
+			OSStartTimer(PPVEHICLEDETECTTASKTIMER, 20); 		// 20 x 10ms = 200ms for checking vehicle detector
+			break;
+	}
+}
+
 void initializeWentworth_ppTask(void)
 {
 	WENTWORTHTASK = OSRegisterTask(wentworth_pptask, "wentworth_pptask", REALPPTASK);
@@ -656,6 +705,18 @@ void initializePPTouchTimerTask(void)
 {
 	PPTOUCHTIMERSEQTASK1 = OSRegisterTask(pptouchtimerseqtask1, "pptouchtimerseqtask1", REALPPTASK);
 	PPTOUCHTIMERSEQTASK1TIMER = OSRegisterTimer(PPTOUCHTIMERSEQTASK1);
+}
+
+void initializeWatchdogTaskTimerPP(void)
+{
+	PPWATCHDOGTASK = OSRegisterTask(watchdogtasktimerpp, "watchdogtasktimerpp", REALPPTASK);
+	PPWATCHDOGTASKTIMER = OSRegisterTimer(PPWATCHDOGTASK);
+}
+
+void initializeVehicleDetectTimerTaskPP(void)
+{
+	PPVEHICLEDETECTTASK = OSRegisterTask(vehicledetecttasktimerpp, "vehicledetecttasktimerpp", REALPPTASK);
+	PPVEHICLEDETECTTASKTIMER = OSRegisterTimer(PPVEHICLEDETECTTASK);
 }
 
 static void ConfigUART()
@@ -837,6 +898,8 @@ void InitHeadsetVariables(void)
 	headset.TouchBoardFail = 0;
 	headset.TouchBoardCode = 0;
 	headset.IsInTestMode = FALSE;
+	headset.WirelessPost = FALSE;
+	headset.VehicleDetectIsActive = FALSE;
 #ifdef ENABLE_CHANNEL_MESSAGES
 	headset.ChannelInfo = 0;
 	headset.LEDCount = 0;
@@ -851,6 +914,8 @@ void InitWentworth_pp(void)
   initializeBC5TimerTask();					// timer task used by BC5
   initializePPTimerTask();					// timer task used to monitor battery voltage
   initializePPTouchTimerTask();				// timer task used to monitor touch board inputs
+  initializeWatchdogTaskTimerPP();			// timer task used for toggling P2[1] for external watchdog timer when PP being used as a wireless post
+  initializeVehicleDetectTimerTaskPP();		// timer task used for checking vehicle detect when PP being used as a wireless post
 
   ConfigBC5Pins();							// setup BC5 PIO and RESETN pins
 

@@ -25,6 +25,7 @@
 
 extern void CopyToUartTxBuffer(UByte * buffer, unsigned int length);
 extern void CopyByteToUartTxBuffer(UByte buffer);
+extern void BroadcastWirelessPostCmd(PPIDType user, WORD cmd);
 extern void BroadcastSystemModeState(PPIDType user);
 extern void BroadcastCalOffset(PPIDType user, unsigned char direction);
 extern UByte fp_subscription_removeSubscription(PPIDType user);
@@ -107,11 +108,11 @@ void WTInfoScreen()
 
 	if ((base_station).DualBase && (base_station).IsUS)
 	{
-		CopyToUartTxBuffer((UByte *)"t \"       SpeedThru EXP (US)\" 13 125 T\r", 39);
+		CopyToUartTxBuffer((UByte *)"t \"       SpeedThru STX (US)\" 13 125 T\r", 39);
 	}
 	else if ((base_station).DualBase)
 	{
-		CopyToUartTxBuffer((UByte *)"t \"       SpeedThru EXP (EU)\" 13 125 T\r", 39);
+		CopyToUartTxBuffer((UByte *)"t \"       SpeedThru STX (EU)\" 13 125 T\r", 39);
 	}
 	else if ((base_station).IsUS)
 	{
@@ -337,6 +338,9 @@ void VolumeAdjustScreen()
 	}
 	else
 		general_startTimer(-1, WRITE_WTDATA_EEPROM, NULL, 0, 5);	// request came from other base, write current values to EEPROM
+
+	if ((base_station).UsingWirelessPost)
+		BroadcastWirelessPostCmd((base_station).UsingWirelessPost - 1, 0x0200 + ((base_station).InboundVol << 4) + (base_station).CurrentOutboundVolume);
 }
 
 extern void ConvertIpeiToSN(PPIDType user, char SerialNumber[17], IPEIType Hex_SN);
@@ -2063,7 +2067,7 @@ void ServiceDisplay()
 				(base_station).NewSystemMode = (base_station).SystemMode > 4 ? 2 : (base_station).SystemMode + 1;
 			}
 			if ((base_station).DualBase && ((base_station).MenuConfig > 1) && ((base_station).NewSystemMode == 4))
-				(base_station).NewSystemMode++;																			// skip AHF for EXP system
+				(base_station).NewSystemMode++;																			// skip AHF for STX system
 			OSStartTimer(SYSTEMMODETASKTIMER, 300);																		// wait 3s before changing
 
 			CopyToUartTxBuffer((UByte *)"bc 24\r", 6);
@@ -2221,6 +2225,8 @@ void ServiceDisplay()
 
 			if ((base_station).DisplayValueChanged && !(base_station).GreeterScreenB)
 			{
+				if ((base_station).UsingWirelessPost)
+					BroadcastWirelessPostCmd((base_station).UsingWirelessPost - 1, 0x0200 + ((base_station).InboundVol << 4) + (base_station).CurrentOutboundVolume);
 				(base_station).DisplayValueChanged = FALSE;
 				general_startTimer(-1, WRITE_WTDATA_EEPROM, NULL, 0, 5);	// write current values to EEPROM
 			}
@@ -2553,11 +2559,6 @@ void ServiceDisplay()
 					(base_station).BC5Bypassed = FALSE;
 					// send BC5 ON to PPs
 					BroadcastSystemModeState(-1);
-					break;
-				case 4:
-					// enable calibration screen for testing headsets
-					(base_station).PPCalibration = TRUE;
-					CopyToUartTxBuffer((UByte *)"m register_main\r", 16);
 					break;
 				case 7:
 					CopyToUartTxBuffer((UByte *)"touch off\r", 10);

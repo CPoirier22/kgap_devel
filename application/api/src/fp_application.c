@@ -10,6 +10,7 @@
 #include "../../../include/machlinterface/include/maclink.h"
 #include "../../kt4585/hlkgap/app/src/wentworth/wentworth_fp.h"
 #include "../../kt4585/hlkgap/app/src/wentworth/fppp_common.h"
+#include "../../kt4585/hlkgap/app/src/dsp/gdsp_all_inits.h"
 
 extern Boolean NewBuffer(int BufferLength, void **BufferPointer);
 extern void *_memcpy(void *DST, const void *SRC, unsigned int LENGTH);
@@ -418,6 +419,7 @@ UByte voice_callUser(PPIDType called, PPIDType caller)
 
 extern void App_dBSendAppOmSubsRemoveReq(PPIDType PPID);
 
+// this runs whenever a PP is deleted
 UByte fp_subscription_removeSubscription(PPIDType user)
 {
     if (QuickData[user].EmptyMarker == 0)
@@ -428,6 +430,16 @@ UByte fp_subscription_removeSubscription(PPIDType user)
 		(base_station).ListenOnly[user] = 0xFF;
 	    if ((base_station).DualBase)
 	   		SendPCMCommand(PP_ON_ind + (user << 4) + 0);
+	    if ((user + 1) == (base_station).UsingWirelessPost)
+	    {
+	    	(base_station).UsingWirelessPost = 0;
+	    	p_dynmixer0->weights[6] = MIC_A_ATTEN;
+	    	p_dynmixer1->weights[6] = MIC_A_ATTEN;
+	    	p_dynmixer2->weights[6] = MIC_A_ATTEN;
+	    	p_dynmixer3->weights[6] = MIC_A_ATTEN;
+	    	p_dynmixer4->weights[6] = MIC_A_ATTEN;
+	    	p_dynmixer5->weights[6] = MIC_A_ATTEN;
+	    }
 		general_startTimer(-1, WRITE_WTDATA_EEPROM, NULL, 0, 5);
         return 1;
     }

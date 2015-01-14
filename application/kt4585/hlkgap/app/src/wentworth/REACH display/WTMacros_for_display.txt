@@ -253,7 +253,7 @@
 //  e8 day volume
 //	e9 night volume
 //  eA m_volume lanes "0" = single, "1" = menu A, "2" = menu B
-//  eB Multi-lane "0" = single ONLY, "1" = single EXP, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
+//  eB Multi-lane "0" = single ONLY, "1" = single STX, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
 //---------------------------------------------------------------------------------------
 
 
@@ -338,7 +338,7 @@ set e9 `9`								// Save current night volume
 //---------------------------------------------------------------------------------------
 //
 //  `A` m_volume lanes "0" = single, "1" = menu A, "2" = menu B
-//  `B` Multi-lane "0" = single ONLY, "1" = single EXP, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
+//  `B` Multi-lane "0" = single ONLY, "1" = single STX, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
 //  
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
@@ -1619,7 +1619,7 @@ out "\xFF\xFF\x4D\x12\x03\x01\x01\x02\x04"	// request base to display the tools 
 // For Tool screen display
 //
 //  `eA` - "0" = single lane, "1" = menu A, "2" = menu B
-//  `eB` - "0" = single ONLY, "1" = single EXP, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
+//  `eB` - "0" = single ONLY, "1" = single STX, "2" = parallel 1OT, "3" = tandem 1OT, "4" = parallel 2OT, "5" = tandem 2OT
 //  
 //---------------------------------------------------------------------------------------
 #define tools

@@ -34,7 +34,6 @@
  */
 void AFEInit(void);
 
-void AFEReenableVoice(void);
 void AFESetVolume(int vol_set);
 void AFESetGainInboundVolumePP(int vol_set);
 void AFESetGainSpkrVolumePP(int vol_set);
