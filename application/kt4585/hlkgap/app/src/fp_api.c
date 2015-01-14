@@ -1392,11 +1392,11 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 			WriteAccess1(RTC, 0x03, i);						// restore previous day of week
 			if ((base_station).PowerOnCount < 2)
 			{
-				// initialize the RTC to January 1, 2014 and clear the control/status registers
+				// initialize the RTC to January 1, 2015 and clear the control/status registers
 				WriteAccess1(RTC, 0x00, 0x00);				// seconds
 				WriteAccess1(RTC, 0x04, 0x01);				// day of month
 				WriteAccess1(RTC, 0x05, 0x01);				// month
-				WriteAccess1(RTC, 0x06, 0x0E);				// year
+				WriteAccess1(RTC, 0x06, 0x0F);				// year
 				WriteAccess1(RTC, 0x0E, 0x00);				// CONTROL
 				WriteAccess1(RTC, 0x0F, 0x00);				// STATUS
 				WriteAccess1(RTC, 0x10, 0x00);				// TRICKLE CHARGER
@@ -1426,11 +1426,11 @@ void fp_general_eeprom_read_res(UByte status, PPIDType ppid, UByte * data, UByte
 					WriteAccess1(RTC, 0x03, i);				// restore previous day of week
 					if ((base_station).PowerOnCount < 2)
 					{
-						// initialize the RTC to January 1, 2014 and clear the control/status registers
+						// initialize the RTC to January 1, 2015 and clear the control/status registers
 						WriteAccess1(RTC, 0x00, 0x00);		// seconds
 						WriteAccess1(RTC, 0x04, 0x01);		// day of month
 						WriteAccess1(RTC, 0x05, 0x01);		// month
-						WriteAccess1(RTC, 0x06, 0x0E);		// year
+						WriteAccess1(RTC, 0x06, 0x0F);		// year
 						WriteAccess1(RTC, 0x0E, 0x00);		// CONTROL
 						WriteAccess1(RTC, 0x0F, 0x00);		// STATUS
 						WriteAccess1(RTC, 0x10, 0x00);		// TRICKLE CHARGER

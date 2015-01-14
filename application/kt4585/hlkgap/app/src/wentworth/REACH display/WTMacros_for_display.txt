@@ -11,10 +11,10 @@
 //#				Saco, ME  04072
 //#				(207) 571-9744
 //#
-//#				Copyright © 2014 Wentworth Technology
+//#				Copyright © 2015 Wentworth Technology
 //#
 //#############################################################################
-// Update v2.0-AL CRP 12/3/2014 - supported by FP rev2.0-AL
+// Update v2.0-AL CRP 1/14/2015 - supported by FP rev2.0-AL
 // Revised several macros to support dual lane
 // 1) removed delayed_switch_button_pressed macro
 // 2) added labels to greeter_screen_setup to handle dual greeters
@@ -23,7 +23,7 @@
 // 5) merged request_power_count_reset2 into request_power_count_reset
 // 6) added request_lane_config, pre_lane_config, and lane_config macros
 // 7) added the `eB` parameter back to calls to tools
-// 8) updated copyright year to 2014
+// 8) updated copyright year to 2015
 //
 //=================================================
 // Update v1.3-AL CRP 8/16/2013 - supported by FP rev1.5-AL
@@ -3620,13 +3620,13 @@ t "  www.wentworthtechnology.com"   13 100 T
 :single
 t "   Firmware Version - `0`.`1`-AL"13 150 T	// Display the firmware version number.
 t "   Base Serial # - `2`"          13 175 T	// Display the master serial number.
-t "   Copyright \xA9 2014  v2.0-AL" 13 250 T
+t "   Copyright \xA9 2015  v2.0-AL" 13 250 T
 touch on										// enable screen touches
 :dual
 t " Firmware Version - `0`.`1`-AL"  13 150 T	// Display the firmware version number.
 t " 1st Base Serial # - `2`"        13 175 T	// Display the master serial number.
 t " 2nd Base Serial # - `3`"        13 200 T	// Display the slave number.
-t "  Copyright \xA9 2014  v2.0-AL"  13 250 T
+t "  Copyright \xA9 2015  v2.0-AL"  13 250 T
 touch on										// enable screen touches
 #end
 
