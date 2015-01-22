@@ -635,7 +635,7 @@ static void watchdogtasktimerpp(MailType * MailPtr)
 	switch (MailPtr->Primitive)
 	{
 		case INITTASK:
-    		SET_CLOCK_HI;
+    		SET_CLOCK_LO;
 			OSStartTimer(PPWATCHDOGTASKTIMER, 100); 			// 100 x 10ms = 1s pause before toggling P2[1]
 			break;
 		case TIMEOUT:
