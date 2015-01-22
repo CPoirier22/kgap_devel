@@ -2560,6 +2560,11 @@ void ServiceDisplay()
 					// send BC5 ON to PPs
 					BroadcastSystemModeState(-1);
 					break;
+				case 4:
+					// enable calibration screen for testing headsets
+					(base_station).PPCalibration = TRUE;
+					CopyToUartTxBuffer((UByte *)"m register_main\r", 16);
+					break;
 				case 7:
 					CopyToUartTxBuffer((UByte *)"touch off\r", 10);
 					StopTimer(WATCHDOGTASKTIMER);
